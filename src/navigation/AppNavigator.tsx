@@ -1,7 +1,6 @@
 // Main app navigation setup with bottom tabs
 import React, { useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -11,6 +10,7 @@ import { theme } from '../utils/theme';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { Loading } from '../components/common/Loading';
+import { SpeedometerIcon, CarIcon, SpannerIcon, GearIcon } from '../components/icons';
 
 // Import screens
 import DashboardScreen from '../screens/DashboardScreen';
@@ -246,8 +246,7 @@ export const AppNavigator: React.FC = () => {
   );
 };
 
-// Simple icon component using emojis for now
-// TODO: Replace with proper icon library (e.g., Expo Vector Icons)
+// Custom SVG icon component for unique GarageLedger branding
 interface TabIconProps {
   name: 'dashboard' | 'vehicles' | 'maintenance' | 'settings';
   color: string;
@@ -255,29 +254,42 @@ interface TabIconProps {
 }
 
 const TabIcon: React.FC<TabIconProps> = ({ name, color, size }) => {
-  const getIconName = (): keyof typeof Ionicons.glyphMap => {
-    switch (name) {
-      case 'dashboard':
-        return 'speedometer-outline'; // Matches your speedometer.svg concept
-      case 'vehicles':
-        return 'car-outline'; // Matches your car.svg
-      case 'maintenance':
-        return 'construct-outline'; // Matches your spanner.svg concept  
-      case 'settings':
-        return 'settings-outline'; // Matches your gear.svg
-      default:
-        return 'apps-outline';
-    }
+  const iconStyle = { 
+    opacity: color === theme.colors.primary ? 1 : 0.6 
   };
 
-  return (
-    <Ionicons 
-      name={getIconName()} 
-      size={size} 
-      color={color}
-      style={{ opacity: color === theme.colors.primary ? 1 : 0.6 }}
-    />
-  );
+  switch (name) {
+    case 'dashboard':
+      return (
+        <View style={iconStyle}>
+          <SpeedometerIcon size={size} color={color} />
+        </View>
+      );
+    case 'vehicles':
+      return (
+        <View style={iconStyle}>
+          <CarIcon size={size} color={color} />
+        </View>
+      );
+    case 'maintenance':
+      return (
+        <View style={iconStyle}>
+          <SpannerIcon size={size} color={color} />
+        </View>
+      );
+    case 'settings':
+      return (
+        <View style={iconStyle}>
+          <GearIcon size={size} color={color} />
+        </View>
+      );
+    default:
+      return (
+        <View style={iconStyle}>
+          <GearIcon size={size} color={color} />
+        </View>
+      );
+  }
 };
 
 export default AppNavigator;
