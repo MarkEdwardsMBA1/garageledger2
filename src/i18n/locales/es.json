@@ -1,0 +1,272 @@
+{
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Agregar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "confirm": "Confirmar",
+    "yes": "Sí", 
+    "no": "No",
+    "retry": "Intentar de Nuevo",
+    "close": "Cerrar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "continue": "Continuar",
+    "ok": "OK"
+  },
+  "welcome": {
+    "tagline": "Tu Libro Digital del Taller",
+    "trackVehicles": "Rastrea mantenimiento, modificaciones y costos — mantente al volante",
+    "neverForget": "Nunca olvides un cambio de aceite otra vez",
+    "ownData": "Tus datos son tuyos — propiedad completa y exportación",
+    "getStarted": "Comenzar",
+    "signIn": "Iniciar Sesión",
+    "alreadyHaveAccount": "¿Ya tienes una cuenta?"
+  },
+  "firstVehicle": {
+    "title": "Agrega Tu Primer Vehículo",
+    "subtitle": "Comencemos tu taller con lo básico",
+    "basicInfo": "Información Básica",
+    "optional": "Detalles Opcionales",
+    "addVehicle": "Agregar Mi Vehículo",
+    "skip": "Omitir por ahora",
+    "saving": "Creando tu primer vehículo...",
+    "showMore": "Mostrar más opciones",
+    "nicknameHelper": "Dale un nombre amigable a tu vehículo"
+  },
+  "signupSuccess": {
+    "title": "¡Bienvenido al Taller!",
+    "message": "Tu cuenta está lista. Agreguemos tu primer auto para comenzar.",
+    "readyToStart": "¿Listo para comenzar a rastrear?",
+    "addVehicleDescription": "Agregar tu primer vehículo toma solo un minuto y desbloquea todas las funciones de GarageLedger.",
+    "addFirstVehicle": "Agregar mi primer vehículo",
+    "skip": "Tal vez más tarde"
+  },
+  "success": {
+    "congratulations": "¡Felicitaciones!",
+    "firstVehicleMessage": "Tu {{year}} {{make}} {{model}} está registrado en GarageLedger.",
+    "whatsNext": "¿Qué sigue?",
+    "nextStepsDescription": "Obtén el máximo provecho de GarageLedger rastreando tu mantenimiento:",
+    "logMaintenance": "Registrar mi último cambio de aceite",
+    "addReminder": "Agregar recordatorio de mantenimiento",
+    "goToDashboard": "Ir al panel principal"
+  },
+  "navigation": {
+    "dashboard": "Panel",
+    "vehicles": "Vehículos",
+    "maintenance": "Mantenimiento",
+    "reminders": "Recordatorios",
+    "settings": "Configuración"
+  },
+  "vehicles": {
+    "title": "Mis Vehículos",
+    "addNew": "Agregar Vehículo",
+    "addVehicle": "Agregar Vehículo",
+    "add": "Agregar",
+    "make": "Marca",
+    "model": "Modelo",
+    "year": "Año",
+    "vin": "VIN",
+    "mileage": "Kilometraje",
+    "notes": "Notas",
+    "photo": "Foto",
+    "noVehicles": "Aún no hay vehículos agregados",
+    "addFirstVehicle": "Agrega tu primer vehículo para comenzar",
+    "upToDate": "Al día",
+    "empty": {
+      "title": "Aún No Hay Vehículos",
+      "message": "Agrega tu primer vehículo para comenzar a rastrear el mantenimiento."
+    },
+    "addDescription": "Ingresa la información de tu vehículo para comenzar a rastrear el mantenimiento.",
+    "basicInfo": "Información Básica",
+    "details": "Detalles del Vehículo",
+    "makePlaceholder": "ej., Toyota, Honda, Ford",
+    "modelPlaceholder": "ej., Camry, Civic, F-150",
+    "yearPlaceholder": "ej., 2020",
+    "vinPlaceholder": "Número de Identificación del Vehículo",
+    "vinHelper": "Opcional - ayuda con repuestos y recalls",
+    "mileagePlaceholder": "ej., 50000",
+    "mileageHelper": "Opcional - ayuda con la programación de mantenimiento",
+    "notesPlaceholder": "Información adicional...",
+    "notesHelper": "Opcional - color, versión, modificaciones, etc.",
+    "saving": "Guardando vehículo...",
+    "vehicleAdded": "Vehículo agregado exitosamente",
+    "addError": "Error al agregar vehículo. Por favor intenta de nuevo.",
+    "loading": "Cargando vehículos...",
+    "loadError": "Error al cargar vehículos",
+    "miles": "millas",
+    "kilometers": "kilómetros",
+    "mileageNotSet": "Kilometraje no establecido",
+    "editVehicle": "Editar Vehículo",
+    "editDescription": "Actualiza la información de tu vehículo.",
+    "vehicleUpdated": "Vehículo actualizado exitosamente",
+    "updateError": "Error al actualizar vehículo. Por favor intenta de nuevo.",
+    "vehicleDeleted": "Vehículo eliminado exitosamente",
+    "deleteError": "Error al eliminar vehículo. Por favor intenta de nuevo.",
+    "notFound": "Vehículo no encontrado",
+    "deleteConfirm": {
+      "title": "Eliminar Vehículo",
+      "message": "¿Estás seguro de que quieres eliminar este vehículo? Esta acción no se puede deshacer."
+    }
+  },
+  "photo": {
+    "addPhoto": "Agregar Foto",
+    "changePhoto": "Cambiar Foto",
+    "removePhoto": "Eliminar Foto",
+    "takePhoto": "Tomar Foto",
+    "chooseFromLibrary": "Elegir de la Galería",
+    "selectPhoto": "Seleccionar Foto",
+    "selectPhotoMessage": "Elige cómo quieres agregar una foto",
+    "processing": "Procesando foto...",
+    "cameraError": "Error al tomar foto. Por favor intenta de nuevo.",
+    "libraryError": "Error al seleccionar foto. Por favor intenta de nuevo."
+  },
+  "permissions": {
+    "camera": {
+      "title": "Permiso de Cámara",
+      "message": "Necesitamos acceso a la cámara para tomar fotos de tus vehículos."
+    },
+    "gallery": {
+      "title": "Permiso de Galería de Fotos",
+      "message": "Necesitamos acceso a la galería para seleccionar fotos de vehículos."
+    }
+  },
+  "maintenance": {
+    "title": "Mantenimiento",
+    "addNew": "Agregar Registro",
+    "logMaintenance": "Registrar Mantenimiento",
+    "log": "Registrar",
+    "logTitle": "Título",
+    "date": "Fecha",
+    "category": "Categoría",
+    "cost": "Costo",
+    "tags": "Etiquetas",
+    "photos": "Fotos",
+    "noLogs": "Aún no hay registros de mantenimiento",
+    "addFirstLog": "Agrega tu primera entrada de mantenimiento",
+    "completed": "Completado",
+    "upcoming": {
+      "title": "Próximo",
+      "empty": {
+        "title": "No Hay Mantenimiento Próximo",
+        "message": "¡Todos tus vehículos están al día!"
+      }
+    },
+    "history": {
+      "title": "Historial",
+      "empty": {
+        "title": "Sin Historial de Mantenimiento",
+        "message": "Comienza registrando mantenimiento para construir tu historial."
+      }
+    },
+    "categories": {
+      "oil-change": "Cambio de Aceite",
+      "brake-service": "Servicio de Frenos",
+      "tire-rotation": "Rotación de Llantas",
+      "engine": "Motor",
+      "transmission": "Transmisión",
+      "electrical": "Eléctrico",
+      "bodywork": "Carrocería",
+      "interior": "Interior",
+      "other": "Otro"
+    }
+  },
+  "reminders": {
+    "title": "Recordatorios",
+    "addNew": "Agregar Recordatorio",
+    "description": "Descripción",
+    "type": "Tipo",
+    "dueDate": "Fecha Límite",
+    "dueMileage": "Kilometraje Límite",
+    "overdue": "Vencido",
+    "dueSoon": "Próximo a Vencer",
+    "upcoming": "Próximo",
+    "noReminders": "No hay recordatorios configurados",
+    "addFirstReminder": "Configura tu primer recordatorio de mantenimiento"
+  },
+  "settings": {
+    "title": "Configuración",
+    "preferences": "Preferencias",
+    "language": "Idioma",
+    "currency": "Moneda",
+    "measurements": "Medidas",
+    "notifications": "Notificaciones",
+    "notificationsDesc": "Recordatorios de mantenimiento",
+    "units": "Unidades",
+    "unitsDesc": "Millas, kilómetros, etc.",
+    "data": "Datos",
+    "backup": "Respaldo y Sincronización",
+    "backupDesc": "Estado del respaldo en la nube",
+    "export": "Exportar Datos",
+    "exportDesc": "Descargar tus datos",
+    "support": "Soporte",
+    "help": "Ayuda y Preguntas Frecuentes",
+    "helpDesc": "Obtener ayuda y respuestas",
+    "feedback": "Enviar Comentarios",
+    "feedbackDesc": "Reportar problemas o sugerencias",
+    "about": "Acerca de",
+    "user": "Usuario",
+    "notSignedIn": "No has iniciado sesión",
+    "signIn": "Iniciar Sesión"
+  },
+  "dashboard": {
+    "welcome": "Bienvenido a GarageLedger",
+    "subtitle": "Mantén un registro del mantenimiento de tus vehículos",
+    "quickStats": "Estadísticas Rápidas",
+    "totalVehicles": "Total de Vehículos",
+    "upcomingMaintenance": "Próximo",
+    "quickActions": "Acciones Rápidas",
+    "addVehicle": "Agregar Vehículo",
+    "logMaintenance": "Registrar Mantenimiento",
+    "recentActivity": "Actividad Reciente",
+    "noActivity": "Sin actividad reciente",
+    "noActivityMessage": "Comienza agregando tu primer vehículo"
+  },
+  "errors": {
+    "generic": {
+      "title": "Algo salió mal",
+      "message": "Ocurrió un error inesperado. Por favor intenta de nuevo."
+    },
+    "network": {
+      "title": "Error de Conexión",
+      "message": "Por favor verifica tu conexión a internet e intenta de nuevo."
+    },
+    "notFound": {
+      "title": "No Encontrado",
+      "message": "El elemento que buscas no pudo ser encontrado."
+    },
+    "unauthorized": {
+      "title": "Acceso Denegado",
+      "message": "No tienes permisos para acceder a este contenido."
+    },
+    "empty": {
+      "title": "Sin Datos",
+      "message": "No se encontraron elementos."
+    }
+  },
+  "export": {
+    "title": "Exportar Datos",
+    "csv": "Exportar como CSV",
+    "pdf": "Exportar como PDF",
+    "success": "Datos exportados exitosamente",
+    "error": "Error al exportar datos"
+  },
+  "validation": {
+    "required": "Este campo es obligatorio",
+    "invalidEmail": "Por favor ingresa un email válido",
+    "invalidYear": "Por favor ingresa un año válido",
+    "invalidMileage": "Por favor ingresa un kilometraje válido",
+    "invalidVin": "El VIN debe tener 17 caracteres"
+  },
+  "auth": {
+    "emailAlreadyExists": "¡Ups! Ya existe una cuenta con este email. Por favor inicia sesión.",
+    "signUpFailed": "Error al Crear Cuenta"
+  }
+}
