@@ -5,6 +5,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
@@ -60,12 +61,17 @@ const DashboardScreen: React.FC = () => {
         </Text>
         
         <View style={styles.statsGrid}>
-          <Card style={styles.statCard}>
-            <Text style={styles.statNumber}>{loading ? '...' : vehicles.length}</Text>
-            <Text style={styles.statLabel}>
-              {t('dashboard.totalVehicles', 'Total Vehicles')}
-            </Text>
-          </Card>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Vehicles' as never)}
+            activeOpacity={0.7}
+          >
+            <Card style={styles.statCard}>
+              <Text style={styles.statNumber}>{loading ? '...' : vehicles.length}</Text>
+              <Text style={styles.statLabel}>
+                {t('dashboard.totalVehicles', 'Total Vehicles')}
+              </Text>
+            </Card>
+          </TouchableOpacity>
           
           <Card style={styles.statCard}>
             <Text style={styles.statNumber}>0</Text>
