@@ -21,7 +21,7 @@ import { Vehicle } from '../types';
  */
 const DashboardScreen: React.FC = () => {
   const { t } = useTranslation();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -62,7 +62,7 @@ const DashboardScreen: React.FC = () => {
         
         <View style={styles.statsGrid}>
           <TouchableOpacity
-            onPress={() => navigation.navigate('Vehicles' as never)}
+            onPress={() => navigation.navigate('Vehicles')}
             activeOpacity={0.7}
           >
             <Card style={styles.statCard}>
@@ -94,7 +94,7 @@ const DashboardScreen: React.FC = () => {
               title={t('dashboard.addVehicle', 'Add Vehicle')}
               variant="primary"
               style={styles.actionButton}
-              onPress={() => navigation.navigate('AddVehicle' as never)}
+              onPress={() => navigation.navigate('Vehicles', { screen: 'AddVehicle' })}
             />
             
             <Button

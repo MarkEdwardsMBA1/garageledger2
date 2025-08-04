@@ -8,6 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useNavigation } from '@react-navigation/native';
 import { theme } from '../utils/theme';
 import { Card } from '../components/common/Card';
 import { Input } from '../components/common/Input';
@@ -26,9 +27,10 @@ interface AddVehicleScreenProps {
  * Add Vehicle screen - form for creating new vehicles
  * Includes validation and Firebase integration
  */
-const AddVehicleScreen: React.FC<AddVehicleScreenProps> = ({ navigation }) => {
+const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const navigation = useNavigation<any>();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<VehicleFormData>({
     make: '',
@@ -193,7 +195,8 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = ({ navigation }) => {
   };
 
   const handleCancel = () => {
-    navigation.goBack();
+    // Navigate back to Vehicles list screen
+    navigation.navigate('VehiclesList');
   };
 
   if (loading) {
