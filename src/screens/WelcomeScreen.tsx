@@ -78,7 +78,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
         {/* Logo and Header */}
         <View style={styles.header}>
           <Image 
-            source={require('../../assets/GarageLedger Logo 4 Transparent.png')} 
+            source={require('../../assets/logos/garageledger_logo_transparent.png')} 
             style={styles.logo}
             resizeMode="contain"
           />

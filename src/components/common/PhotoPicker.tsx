@@ -153,7 +153,6 @@ export const PhotoPicker: React.FC<PhotoPickerProps> = ({
       if (photoUri) {
         options.push({
           text: t('photo.removePhoto', 'Remove Photo'),
-          style: 'cancel' as const,
           onPress: removePhoto,
         });
       }

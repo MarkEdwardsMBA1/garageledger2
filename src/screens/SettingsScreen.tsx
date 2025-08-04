@@ -87,7 +87,7 @@ const SettingsScreen: React.FC = () => {
         {
           id: 'language',
           title: t('settings.language', 'Language'),
-          subtitle: i18n.language === 'en' ? 'English' : 'Español',
+          subtitle: 'English', // Fixed to show English since Spanish is not yet implemented
           icon: '🌐',
           onPress: handleLanguageToggle,
         },
@@ -210,16 +210,7 @@ const SettingsScreen: React.FC = () => {
               </View>
             )}
           </View>
-          {user ? (
-            <TouchableOpacity
-              style={[styles.signInButton, styles.signOutButton]}
-              onPress={handleSignOut}
-            >
-              <Text style={styles.signInButtonText}>
-                {t('settings.signOut', 'Sign Out')}
-              </Text>
-            </TouchableOpacity>
-          ) : (
+          {!user && (
             <TouchableOpacity
               style={styles.signInButton}
               onPress={() => console.log('Navigate to sign in')}
@@ -248,6 +239,20 @@ const SettingsScreen: React.FC = () => {
           </Card>
         </View>
       ))}
+
+      {/* Sign Out at bottom - only show if user is signed in */}
+      {user && (
+        <View style={styles.signOutSection}>
+          <TouchableOpacity
+            onPress={handleSignOut}
+            style={styles.signOutButton}
+          >
+            <Text style={styles.signOutText}>
+              {t('settings.signOut', 'Sign Out')}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
     </ScrollView>
   );
@@ -333,8 +338,22 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     borderRadius: theme.borderRadius.md,
   },
+  // Sign out section at bottom
+  signOutSection: {
+    marginTop: theme.spacing.xl,
+    paddingTop: theme.spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.borderLight,
+    alignItems: 'center',
+  },
   signOutButton: {
-    backgroundColor: theme.colors.error || '#ef4444',
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+  },
+  signOutText: {
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
   },
   signInButtonText: {
     fontSize: theme.typography.fontSize.sm,

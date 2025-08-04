@@ -123,7 +123,7 @@ export const LoginScreen: React.FC = () => {
       >
         <View style={styles.header}>
           <Image 
-            source={require('../../assets/GarageLedger Logo 4 Transparent.png')} 
+            source={require('../../assets/logos/garageledger_logo_transparent.png')} 
             style={styles.logo}
             resizeMode="contain"
             testID="garage-ledger-logo"

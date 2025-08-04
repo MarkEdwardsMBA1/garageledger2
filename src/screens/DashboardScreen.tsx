@@ -88,7 +88,7 @@ const DashboardScreen: React.FC = () => {
               title={t('dashboard.addVehicle', 'Add Vehicle')}
               variant="primary"
               style={styles.actionButton}
-              onPress={() => navigation.navigate('Vehicles', { screen: 'AddVehicle' })}
+              onPress={() => navigation.navigate('AddVehicle' as never)}
             />
             
             <Button

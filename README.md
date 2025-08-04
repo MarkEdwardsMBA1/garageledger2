@@ -46,11 +46,35 @@ Empower car enthusiasts and DIY mechanics with a flexible, detailed, and user-fr
 
 ### Prerequisites
 
-TBD
+**Environment Requirements** (tested and locked for stability):
+- **Node.js**: 22.16.0+ 
+- **npm**: 10.9.2+
+- **Expo CLI**: Use `npx expo` (no global install needed)
+
+**Critical**: All dependencies are locked to exact versions to prevent compatibility issues.
 
 ### Installation
 
-TBD
+```bash
+# Clone and install (exact versions locked)
+npm install
+
+# Verify TypeScript compilation  
+npm run type-check
+```
+
+### Running the App
+
+```bash
+# Standard development
+npm start
+
+# macOS localhost troubleshooting
+npm start -- --host tunnel  # External access
+npm start -- --host lan     # Local network
+```
+
+**Note**: All dependencies locked to prevent compatibility issues. Never run `npm update` without testing.
 
 ## 📱 Development
 

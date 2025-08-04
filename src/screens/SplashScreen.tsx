@@ -40,7 +40,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
       <StatusBar barStyle="light-content" backgroundColor="#1e293b" />
       <View style={styles.content}>
         <Image 
-          source={require('../../assets/GarageLedger Logo 4 Transparent.png')} 
+          source={require('../../assets/logos/garageledger_logo_transparent.png')} 
           style={styles.logo}
           resizeMode="contain"
         />

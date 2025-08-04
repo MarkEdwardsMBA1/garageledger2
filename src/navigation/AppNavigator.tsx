@@ -1,6 +1,7 @@
 // Main app navigation setup with bottom tabs
 import React, { useState } from 'react';
-import { Text, TouchableOpacity } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -254,28 +255,28 @@ interface TabIconProps {
 }
 
 const TabIcon: React.FC<TabIconProps> = ({ name, color, size }) => {
-  const getIcon = () => {
+  const getIconName = (): keyof typeof Ionicons.glyphMap => {
     switch (name) {
       case 'dashboard':
-        return '📊';
+        return 'speedometer-outline'; // Matches your speedometer.svg concept
       case 'vehicles':
-        return '🚗';
+        return 'car-outline'; // Matches your car.svg
       case 'maintenance':
-        return '🔧';
+        return 'construct-outline'; // Matches your spanner.svg concept  
       case 'settings':
-        return '⚙️';
+        return 'settings-outline'; // Matches your gear.svg
       default:
-        return '📱';
+        return 'apps-outline';
     }
   };
 
   return (
-    <Text style={{ 
-      fontSize: size, 
-      opacity: color === theme.colors.primary ? 1 : 0.6 
-    }}>
-      {getIcon()}
-    </Text>
+    <Ionicons 
+      name={getIconName()} 
+      size={size} 
+      color={color}
+      style={{ opacity: color === theme.colors.primary ? 1 : 0.6 }}
+    />
   );
 };
 
