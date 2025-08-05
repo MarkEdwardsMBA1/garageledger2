@@ -19,7 +19,8 @@
     "next": "Next",
     "previous": "Previous",
     "continue": "Continue",
-    "ok": "OK"
+    "ok": "OK",
+    "networkError": "Network error. Please check your connection."
   },
   "welcome": {
     "tagline": "Your Digital Garage Logbook",
@@ -268,6 +269,8 @@
   },
   "auth": {
     "emailAlreadyExists": "Oops! An account with this email already exists. Please sign in.",
-    "signUpFailed": "Sign Up Failed"
+    "signUpFailed": "Sign Up Failed",
+    "required": "Authentication Required",
+    "signInPrompt": "Please sign in to add vehicles"
   }
 }

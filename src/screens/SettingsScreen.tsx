@@ -11,7 +11,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { theme } from '../utils/theme';
 import { Card } from '../components/common/Card';
-import { LanguageUtils } from '../i18n';
+import { LanguageUtils, AVAILABLE_LANGUAGES, SupportedLanguage } from '../i18n';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/AuthService';
 
@@ -32,8 +32,28 @@ const SettingsScreen: React.FC = () => {
   const { user, signOut } = useAuth();
 
   const handleLanguageToggle = async () => {
-    const newLanguage = i18n.language === 'en' ? 'es' : 'en';
-    await LanguageUtils.changeLanguage(newLanguage);
+    try {
+      const currentLang = LanguageUtils.getCurrentLanguage();
+      const newLanguage: SupportedLanguage = currentLang === 'en' ? 'es' : 'en';
+      
+      await LanguageUtils.changeLanguage(newLanguage);
+      
+      // Show success message in the new language
+      const newLangName = AVAILABLE_LANGUAGES[newLanguage].name;
+      Alert.alert(
+        newLanguage === 'es' ? '🌍 Idioma Cambiado' : '🌍 Language Changed',
+        newLanguage === 'es' 
+          ? `El idioma se cambió a ${newLangName} exitosamente.`
+          : `Language successfully changed to ${newLangName}.`,
+        [{ text: newLanguage === 'es' ? 'Perfecto' : 'Great' }]
+      );
+    } catch (error) {
+      Alert.alert(
+        t('common.error', 'Error'),
+        'Failed to change language. Please try again.',
+        [{ text: t('common.ok', 'OK') }]
+      );
+    }
   };
 
   const handleSendVerification = async () => {
@@ -87,7 +107,7 @@ const SettingsScreen: React.FC = () => {
         {
           id: 'language',
           title: t('settings.language', 'Language'),
-          subtitle: 'English', // Fixed to show English since Spanish is not yet implemented
+          subtitle: AVAILABLE_LANGUAGES[LanguageUtils.getCurrentLanguage()].name,
           icon: '🌐',
           onPress: handleLanguageToggle,
         },

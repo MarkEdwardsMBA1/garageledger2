@@ -90,4 +90,6 @@ export interface IRepositoryFactory {
   getVehicleRepository(): IBaseRepository<any>;
   getMaintenanceLogRepository(): IBaseRepository<any>;
   getReminderRepository(): IBaseRepository<any>;
+  getUserMaintenanceProgramRepository(): IBaseRepository<any>;
+  getLegalComplianceRepository(): IBaseRepository<any>;
 }

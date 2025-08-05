@@ -19,7 +19,8 @@
     "next": "Siguiente",
     "previous": "Anterior",
     "continue": "Continuar",
-    "ok": "OK"
+    "ok": "OK",
+    "networkError": "Error de red. Por favor verifica tu conexión."
   },
   "welcome": {
     "tagline": "Tu Libro Digital del Taller",
@@ -99,6 +100,7 @@
     "saving": "Guardando vehículo...",
     "vehicleAdded": "Vehículo agregado exitosamente",
     "addError": "Error al agregar vehículo. Por favor intenta de nuevo.",
+    "saveError": "Error al guardar vehículo",
     "loading": "Cargando vehículos...",
     "loadError": "Error al cargar vehículos",
     "miles": "millas",
@@ -267,6 +269,8 @@
   },
   "auth": {
     "emailAlreadyExists": "¡Ups! Ya existe una cuenta con este email. Por favor inicia sesión.",
-    "signUpFailed": "Error al Crear Cuenta"
+    "signUpFailed": "Error al Crear Cuenta",
+    "required": "Autenticación Requerida",
+    "signInPrompt": "Por favor inicia sesión para agregar vehículos"
   }
 }

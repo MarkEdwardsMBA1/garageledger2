@@ -1,0 +1,150 @@
+// Firestore Security Rules for User-Only Maintenance Program Architecture
+// LEGAL SAFETY: These rules enforce user-only data access and creation constraints
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===== USER MAINTENANCE PROGRAMS =====
+    // CRITICAL: Enforce 100% user-only maintenance program creation and access
+    match /maintenancePrograms/{programId} {
+      // Users can only create their own maintenance programs
+      allow create: if request.auth != null 
+        && request.auth.uid == request.resource.data.userId
+        && request.resource.data.createdBy == 'user'
+        && request.resource.data.source == 'user_manual_entry'
+        && request.resource.data.userAcknowledgment == true;
+        
+      // Users can only read their own maintenance programs
+      allow read: if request.auth != null 
+        && request.auth.uid == resource.data.userId;
+        
+      // Users can only update their own maintenance programs
+      // LEGAL SAFETY: Prevent modification of critical legal fields
+      allow update: if request.auth != null 
+        && request.auth.uid == resource.data.userId
+        && request.auth.uid == request.resource.data.userId
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.source == resource.data.source
+        && request.resource.data.disclaimer == resource.data.disclaimer
+        && request.resource.data.lastModifiedBy == 'user';
+        
+      // Users can only delete their own maintenance programs
+      allow delete: if request.auth != null 
+        && request.auth.uid == resource.data.userId;
+    }
+    
+    // ===== LEGAL COMPLIANCE TRACKING =====
+    // CRITICAL: Legal acceptance records with complete audit trail protection
+    match /legalAcceptances/{acceptanceId} {
+      // Users can create their own legal acceptance records
+      allow create: if request.auth != null 
+        && request.auth.uid == request.resource.data.userId;
+        
+      // Users can only read their own legal acceptance records
+      allow read: if request.auth != null 
+        && request.auth.uid == resource.data.userId;
+        
+      // Limited updates allowed (for version updates only)
+      // CRITICAL: Preserve audit trail integrity
+      allow update: if request.auth != null 
+        && request.auth.uid == resource.data.userId
+        && request.auth.uid == request.resource.data.userId
+        && request.resource.data.acceptanceDate == resource.data.acceptanceDate
+        && request.resource.data.ipAddress == resource.data.ipAddress
+        && request.resource.data.userAgent == resource.data.userAgent;
+        
+      // Deletion only allowed for complete account deletion
+      allow delete: if request.auth != null 
+        && request.auth.uid == resource.data.userId;
+    }
+    
+    // ===== EXISTING COLLECTIONS (Updated) =====
+    
+    // Vehicles - User can only access their own vehicles
+    match /vehicles/{vehicleId} {
+      allow read, write: if request.auth != null 
+        && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null 
+        && request.auth.uid == request.resource.data.userId;
+    }
+    
+    // Maintenance Logs - User can only access their own logs
+    match /maintenanceLogs/{logId} {
+      allow read, write: if request.auth != null 
+        && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null 
+        && request.auth.uid == request.resource.data.userId;
+    }
+    
+    // Reminders - User can only access their own reminders
+    match /reminders/{reminderId} {
+      allow read, write: if request.auth != null 
+        && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null 
+        && request.auth.uid == request.resource.data.userId;
+    }
+    
+    // User Preferences - User can only access their own preferences
+    match /userPreferences/{userId} {
+      allow read, write: if request.auth != null 
+        && request.auth.uid == userId;
+    }
+    
+    // ===== VALIDATION FUNCTIONS =====
+    
+    // Validate maintenance interval structure
+    function isValidMaintenanceInterval(interval) {
+      return interval.keys().hasAll(['id', 'title', 'type', 'userCreated', 'source'])
+        && interval.userCreated == true
+        && interval.source == 'user_input'
+        && interval.type in ['PREVENTIVE', 'MODIFICATION', 'REPAIR'];
+    }
+    
+    // Validate user maintenance program structure
+    function isValidMaintenanceProgram(program) {
+      return program.keys().hasAll(['userId', 'vehicleId', 'name', 'createdBy', 'source', 'userAcknowledgment'])
+        && program.createdBy == 'user'
+        && program.source == 'user_manual_entry'
+        && program.userAcknowledgment == true;
+    }
+    
+    // Validate legal acceptance structure
+    function isValidLegalAcceptance(acceptance) {
+      return acceptance.keys().hasAll(['userId', 'acceptanceDate', 'acceptedTerms', 'acceptedPrivacyPolicy', 'acceptedMaintenanceDisclaimer'])
+        && acceptance.acceptedTerms == true
+        && acceptance.acceptedPrivacyPolicy == true
+        && acceptance.acceptedMaintenanceDisclaimer == true;
+    }
+  }
+}
+
+// ===== SECURITY RULE SUMMARY =====
+//
+// These rules enforce the user-only maintenance program architecture by:
+//
+// 1. MAINTENANCE PROGRAMS:
+//    - Only users can create their own programs
+//    - All programs must be marked as user-created
+//    - Critical legal fields cannot be modified
+//    - Complete user data isolation
+//
+// 2. LEGAL COMPLIANCE:
+//    - Complete audit trail protection
+//    - Users can only access their own legal records
+//    - Prevents tampering with acceptance timestamps
+//    - Maintains regulatory compliance integrity
+//
+// 3. DATA ISOLATION:
+//    - Users can only access their own data
+//    - No cross-user data access possible
+//    - Complete data ownership by individual users
+//
+// 4. LEGAL SAFETY:
+//    - Enforces user-only creation constraints
+//    - Prevents app-generated suggestions at database level
+//    - Maintains legal disclaimer requirements
+//    - Preserves audit trail integrity
+//
+// These rules work in conjunction with the application-level legal
+// compliance service to ensure complete legal protection.

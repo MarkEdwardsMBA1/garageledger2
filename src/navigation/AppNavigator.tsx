@@ -5,7 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-// TEMP: removed i18n import
+import '../i18n'; // Initialize i18n
 import { theme } from '../utils/theme';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
