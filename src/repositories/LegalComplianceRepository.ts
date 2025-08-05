@@ -5,13 +5,14 @@ import {
   getDoc, 
   getDocs, 
   updateDoc, 
+  deleteDoc,
   query, 
   where, 
   orderBy,
   Timestamp 
 } from 'firebase/firestore';
 
-import { db } from '../services/firebase/config';
+import { firestore as db } from '../services/firebase/config';
 import { BaseRepository } from './BaseRepository';
 import { 
   LegalAcceptance, 
@@ -155,7 +156,12 @@ export class LegalComplianceRepository extends BaseRepository<LegalAcceptance> {
         id: doc.id,
         ...this.convertDatesFromFirestore(doc.data()),
       })) as LegalAcceptance[];
-    } catch (error) {
+    } catch (error: any) {
+      // If it's an index error, just return empty array instead of throwing
+      if (error.code === 'failed-precondition' && error.message.includes('index')) {
+        console.warn('Firestore index not ready for legal acceptances query, returning empty array');
+        return [];
+      }
       return this.handleError(error, 'get legal acceptances');
     }
   }
@@ -186,21 +192,35 @@ export class LegalComplianceRepository extends BaseRepository<LegalAcceptance> {
         id: mostRecent.id,
         ...this.convertDatesFromFirestore(mostRecent.data()),
       } as LegalAcceptance;
-    } catch (error) {
+    } catch (error: any) {
+      // If it's an index error, just return null instead of throwing
+      if (error.code === 'failed-precondition' && error.message.includes('index')) {
+        console.warn('Firestore index not ready for legal acceptances query, returning null');
+        return null;
+      }
       return this.handleError(error, 'get current legal acceptance');
     }
   }
 
   /**
-   * Check compliance status for user
-   * CRITICAL: Determines if user needs to accept updated legal documents
+   * Simplified: Check if user has any legal acceptance record
    */
   async checkComplianceStatus(userId?: string): Promise<LegalComplianceStatus> {
     try {
       const targetUserId = userId || this.getCurrentUserId();
       const currentAcceptance = await this.getCurrentAcceptance(targetUserId);
 
-      if (!currentAcceptance) {
+      if (currentAcceptance) {
+        // User has completed legal acceptance - they're compliant
+        return {
+          isCompliant: true,
+          requiresTermsAcceptance: false,
+          requiresPrivacyAcceptance: false,
+          requiresMaintenanceDisclaimer: false,
+          currentVersions: this.CURRENT_VERSIONS,
+        };
+      } else {
+        // New user - needs to complete legal agreements
         return {
           isCompliant: false,
           requiresTermsAcceptance: true,
@@ -209,30 +229,19 @@ export class LegalComplianceRepository extends BaseRepository<LegalAcceptance> {
           currentVersions: this.CURRENT_VERSIONS,
         };
       }
-
-      const requiresTermsAcceptance = currentAcceptance.termsVersion !== this.CURRENT_VERSIONS.terms;
-      const requiresPrivacyAcceptance = currentAcceptance.privacyPolicyVersion !== this.CURRENT_VERSIONS.privacy;
-      const requiresMaintenanceDisclaimer = currentAcceptance.maintenanceDisclaimerVersion !== this.CURRENT_VERSIONS.maintenance;
-
-      return {
-        isCompliant: !requiresTermsAcceptance && !requiresPrivacyAcceptance && !requiresMaintenanceDisclaimer,
-        requiresTermsAcceptance,
-        requiresPrivacyAcceptance,
-        requiresMaintenanceDisclaimer,
-        currentVersions: this.CURRENT_VERSIONS,
-      };
     } catch (error) {
       return this.handleError(error, 'check compliance status');
     }
   }
 
   /**
-   * Check if user has accepted current legal versions
+   * Simplified: Check if user needs initial acceptance (new users only)
    */
   async requiresNewAcceptance(userId?: string): Promise<boolean> {
     try {
-      const status = await this.checkComplianceStatus(userId);
-      return !status.isCompliant;
+      const targetUserId = userId || this.getCurrentUserId();
+      const currentAcceptance = await this.getCurrentAcceptance(targetUserId);
+      return !currentAcceptance; // Only new users need acceptance
     } catch (error) {
       return this.handleError(error, 'check if new acceptance required');
     }

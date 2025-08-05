@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { theme } from '../../utils/theme';
 import { Button } from './Button';
 import { Loading } from './Loading';
+import { imageUploadService } from '../../services/ImageUploadService';
 
 export interface PhotoPickerProps {
   /** Current photo URI */
@@ -41,6 +42,9 @@ export interface PhotoPickerProps {
     height: number;
   };
   
+  /** Vehicle ID for organizing uploaded photos */
+  vehicleId?: string;
+  
   /** Test ID for testing */
   testID?: string;
 }
@@ -57,6 +61,7 @@ export const PhotoPicker: React.FC<PhotoPickerProps> = ({
   disabled = false,
   quality = 0.7,
   maxDimensions = { width: 1024, height: 1024 },
+  vehicleId,
   testID,
 }) => {
   const { t } = useTranslation();
@@ -184,7 +189,26 @@ export const PhotoPicker: React.FC<PhotoPickerProps> = ({
       });
 
       if (!result.canceled && result.assets[0]) {
-        onPhotoSelected(result.assets[0].uri);
+        const localUri = result.assets[0].uri;
+        
+        // If vehicleId is provided, upload to Firebase Storage
+        if (vehicleId) {
+          try {
+            const firebaseUrl = await imageUploadService.uploadVehiclePhoto(localUri, vehicleId);
+            onPhotoSelected(firebaseUrl);
+          } catch (error) {
+            console.error('Failed to upload photo:', error);
+            Alert.alert(
+              t('common.error', 'Error'),
+              t('photo.uploadError', 'Failed to upload photo. Using local copy instead.')
+            );
+            // Fallback to local URI
+            onPhotoSelected(localUri);
+          }
+        } else {
+          // No vehicleId provided, use local URI
+          onPhotoSelected(localUri);
+        }
       }
     } catch (error) {
       console.error('Error taking photo:', error);
@@ -209,7 +233,26 @@ export const PhotoPicker: React.FC<PhotoPickerProps> = ({
       });
 
       if (!result.canceled && result.assets[0]) {
-        onPhotoSelected(result.assets[0].uri);
+        const localUri = result.assets[0].uri;
+        
+        // If vehicleId is provided, upload to Firebase Storage
+        if (vehicleId) {
+          try {
+            const firebaseUrl = await imageUploadService.uploadVehiclePhoto(localUri, vehicleId);
+            onPhotoSelected(firebaseUrl);
+          } catch (error) {
+            console.error('Failed to upload photo:', error);
+            Alert.alert(
+              t('common.error', 'Error'),
+              t('photo.uploadError', 'Failed to upload photo. Using local copy instead.')
+            );
+            // Fallback to local URI
+            onPhotoSelected(localUri);
+          }
+        } else {
+          // No vehicleId provided, use local URI
+          onPhotoSelected(localUri);
+        }
       }
     } catch (error) {
       console.error('Error picking from library:', error);
@@ -223,6 +266,16 @@ export const PhotoPicker: React.FC<PhotoPickerProps> = ({
   };
 
   const removePhoto = async () => {
+    try {
+      // Delete from Firebase Storage if it's a Firebase URL
+      if (photoUri && imageUploadService.isFirebaseStorageUrl(photoUri)) {
+        await imageUploadService.deleteVehiclePhoto(photoUri);
+      }
+    } catch (error) {
+      console.warn('Failed to delete photo from storage:', error);
+      // Continue with removal even if deletion fails
+    }
+    
     if (onPhotoRemoved) {
       onPhotoRemoved();
     }

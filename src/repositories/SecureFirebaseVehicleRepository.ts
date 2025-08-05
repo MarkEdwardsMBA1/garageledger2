@@ -17,6 +17,7 @@ import { firestore } from '../services/firebase/config';
 import { BaseRepository } from './BaseRepository';
 import { Vehicle } from '../types';
 import { authService } from '../services/AuthService';
+import { imageUploadService } from '../services/ImageUploadService';
 
 export interface ISecureVehicleRepository extends BaseRepository<Vehicle> {
   getByUserId(userId: string): Promise<Vehicle[]>;
@@ -117,9 +118,14 @@ export class SecureFirebaseVehicleRepository extends BaseRepository<Vehicle> imp
       
       const querySnapshot = await getDocs(q);
       
-      return querySnapshot.docs.map(doc => 
+      const vehicles = querySnapshot.docs.map(doc => 
         this.mapFirestoreDocument(doc.id, doc.data())
       );
+      
+      // Migrate any vehicles with local photo URIs to Firebase Storage (background)
+      this.migrateLocalPhotos(vehicles);
+      
+      return vehicles;
     } catch (error) {
       console.error('Error getting all vehicles:', error);
       this.handleError(error, 'get all vehicles');
@@ -174,11 +180,14 @@ export class SecureFirebaseVehicleRepository extends BaseRepository<Vehicle> imp
       
       const docRef = doc(this.collection, id);
       
-      await updateDoc(docRef, {
+      // Clean undefined values (Firestore doesn't allow them)
+      const cleanedData = this.removeUndefinedFields({
         ...updateData,
         userId: currentUser.uid, // Force userId to current user
         updatedAt: serverTimestamp(),
       });
+      
+      await updateDoc(docRef, cleanedData);
       
       // Fetch and return updated document
       const updatedVehicle = await this.getById(id);
@@ -239,6 +248,92 @@ export class SecureFirebaseVehicleRepository extends BaseRepository<Vehicle> imp
       createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(),
       updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : new Date(),
     };
+  }
+  
+  /**
+   * Migrate vehicles with local photo URIs to Firebase Storage
+   * This runs in the background and doesn't block the main operation
+   * Smart migration that handles cleanup of invalid URIs
+   */
+  private migrateLocalPhotos(vehicles: Vehicle[]): void {
+    // Skip migration if no vehicles
+    if (!vehicles.length) return;
+    
+    // Only attempt migration for vehicles with local photo URIs
+    const vehiclesToCheck = vehicles.filter(v => 
+      v.photoUri && 
+      !imageUploadService.isFirebaseStorageUrl(v.photoUri) &&
+      (v.photoUri.startsWith('file://') || v.photoUri.startsWith('content://') || v.photoUri.startsWith('ph://'))
+    );
+    
+    if (vehiclesToCheck.length === 0) return;
+    
+    console.log(`Checking ${vehiclesToCheck.length} vehicles for photo migration`);
+    
+    // Run migration in background with smart handling
+    setTimeout(async () => {
+      let migratedCount = 0;
+      let cleanedCount = 0;
+      
+      for (const vehicle of vehiclesToCheck) {
+        try {
+          // Stop if we've already migrated 2 photos successfully to avoid overwhelming
+          if (migratedCount >= 2) {
+            console.log('Migration limit reached for this session');
+            break;
+          }
+          
+          console.log('Checking photo for vehicle:', vehicle.id);
+          
+          const firebaseUrl = await imageUploadService.migrateLocalPhotoToFirebase(vehicle.photoUri!, vehicle.id);
+          
+          if (firebaseUrl) {
+            // Migration successful
+            await this.update(vehicle.id, { photoUri: firebaseUrl });
+            console.log('Successfully migrated photo for vehicle:', vehicle.id);
+            migratedCount++;
+            
+            // Add delay after successful migration
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+          } else {
+            // Migration failed, likely because file no longer exists
+            console.log('Photo file no longer exists for vehicle:', vehicle.id, '- clearing URI');
+            
+            // Clear the invalid URI to prevent future migration attempts
+            const cleanedData = this.removeUndefinedFields({ photoUri: '' });
+            const docRef = doc(this.collection, vehicle.id);
+            await updateDoc(docRef, cleanedData);
+            
+            cleanedCount++;
+          }
+          
+        } catch (error: any) {
+          console.warn('Error during photo migration check for vehicle:', vehicle.id, error.message);
+          // Don't clear URIs on errors - they might be temporary
+        }
+      }
+      
+      if (migratedCount > 0 || cleanedCount > 0) {
+        console.log(`Photo migration complete: ${migratedCount} migrated, ${cleanedCount} cleaned up`);
+      }
+      
+    }, 3000); // 3 second delay before starting
+  }
+  
+  /**
+   * Remove undefined fields from an object (Firestore doesn't allow undefined)
+   */
+  private removeUndefinedFields(obj: any): any {
+    const cleaned: any = {};
+    
+    for (const [key, value] of Object.entries(obj)) {
+      if (value !== undefined) {
+        cleaned[key] = value;
+      }
+    }
+    
+    return cleaned;
   }
 }
 

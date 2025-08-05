@@ -315,16 +315,12 @@ export class UserMaintenanceProgramService {
     const safeUpdates: Partial<UserMaintenanceProgram> = {};
 
     // Allow only safe fields to be updated
-    const allowedFields: (keyof UserMaintenanceProgram)[] = [
-      'name',
-      'intervals',
-    ];
-
-    allowedFields.forEach(field => {
-      if (updates[field] !== undefined) {
-        safeUpdates[field] = updates[field];
-      }
-    });
+    if (updates.name !== undefined) {
+      safeUpdates.name = updates.name;
+    }
+    if (updates.intervals !== undefined) {
+      safeUpdates.intervals = updates.intervals;
+    }
 
     return safeUpdates;
   }
@@ -336,21 +332,27 @@ export class UserMaintenanceProgramService {
     const safeUpdates: Partial<UserDefinedInterval> = {};
 
     // Allow only safe fields to be updated
-    const allowedFields: (keyof UserDefinedInterval)[] = [
-      'title',
-      'description',
-      'type',
-      'mileageInterval',
-      'timeInterval',
-      'estimatedCost',
-      'notes',
-    ];
-
-    allowedFields.forEach(field => {
-      if (updates[field] !== undefined) {
-        safeUpdates[field] = updates[field];
-      }
-    });
+    if (updates.title !== undefined) {
+      safeUpdates.title = updates.title;
+    }
+    if (updates.description !== undefined) {
+      safeUpdates.description = updates.description;
+    }
+    if (updates.type !== undefined) {
+      safeUpdates.type = updates.type;
+    }
+    if (updates.mileageInterval !== undefined) {
+      safeUpdates.mileageInterval = updates.mileageInterval;
+    }
+    if (updates.timeInterval !== undefined) {
+      safeUpdates.timeInterval = updates.timeInterval;
+    }
+    if (updates.estimatedCost !== undefined) {
+      safeUpdates.estimatedCost = updates.estimatedCost;
+    }
+    if (updates.notes !== undefined) {
+      safeUpdates.notes = updates.notes;
+    }
 
     return safeUpdates;
   }

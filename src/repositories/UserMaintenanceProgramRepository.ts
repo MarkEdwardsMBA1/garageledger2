@@ -12,7 +12,7 @@ import {
   Timestamp 
 } from 'firebase/firestore';
 
-import { db } from '../services/firebase/config';
+import { firestore as db } from '../services/firebase/config';
 import { BaseRepository } from './BaseRepository';
 import { 
   UserMaintenanceProgram, 
@@ -219,8 +219,8 @@ export class UserMaintenanceProgramRepository extends BaseRepository<UserMainten
       const safeInterval: UserDefinedInterval = {
         ...interval,
         id: this.generateId(),
-        userCreated: true,
-        source: 'user_input',
+        userCreated: true as const,
+        source: 'user_input' as const,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -252,8 +252,8 @@ export class UserMaintenanceProgramRepository extends BaseRepository<UserMainten
       const updatedInterval = {
         ...program.intervals[intervalIndex],
         ...updates,
-        userCreated: true, // Always preserve
-        source: 'user_input', // Always preserve
+        userCreated: true as const, // Always preserve
+        source: 'user_input' as const, // Always preserve
         updatedAt: new Date(),
       };
 

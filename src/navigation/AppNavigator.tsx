@@ -24,6 +24,7 @@ import { SignUpScreen } from '../screens/SignUpScreen';
 import { SplashScreen } from '../screens/SplashScreen';
 import { WelcomeScreen } from '../screens/WelcomeScreen';
 import { SignUpSuccessScreen } from '../screens/SignUpSuccessScreen';
+import { LegalAgreementsScreen } from '../screens/LegalAgreementsScreen';
 import { FirstVehicleWizardScreen } from '../screens/FirstVehicleWizardScreen';
 import { FirstVehicleSuccessScreen } from '../screens/FirstVehicleSuccessScreen';
 
@@ -109,6 +110,28 @@ const OnboardingStack: React.FC = () => {
       <Stack.Screen name="Welcome" component={WelcomeScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="SignUp" component={SignUpScreen} />
+      <Stack.Screen name="LegalAgreements" component={LegalAgreementsScreen} />
+      <Stack.Screen name="SignUpSuccess" component={SignUpSuccessScreen} />
+      <Stack.Screen name="FirstVehicleWizard" component={FirstVehicleWizardScreen} />
+      <Stack.Screen name="FirstVehicleSuccess" component={FirstVehicleSuccessScreen} />
+      <Stack.Screen name="MainApp" component={MainAppNavigator} />
+    </Stack.Navigator>
+  );
+};
+
+/**
+ * Legal Compliance stack navigator
+ * For authenticated users who need to complete legal agreements
+ */
+const LegalComplianceStack: React.FC = () => {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+      initialRouteName="LegalAgreements"
+    >
+      <Stack.Screen name="LegalAgreements" component={LegalAgreementsScreen} />
       <Stack.Screen name="SignUpSuccess" component={SignUpSuccessScreen} />
       <Stack.Screen name="FirstVehicleWizard" component={FirstVehicleWizardScreen} />
       <Stack.Screen name="FirstVehicleSuccess" component={FirstVehicleSuccessScreen} />
@@ -204,11 +227,42 @@ const MainAppNavigator: React.FC = () => {
 };
 
 /**
- * App navigation router that handles splash screen and auth state
+ * App navigation router that handles splash screen, auth state, and legal compliance
  */
 const AppNavigationRouter: React.FC = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const [showSplash, setShowSplash] = useState(true);
+  const [isCheckingCompliance, setIsCheckingCompliance] = useState(false);
+  const [needsLegalCompliance, setNeedsLegalCompliance] = useState(false);
+
+  // Effect to check if user has completed initial legal acceptance
+  React.useEffect(() => {
+    const checkLegalCompliance = async () => {
+      if (isAuthenticated && user && !isCheckingCompliance) {
+        setIsCheckingCompliance(true);
+        try {
+          // Import legal compliance service
+          const { legalComplianceService } = await import('../services/LegalComplianceService');
+          
+          // Check if user needs initial legal acceptance (new users only)
+          const requiresAcceptance = await legalComplianceService.requiresNewAcceptance(user.uid);
+          setNeedsLegalCompliance(requiresAcceptance);
+        } catch (error) {
+          console.error('Failed to check legal compliance:', error);
+          // Default to NOT requiring compliance to prevent lockouts
+          setNeedsLegalCompliance(false);
+        } finally {
+          setIsCheckingCompliance(false);
+        }
+      } else if (!isAuthenticated) {
+        // Reset state when user logs out
+        setNeedsLegalCompliance(false);
+        setIsCheckingCompliance(false);
+      }
+    };
+
+    checkLegalCompliance();
+  }, [isAuthenticated, user?.uid]); // Remove isCheckingCompliance from dependencies to prevent infinite loop
 
   // Show branded splash screen first (for branding & future i18n)
   if (showSplash) {
@@ -219,14 +273,19 @@ const AppNavigationRouter: React.FC = () => {
     );
   }
 
-  // Show loading spinner while checking auth state
-  if (isLoading) {
+  // Show loading spinner while checking auth state or compliance
+  if (isLoading || isCheckingCompliance) {
     return <Loading />;
   }
 
-  // Route based on authentication state
-  
-  if (isAuthenticated) {
+  // Route based on authentication state and initial legal acceptance
+  if (isAuthenticated && user) {
+    // For new users who haven't completed initial legal acceptance
+    if (needsLegalCompliance) {
+      // Show legal agreements during initial signup flow
+      return <LegalComplianceStack />;
+    }
+    
     return <MainAppNavigator />;
   } else {
     return <OnboardingStack />;

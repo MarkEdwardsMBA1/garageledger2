@@ -36,12 +36,32 @@ export class LegalComplianceService {
   }
 
   /**
-   * Check if user is legally compliant to use the app
-   * CRITICAL: Must return true before allowing access to maintenance features
+   * Check if user has completed initial legal acceptance during signup
+   * Simplified: Only checks if user has any legal acceptance record
    */
   async checkUserCompliance(userId: string): Promise<LegalComplianceStatus> {
     try {
-      return await this.repository.checkComplianceStatus(userId);
+      const hasAcceptance = await this.repository.getCurrentAcceptance(userId);
+      
+      if (hasAcceptance) {
+        // User has completed initial legal acceptance - they're compliant
+        return {
+          isCompliant: true,
+          requiresTermsAcceptance: false,
+          requiresPrivacyAcceptance: false,
+          requiresMaintenanceDisclaimer: false,
+          currentVersions: this.repository.getCurrentLegalVersions(),
+        };
+      } else {
+        // New user - needs to complete legal agreements
+        return {
+          isCompliant: false,
+          requiresTermsAcceptance: true,
+          requiresPrivacyAcceptance: true,
+          requiresMaintenanceDisclaimer: true,
+          currentVersions: this.repository.getCurrentLegalVersions(),
+        };
+      }
     } catch (error) {
       console.error('Failed to check legal compliance:', error);
       // Default to non-compliant for safety
@@ -56,11 +76,13 @@ export class LegalComplianceService {
   }
 
   /**
-   * Check if user needs to accept updated legal documents
+   * Simplified: Check if user needs initial legal acceptance (new users only)
    */
   async requiresNewAcceptance(userId: string): Promise<boolean> {
     try {
-      return await this.repository.requiresNewAcceptance(userId);
+      const hasAcceptance = await this.repository.getCurrentAcceptance(userId);
+      // Only new users (without any acceptance record) need to accept
+      return !hasAcceptance;
     } catch (error) {
       console.error('Failed to check acceptance requirements:', error);
       // Default to requiring acceptance for safety
@@ -88,36 +110,21 @@ export class LegalComplianceService {
   }
 
   /**
-   * Validate that user can access maintenance features
-   * CRITICAL: Must pass before any maintenance functionality is available
+   * Simplified: Validate that user has completed initial legal acceptance
    */
   async validateMaintenanceAccess(userId: string): Promise<void> {
     const compliance = await this.checkUserCompliance(userId);
     
     if (!compliance.isCompliant) {
-      const missing = [];
-      if (compliance.requiresTermsAcceptance) missing.push('Terms of Service');
-      if (compliance.requiresPrivacyAcceptance) missing.push('Privacy Policy');
-      if (compliance.requiresMaintenanceDisclaimer) missing.push('Maintenance Disclaimer');
-      
       throw new Error(
-        `Legal compliance required before accessing maintenance features. ` +
-        `Please accept: ${missing.join(', ')}`
-      );
-    }
-
-    // Additional check for maintenance-specific disclaimer
-    if (compliance.requiresMaintenanceDisclaimer) {
-      throw new Error(
-        'Maintenance disclaimer acceptance required. This app provides tracking tools, ' +
-        'not professional automotive advice. You are responsible for all maintenance decisions.'
+        'Please complete the legal agreements in your account settings to access maintenance features.'
       );
     }
   }
 
   /**
-   * Handle legal document updates (admin function)
-   * When legal documents are updated, this triggers user re-acceptance flows
+   * Handle legal document updates (admin function) - Simplified
+   * Updates version and logs change for audit purposes
    */
   async handleLegalDocumentUpdate(documentType: 'terms' | 'privacy' | 'maintenance', newVersion: string): Promise<void> {
     try {
@@ -127,9 +134,7 @@ export class LegalComplianceService {
       
       // Log the update for audit purposes
       console.log(`Legal document updated: ${documentType} to version ${newVersion}`);
-      
-      // In a production app, this would trigger notifications to users
-      // about the legal document update and requirement for re-acceptance
+      console.log('Users will see updated documents in Settings. Consider sending push notification.');
       
     } catch (error) {
       console.error('Failed to handle legal document update:', error);

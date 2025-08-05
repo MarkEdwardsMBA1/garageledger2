@@ -457,6 +457,7 @@ const EditVehicleScreen: React.FC<any> = ({ navigation, route }) => {
             onPhotoSelected={handlePhotoSelected}
             onPhotoRemoved={handlePhotoRemoved}
             placeholder={t('vehicles.photo', 'Photo')}
+            vehicleId={vehicleId}
           />
         </View>
       </Card>

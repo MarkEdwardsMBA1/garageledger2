@@ -1,0 +1,19 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "legalAcceptances",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "acceptanceDate",
+          "order": "DESCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

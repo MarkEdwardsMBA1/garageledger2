@@ -87,6 +87,15 @@ export class AuthService {
         await updateProfile(userCredential.user, { displayName });
       }
 
+      // Automatically send email verification
+      try {
+        await sendEmailVerification(userCredential.user);
+        console.log('✅ Email verification sent automatically');
+      } catch (verificationError) {
+        console.warn('⚠️ Failed to send email verification:', verificationError);
+        // Don't throw error - user can still proceed and send verification later
+      }
+
       return this.formatUser(userCredential.user);
     } catch (error: any) {
       throw this.handleAuthError(error);
@@ -183,6 +192,33 @@ export class AuthService {
       
       await sendEmailVerification(firebaseUser);
     } catch (error: any) {
+      throw this.handleAuthError(error);
+    }
+  }
+
+  /**
+   * Refresh current user data from Firebase
+   * Useful for checking email verification status after user clicks verification link
+   */
+  async refreshUser(): Promise<User | null> {
+    try {
+      const firebaseUser = this.authInstance.currentUser;
+      if (!firebaseUser) {
+        return null;
+      }
+
+      // Reload user data from Firebase
+      await firebaseUser.reload();
+      
+      // Return updated user data
+      const refreshedUser = this.formatUser(firebaseUser);
+      
+      // Trigger auth state change to update UI
+      this.authStateListeners.forEach(listener => listener(refreshedUser));
+      
+      return refreshedUser;
+    } catch (error: any) {
+      console.error('Failed to refresh user:', error);
       throw this.handleAuthError(error);
     }
   }

@@ -1,5 +1,5 @@
 // Settings screen for app configuration and user preferences
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useFocusEffect } from '@react-navigation/native';
 import { theme } from '../utils/theme';
 import { Card } from '../components/common/Card';
 import { LanguageUtils, AVAILABLE_LANGUAGES, SupportedLanguage } from '../i18n';
@@ -29,7 +30,17 @@ interface SettingItem {
  */
 const SettingsScreen: React.FC = () => {
   const { t, i18n } = useTranslation();
-  const { user, signOut } = useAuth();
+  const { user, signOut, refreshUser } = useAuth();
+
+  // Automatically refresh user data when screen comes into focus
+  // This helps catch email verification that happened in a browser
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user && !user.emailVerified) {
+        refreshUser();
+      }
+    }, [user?.emailVerified, refreshUser])
+  );
 
   const handleLanguageToggle = async () => {
     try {
@@ -68,6 +79,31 @@ const SettingsScreen: React.FC = () => {
       Alert.alert(
         'Unable to Send Verification',
         error.message || 'Please try again later.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
+  const handleRefreshEmailVerification = async () => {
+    try {
+      await refreshUser();
+      if (user?.emailVerified) {
+        Alert.alert(
+          '✅ Email Verified!',
+          'Your email has been successfully verified.',
+          [{ text: 'Great!' }]
+        );
+      } else {
+        Alert.alert(
+          'Email Not Yet Verified',
+          'If you clicked the verification link, please wait a moment and try refreshing again.',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error: any) {
+      Alert.alert(
+        'Unable to Refresh Status',
+        'Please try again later.',
         [{ text: 'OK' }]
       );
     }
@@ -219,12 +255,41 @@ const SettingsScreen: React.FC = () => {
                 <Text style={styles.emailVerificationText}>
                   Verify your email to secure your account and enable password recovery.
                 </Text>
+                <View style={styles.emailButtonsContainer}>
+                  <TouchableOpacity 
+                    style={[styles.verifyEmailButton, styles.primaryButton]}
+                    onPress={handleSendVerification}
+                  >
+                    <Text style={styles.verifyEmailButtonText}>
+                      📧 Send Verification Email
+                    </Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={[styles.verifyEmailButton, styles.secondaryButton]}
+                    onPress={handleRefreshEmailVerification}
+                  >
+                    <Text style={styles.refreshButtonText}>
+                      🔄 Check Status
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+            {user && user.emailVerified && (
+              <View style={styles.legalComplianceSection}>
+                <Text style={styles.legalComplianceTitle}>
+                  📋 Legal Documents
+                </Text>
+                <Text style={styles.legalComplianceText}>
+                  View current Terms of Service, Privacy Policy, and Maintenance Disclaimer.
+                </Text>
                 <TouchableOpacity 
-                  style={styles.verifyEmailButton}
-                  onPress={handleSendVerification}
+                  style={styles.legalComplianceButton}
+                  onPress={() => console.log('Navigate to legal documents viewer')}
                 >
-                  <Text style={styles.verifyEmailButtonText}>
-                    📧 Send Verification Email
+                  <Text style={styles.legalComplianceButtonText}>
+                    View Legal Documents
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -340,15 +405,64 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
     lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.xs,
   },
+  emailButtonsContainer: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+  },
   verifyEmailButton: {
-    backgroundColor: theme.colors.primary,
+    flex: 1,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     borderRadius: theme.borderRadius.sm,
     alignItems: 'center',
   },
+  primaryButton: {
+    backgroundColor: theme.colors.primary,
+  },
+  secondaryButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+  },
   verifyEmailButtonText: {
-    color: theme.colors.primaryText,
+    color: theme.colors.surface,
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  refreshButtonText: {
+    color: theme.colors.primary,
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  legalComplianceSection: {
+    marginTop: theme.spacing.sm,
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.info + '10',
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.info + '30',
+  },
+  legalComplianceTitle: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.info,
+    fontWeight: theme.typography.fontWeight.semibold,
+    marginBottom: theme.spacing.xs,
+  },
+  legalComplianceText: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.md,
+    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.xs,
+  },
+  legalComplianceButton: {
+    backgroundColor: theme.colors.info,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.borderRadius.sm,
+    alignItems: 'center',
+  },
+  legalComplianceButtonText: {
+    color: theme.colors.surface,
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.medium,
   },

@@ -18,6 +18,7 @@ import { PhotoPicker } from '../components/common/PhotoPicker';
 import { VehicleFormData, Vehicle } from '../types';
 import { vehicleRepository } from '../repositories/VehicleRepository';
 import { useAuth } from '../contexts/AuthContext';
+import { imageUploadService } from '../services/ImageUploadService';
 
 interface AddVehicleScreenProps {
   navigation: any;
@@ -134,6 +135,18 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
       // Save using secure repository
       const savedVehicle = await vehicleRepository.create(vehicleData);
       console.log('Vehicle saved successfully:', savedVehicle);
+      
+      // If there's a local photo URI, upload it to Firebase and update the vehicle
+      if (formData.photoUri && !imageUploadService.isFirebaseStorageUrl(formData.photoUri)) {
+        try {
+          const firebaseUrl = await imageUploadService.uploadVehiclePhoto(formData.photoUri, savedVehicle.id);
+          await vehicleRepository.update(savedVehicle.id, { photoUri: firebaseUrl });
+          console.log('Vehicle photo uploaded and updated:', firebaseUrl);
+        } catch (photoError) {
+          console.warn('Failed to upload vehicle photo, keeping local URI:', photoError);
+          // Don't fail the whole operation if photo upload fails
+        }
+      }
       
       // Create personalized success message
       const vehicleName = `${vehicleData.year} ${vehicleData.make} ${vehicleData.model}`;

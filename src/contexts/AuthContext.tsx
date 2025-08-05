@@ -9,6 +9,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, displayName?: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -89,6 +90,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     await authService.resetPassword(email);
   };
 
+  const refreshUser = async (): Promise<void> => {
+    try {
+      await authService.refreshUser();
+      // User state will be updated by the onAuthStateChanged listener
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
+      // Don't throw error - not critical
+    }
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
@@ -97,6 +108,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signUp,
     signOut,
     resetPassword,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
