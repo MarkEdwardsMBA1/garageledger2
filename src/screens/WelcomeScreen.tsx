@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../components/common/Button';
 import { Typography } from '../components/common/Typography';
+import { VehicleIcon, MaintenanceIcon, MobileIcon } from '../components/icons';
 import { theme } from '../utils/theme';
 import { LanguageUtils } from '../i18n';
 import { useAuth } from '../contexts/AuthContext';
@@ -47,7 +48,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
   };
 
   const handleGetStarted = () => {
-    navigation.navigate('SignUp');
+    navigation.navigate('GoalsSetup');
   };
 
   const handleSignIn = () => {
@@ -58,16 +59,6 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
       
-      {/* Language Toggle */}
-      <View style={styles.languageToggle}>
-        <Button
-          title={isSpanish ? 'English' : 'Español'}
-          variant="text"
-          onPress={handleLanguageToggle}
-          disabled={isChangingLanguage}
-          style={styles.languageButton}
-        />
-      </View>
 
       <ScrollView 
         contentContainerStyle={[
@@ -82,10 +73,10 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
             style={styles.logo}
             resizeMode="contain"
           />
-          <Typography variant="title" style={styles.title}>
+          <Typography variant="display" style={[styles.title, { color: theme.colors.primary }]}>
             GarageLedger
           </Typography>
-          <Typography variant="heading" style={styles.subtitle}>
+          <Typography variant="subheading" style={styles.subtitle}>
             {t('welcome.tagline', 'Your Digital Garage Logbook')}
           </Typography>
         </View>
@@ -93,22 +84,28 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
         {/* Value Propositions */}
         <View style={styles.valueProps}>
           <View style={styles.valueProp}>
-            <Typography variant="body" style={styles.valueIcon}>🚗</Typography>
-            <Typography variant="body" style={styles.valueText}>
+            <View style={styles.iconContainer}>
+              <VehicleIcon size={24} color={theme.colors.primary} />
+            </View>
+            <Typography variant="bodyLarge" style={styles.valueText}>
               {t('welcome.trackVehicles', 'Track maintenance, mods & costs — stay in the driver\'s seat')}
             </Typography>
           </View>
           
           <View style={styles.valueProp}>
-            <Typography variant="body" style={styles.valueIcon}>🔧</Typography>
-            <Typography variant="body" style={styles.valueText}>
+            <View style={styles.iconContainer}>
+              <MaintenanceIcon size={24} color={theme.colors.primary} />
+            </View>
+            <Typography variant="bodyLarge" style={styles.valueText}>
               {t('welcome.neverForget', 'Never forget an oil change again')}
             </Typography>
           </View>
           
           <View style={styles.valueProp}>
-            <Typography variant="body" style={styles.valueIcon}>📱</Typography>
-            <Typography variant="body" style={styles.valueText}>
+            <View style={styles.iconContainer}>
+              <MobileIcon size={24} color={theme.colors.primary} />
+            </View>
+            <Typography variant="bodyLarge" style={styles.valueText}>
               {t('welcome.ownData', 'Your data stays yours — complete ownership and export')}
             </Typography>
           </View>
@@ -124,7 +121,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
           />
           
           <View style={styles.signInRow}>
-            <Typography variant="body" style={styles.signInText}>
+            <Typography variant="bodySmall" style={styles.signInText}>
               {t('welcome.alreadyHaveAccount', 'Already have an account?')}
             </Typography>
             <Button
@@ -132,6 +129,20 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
               variant="text"
               onPress={handleSignIn}
               style={styles.signInButton}
+            />
+          </View>
+          
+          {/* Language Toggle - Moved to bottom for less prominence */}
+          <View style={styles.languageSection}>
+            <Typography variant="caption" style={styles.languageLabel}>
+              {t('welcome.language', 'Language')}: {isSpanish ? 'Español' : 'English'}
+            </Typography>
+            <Button
+              title={t('welcome.switchLanguage', { language: isSpanish ? 'English' : 'Español' })}
+              variant="text"
+              onPress={handleLanguageToggle}
+              disabled={isChangingLanguage}
+              style={styles.languageButton}
             />
           </View>
         </View>
@@ -145,14 +156,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  languageToggle: {
-    position: 'absolute',
-    top: 60, // Account for status bar
-    right: theme.spacing.lg,
-    zIndex: 1,
+  languageSection: {
+    alignItems: 'center',
+    marginTop: theme.spacing.xl,
+    paddingTop: theme.spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.borderLight,
+  },
+  languageLabel: {
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xs,
   },
   languageButton: {
-    paddingHorizontal: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.xs,
     paddingVertical: theme.spacing.xs,
   },
   scrollContent: {
@@ -173,13 +189,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: theme.typography.fontSize['3xl'],
     fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary,
     marginBottom: theme.spacing.sm,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: theme.typography.fontSize.lg,
-    color: theme.colors.textSecondary,
+    color: theme.colors.luxury, // Titanium Gray for premium feel
     textAlign: 'center',
     lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.lg,
   },
@@ -192,11 +207,11 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xl,
     paddingHorizontal: theme.spacing.md,
   },
-  valueIcon: {
-    fontSize: theme.typography.fontSize.xl,
+  iconContainer: {
     marginRight: theme.spacing.md,
     width: 32,
-    textAlign: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   valueText: {
     flex: 1,

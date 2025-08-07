@@ -22,7 +22,7 @@ export interface CardProps {
   subtitle?: string;
   
   /** Card variant */
-  variant?: 'default' | 'elevated' | 'outlined' | 'filled';
+  variant?: 'default' | 'elevated' | 'floating' | 'outlined' | 'filled';
   
   /** Card size/padding */
   size?: 'sm' | 'md' | 'lg';
@@ -181,19 +181,27 @@ const styles = StyleSheet.create({
     marginVertical: theme.components.card.marginVertical,
   },
 
-  // Variant styles
+  // Variant styles - Enhanced automotive-inspired cards
   default: {
     borderWidth: 0,
+    ...theme.shadows.xs, // Subtle shadow for all cards
   },
   elevated: {
-    ...theme.shadows.md,
+    ...theme.shadows.md, // Medium shadow for elevated cards
+    backgroundColor: theme.colors.surface,
+  },
+  floating: {
+    ...theme.shadows.floating, // Special floating shadow
+    backgroundColor: theme.colors.surface,
   },
   outlined: {
     borderWidth: 1,
     borderColor: theme.colors.border,
+    ...theme.shadows.xs, // Subtle shadow even for outlined
   },
   filled: {
-    backgroundColor: theme.colors.borderLight,
+    backgroundColor: theme.colors.backgroundSecondary, // Subtle tinted background
+    ...theme.shadows.sm, // Light shadow for depth
   },
 
   // Size styles
@@ -209,7 +217,8 @@ const styles = StyleSheet.create({
 
   // State styles
   pressable: {
-    // Additional styles for pressable cards
+    // Enhanced pressable interaction with automotive-style feedback
+    transform: [{ scale: 1 }], // Base scale for smooth transitions
   },
   disabled: {
     opacity: 0.6,

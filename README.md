@@ -22,7 +22,9 @@ Empower car enthusiasts and DIY mechanics with a flexible, detailed, and user-fr
 - **Data Ownership** - Complete export capabilities, no vendor lock-in  
 - **Photo Documentation** - Visual records with camera/gallery integration
 - **Bilingual Support** - Complete English and Spanish localization
-- **Professional Branding** - Clean, modern logo and visual identity
+- **Premium Automotive Design** - Sophisticated Engine Blue branding with automotive-inspired UI
+- **Professional Typography** - Enhanced hierarchy with proper letter spacing and weights
+- **Premium Visual Depth** - Oil Black shadow system and floating elements
 
 ### Advanced Features (Pro/Expert Tiers)
 - **Cloud Sync** - Backup and sync across devices

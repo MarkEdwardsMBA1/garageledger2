@@ -13,6 +13,7 @@ import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { EmptyState } from '../components/common/ErrorState';
 import { Loading } from '../components/common/Loading';
+import { CameraIcon } from '../components/icons';
 import { Vehicle } from '../types';
 import { vehicleRepository } from '../repositories/VehicleRepository';
 import { useAuth } from '../contexts/AuthContext';
@@ -118,7 +119,7 @@ const VehiclesScreen: React.FC<VehiclesScreenProps> = ({ navigation }) => {
             />
           ) : (
             <View style={styles.vehicleImagePlaceholder}>
-              <Text style={styles.vehicleImagePlaceholderText}>📸</Text>
+              <CameraIcon size={24} color={theme.colors.textSecondary} />
               <Text style={styles.vehicleImagePlaceholderSubtext}>
                 {t('vehicles.photo', 'Photo')}
               </Text>
@@ -204,13 +205,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  vehicleImagePlaceholderText: {
-    fontSize: 32,
-    marginBottom: theme.spacing.xs,
-  },
   vehicleImagePlaceholderSubtext: {
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.textSecondary,
+    marginTop: theme.spacing.xs,
   },
 });
 

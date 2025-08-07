@@ -29,7 +29,9 @@
     "ownData": "Tus datos son tuyos — propiedad completa y exportación",
     "getStarted": "Comenzar",
     "signIn": "Iniciar Sesión",
-    "alreadyHaveAccount": "¿Ya tienes una cuenta?"
+    "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+    "language": "Idioma",
+    "switchLanguage": "Cambiar a {{language}}"
   },
   "firstVehicle": {
     "title": "Agrega Tu Primer Vehículo",

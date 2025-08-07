@@ -15,12 +15,22 @@ import { Card } from '../components/common/Card';
 import { LanguageUtils, AVAILABLE_LANGUAGES, SupportedLanguage } from '../i18n';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/AuthService';
+import { 
+  GlobeIcon, 
+  NotificationsIcon, 
+  RulerIcon, 
+  CloudIcon, 
+  ExportIcon, 
+  HelpIcon, 
+  FeedbackIcon, 
+  InfoIcon 
+} from '../components/icons';
 
 interface SettingItem {
   id: string;
   title: string;
   subtitle?: string;
-  icon: string;
+  IconComponent: React.FC<{ size?: number; color?: string }>;
   onPress: () => void;
 }
 
@@ -144,21 +154,21 @@ const SettingsScreen: React.FC = () => {
           id: 'language',
           title: t('settings.language', 'Language'),
           subtitle: AVAILABLE_LANGUAGES[LanguageUtils.getCurrentLanguage()].name,
-          icon: '🌐',
+          IconComponent: GlobeIcon,
           onPress: handleLanguageToggle,
         },
         {
           id: 'notifications',
           title: t('settings.notifications', 'Notifications'),
           subtitle: t('settings.notificationsDesc', 'Maintenance reminders'),
-          icon: '🔔',
+          IconComponent: NotificationsIcon,
           onPress: () => console.log('Navigate to notifications settings'),
         },
         {
           id: 'units',
           title: t('settings.units', 'Units'),
           subtitle: t('settings.unitsDesc', 'Miles, kilometers, etc.'),
-          icon: '📏',
+          IconComponent: RulerIcon,
           onPress: () => console.log('Navigate to units settings'),
         },
       ],
@@ -170,14 +180,14 @@ const SettingsScreen: React.FC = () => {
           id: 'backup',
           title: t('settings.backup', 'Backup & Sync'),
           subtitle: t('settings.backupDesc', 'Cloud backup status'),
-          icon: '☁️',
+          IconComponent: CloudIcon,
           onPress: () => console.log('Navigate to backup settings'),
         },
         {
           id: 'export',
           title: t('settings.export', 'Export Data'),
           subtitle: t('settings.exportDesc', 'Download your data'),
-          icon: '📤',
+          IconComponent: ExportIcon,
           onPress: () => console.log('Export data'),
         },
       ],
@@ -189,21 +199,21 @@ const SettingsScreen: React.FC = () => {
           id: 'help',
           title: t('settings.help', 'Help & FAQ'),
           subtitle: t('settings.helpDesc', 'Get help and answers'),
-          icon: '❓',
+          IconComponent: HelpIcon,
           onPress: () => console.log('Navigate to help'),
         },
         {
           id: 'feedback',
           title: t('settings.feedback', 'Send Feedback'),
           subtitle: t('settings.feedbackDesc', 'Report issues or suggestions'),
-          icon: '💬',
+          IconComponent: FeedbackIcon,
           onPress: () => console.log('Send feedback'),
         },
         {
           id: 'about',
           title: t('settings.about', 'About'),
           subtitle: 'GarageLedger v1.0.0',
-          icon: 'ℹ️',
+          IconComponent: InfoIcon,
           onPress: () => console.log('Navigate to about'),
         },
       ],
@@ -218,7 +228,7 @@ const SettingsScreen: React.FC = () => {
       activeOpacity={0.7}
     >
       <View style={styles.settingIcon}>
-        <Text style={styles.settingIconText}>{item.icon}</Text>
+        <item.IconComponent size={20} color={theme.colors.textSecondary} />
       </View>
       <View style={styles.settingContent}>
         <Text style={styles.settingTitle}>{item.title}</Text>
@@ -276,24 +286,6 @@ const SettingsScreen: React.FC = () => {
                 </View>
               </View>
             )}
-            {user && user.emailVerified && (
-              <View style={styles.legalComplianceSection}>
-                <Text style={styles.legalComplianceTitle}>
-                  📋 Legal Documents
-                </Text>
-                <Text style={styles.legalComplianceText}>
-                  View current Terms of Service, Privacy Policy, and Maintenance Disclaimer.
-                </Text>
-                <TouchableOpacity 
-                  style={styles.legalComplianceButton}
-                  onPress={() => console.log('Navigate to legal documents viewer')}
-                >
-                  <Text style={styles.legalComplianceButtonText}>
-                    View Legal Documents
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
           </View>
           {!user && (
             <TouchableOpacity
@@ -324,6 +316,56 @@ const SettingsScreen: React.FC = () => {
           </Card>
         </View>
       ))}
+
+      {/* Legal Documents - only show for signed-in users */}
+      {user && user.emailVerified && (
+        <View style={styles.section}>
+          <Card style={styles.sectionCard}>
+            <TouchableOpacity
+              style={styles.settingItem}
+              onPress={() => console.log('Navigate to Terms of Service')}
+              activeOpacity={0.7}
+            >
+              <View style={styles.settingContent}>
+                <Text style={styles.settingTitle}>Terms of Service</Text>
+              </View>
+              <View style={styles.settingArrow}>
+                <Text style={styles.settingArrowText}>›</Text>
+              </View>
+            </TouchableOpacity>
+            
+            <View style={styles.settingDivider} />
+            
+            <TouchableOpacity
+              style={styles.settingItem}
+              onPress={() => console.log('Navigate to Privacy Policy')}
+              activeOpacity={0.7}
+            >
+              <View style={styles.settingContent}>
+                <Text style={styles.settingTitle}>Privacy Policy</Text>
+              </View>
+              <View style={styles.settingArrow}>
+                <Text style={styles.settingArrowText}>›</Text>
+              </View>
+            </TouchableOpacity>
+            
+            <View style={styles.settingDivider} />
+            
+            <TouchableOpacity
+              style={styles.settingItem}
+              onPress={() => console.log('Navigate to Maintenance Disclaimer')}
+              activeOpacity={0.7}
+            >
+              <View style={styles.settingContent}>
+                <Text style={styles.settingTitle}>Maintenance Disclaimer</Text>
+              </View>
+              <View style={styles.settingArrow}>
+                <Text style={styles.settingArrowText}>›</Text>
+              </View>
+            </TouchableOpacity>
+          </Card>
+        </View>
+      )}
 
       {/* Sign Out at bottom - only show if user is signed in */}
       {user && (
@@ -434,38 +476,6 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.medium,
   },
-  legalComplianceSection: {
-    marginTop: theme.spacing.sm,
-    padding: theme.spacing.md,
-    backgroundColor: theme.colors.info + '10',
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.info + '30',
-  },
-  legalComplianceTitle: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.info,
-    fontWeight: theme.typography.fontWeight.semibold,
-    marginBottom: theme.spacing.xs,
-  },
-  legalComplianceText: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.md,
-    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.xs,
-  },
-  legalComplianceButton: {
-    backgroundColor: theme.colors.info,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.sm,
-    alignItems: 'center',
-  },
-  legalComplianceButtonText: {
-    color: theme.colors.surface,
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-  },
   signInButton: {
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
@@ -523,9 +533,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: theme.spacing.md,
-  },
-  settingIconText: {
-    fontSize: 20,
   },
   settingContent: {
     flex: 1,

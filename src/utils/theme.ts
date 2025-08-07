@@ -2,44 +2,50 @@
 // Based on README.md design system specifications
 
 export const colors = {
-  // Primary colors
-  primary: '#2563eb',      // Blue
-  primaryLight: '#60a5fa',
-  primaryDark: '#1d4ed8',
+  // Primary colors - Engine Blue (trust, reliability, precision)
+  primary: '#1e40af',           // Engine Blue
+  primaryLight: '#3b82f6',      // Lighter Engine Blue
+  primaryDark: '#1e3a8a',       // Darker Engine Blue
   
-  // Secondary colors  
-  secondary: '#059669',    // Green
-  secondaryLight: '#10b981',
-  secondaryDark: '#047857',
+  // Secondary colors - Racing Green (efficiency, eco-friendly)
+  secondary: '#166534',         // Racing Green
+  secondaryLight: '#22c55e',    // Lighter Racing Green
+  secondaryDark: '#14532d',     // Darker Racing Green
   
-  // Accent colors
-  accent: '#dc2626',       // Red
-  accentLight: '#f87171',
-  accentDark: '#b91c1c',
+  // Performance colors - Performance Red (action, power, excitement)
+  accent: '#dc2626',            // Performance Red
+  accentLight: '#f87171',       // Lighter Performance Red
+  accentDark: '#b91c1c',        // Darker Performance Red
   
-  // Neutral colors
-  background: '#f8fafc',   // Light Gray
-  backgroundSecondary: '#f1f5f9', // Slightly darker than background
-  surface: '#ffffff',
-  text: '#1e293b',         // Dark Gray
-  textSecondary: '#64748b',
-  textLight: '#94a3b8',
-  primaryText: '#1e293b',  // Alias for main text color
+  // Premium Automotive Neutrals
+  background: '#f8fafc',        // Clean White
+  backgroundSecondary: '#f1f5f9', // Slightly tinted background
+  surface: '#ffffff',           // Pure White
+  text: '#111827',              // Oil Black (deep, premium)
+  textSecondary: '#374151',     // Titanium Gray
+  textLight: '#9ca3af',         // Chrome Silver
+  primaryText: '#111827',       // Alias for main text color
   
-  // State colors
-  success: '#059669',
-  warning: '#d97706',
-  error: '#dc2626',
-  info: '#2563eb',
+  // Automotive-Inspired State Colors
+  success: '#166534',           // Racing Green (achievements, completed)
+  warning: '#ea580c',           // Signal Orange (maintenance alerts, warnings)
+  error: '#b91c1c',             // Critical Red (errors, failures)
+  info: '#0284c7',              // Electric Blue (information, modern tech)
   
-  // Border colors
-  border: '#e2e8f0',
-  borderLight: '#f1f5f9',
-  borderDark: '#cbd5e1',
+  // Enhanced Border System
+  border: '#e5e7eb',            // Subtle Gray
+  borderLight: '#f3f4f6',       // Very Light Gray
+  borderDark: '#d1d5db',        // Medium Gray
   
-  // Overlay colors
-  overlay: 'rgba(0, 0, 0, 0.5)',
-  overlayLight: 'rgba(0, 0, 0, 0.3)',
+  // Premium Overlays
+  overlay: 'rgba(17, 24, 39, 0.75)',      // Oil Black overlay
+  overlayLight: 'rgba(17, 24, 39, 0.25)', // Subtle Oil Black overlay
+  
+  // Additional Automotive Colors
+  performance: '#dc2626',       // Performance Red (alias for accent)
+  luxury: '#374151',            // Titanium Gray for premium elements
+  chrome: '#9ca3af',            // Chrome Silver for accents
+  carbon: '#111827',            // Carbon Black for premium text
 } as const;
 
 export const typography = {
@@ -52,8 +58,9 @@ export const typography = {
     mono: 'JetBrainsMono-Regular',
   },
   
-  // Font sizes
+  // Font sizes - Enhanced scale with more granular options
   fontSize: {
+    '2xs': 10,
     xs: 12,
     sm: 14,
     base: 16,
@@ -62,21 +69,38 @@ export const typography = {
     '2xl': 24,
     '3xl': 30,
     '4xl': 36,
+    '5xl': 48,
+    '6xl': 60,
   },
   
-  // Line heights
+  // Line heights - More precise values for better readability
   lineHeight: {
-    tight: 1.2,
+    none: 1,
+    tight: 1.25,
+    snug: 1.375,
     normal: 1.5,
-    relaxed: 1.75,
+    relaxed: 1.625,
+    loose: 2,
   },
   
   // Font weights
   fontWeight: {
+    light: '300',
     normal: '400',
     medium: '500',
     semibold: '600',
     bold: '700',
+    extrabold: '800',
+  },
+  
+  // Letter spacing for better text appearance
+  letterSpacing: {
+    tighter: -0.5,
+    tight: -0.25,
+    normal: 0,
+    wide: 0.25,
+    wider: 0.5,
+    widest: 1,
   },
 } as const;
 
@@ -104,26 +128,63 @@ export const borderRadius = {
 } as const;
 
 export const shadows = {
-  sm: {
-    shadowColor: '#000',
+  // Subtle automotive-inspired shadows for premium depth
+  none: {
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  xs: {
+    shadowColor: '#111827', // Oil Black shadow
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    shadowOpacity: 0.03,
+    shadowRadius: 1,
     elevation: 1,
   },
-  md: {
-    shadowColor: '#000',
+  sm: {
+    shadowColor: '#111827', // Oil Black shadow
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  md: {
+    shadowColor: '#111827', // Oil Black shadow
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 4,
   },
   lg: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowColor: '#111827', // Oil Black shadow
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  xl: {
+    shadowColor: '#111827', // Oil Black shadow
+    shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowRadius: 18,
+    elevation: 12,
+  },
+  // Special automotive shadows
+  floating: {
+    shadowColor: '#111827',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  pressed: {
+    shadowColor: '#111827',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
   },
 } as const;
 

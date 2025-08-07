@@ -25,6 +25,9 @@ import { SplashScreen } from '../screens/SplashScreen';
 import { WelcomeScreen } from '../screens/WelcomeScreen';
 import { SignUpSuccessScreen } from '../screens/SignUpSuccessScreen';
 import { LegalAgreementsScreen } from '../screens/LegalAgreementsScreen';
+import { LegalConsentScreen } from '../screens/LegalConsentScreen';
+import { GoalsSetupScreen } from '../screens/GoalsSetupScreen';
+import { GoalsSuccessScreen } from '../screens/GoalsSuccessScreen';
 import { FirstVehicleWizardScreen } from '../screens/FirstVehicleWizardScreen';
 import { FirstVehicleSuccessScreen } from '../screens/FirstVehicleSuccessScreen';
 
@@ -108,8 +111,11 @@ const OnboardingStack: React.FC = () => {
       }}
     >
       <Stack.Screen name="Welcome" component={WelcomeScreen} />
+      <Stack.Screen name="GoalsSetup" component={GoalsSetupScreen} />
+      <Stack.Screen name="GoalsSuccess" component={GoalsSuccessScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="SignUp" component={SignUpScreen} />
+      <Stack.Screen name="LegalConsent" component={LegalConsentScreen} />
       <Stack.Screen name="LegalAgreements" component={LegalAgreementsScreen} />
       <Stack.Screen name="SignUpSuccess" component={SignUpSuccessScreen} />
       <Stack.Screen name="FirstVehicleWizard" component={FirstVehicleWizardScreen} />
@@ -241,12 +247,24 @@ const AppNavigationRouter: React.FC = () => {
       if (isAuthenticated && user && !isCheckingCompliance) {
         setIsCheckingCompliance(true);
         try {
-          // Import legal compliance service
+          // Import services
           const { legalComplianceService } = await import('../services/LegalComplianceService');
+          const { vehicleRepository } = await import('../repositories/VehicleRepository');
           
-          // Check if user needs initial legal acceptance (new users only)
-          const requiresAcceptance = await legalComplianceService.requiresNewAcceptance(user.uid);
-          setNeedsLegalCompliance(requiresAcceptance);
+          // Check if user has existing vehicles (indicating they're a returning user)
+          // This also pre-loads vehicle data to prevent Dashboard flicker
+          const vehicles = await vehicleRepository.getAll();
+          const hasVehicles = vehicles.length > 0;
+          
+          if (hasVehicles) {
+            // Existing users with vehicles should skip legal compliance
+            // Vehicle data is now cached for Dashboard
+            setNeedsLegalCompliance(false);
+          } else {
+            // Only check legal compliance for users without vehicles (potentially new users)
+            const requiresAcceptance = await legalComplianceService.requiresNewAcceptance(user.uid);
+            setNeedsLegalCompliance(requiresAcceptance);
+          }
         } catch (error) {
           console.error('Failed to check legal compliance:', error);
           // Default to NOT requiring compliance to prevent lockouts

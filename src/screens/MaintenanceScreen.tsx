@@ -11,6 +11,7 @@ import { theme } from '../utils/theme';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { EmptyState } from '../components/common/ErrorState';
+import { ActivityIcon } from '../components/icons';
 
 type MaintenanceTab = 'upcoming' | 'history';
 
@@ -88,7 +89,7 @@ const MaintenanceScreen: React.FC = () => {
         <EmptyState
           title={t('maintenance.history.empty.title', 'No Maintenance History')}
           message={t('maintenance.history.empty.message', 'Start logging maintenance to build your history.')}
-          icon="📋"
+          icon={<ActivityIcon size={48} color={theme.colors.textSecondary} />}
           primaryAction={{
             title: t('maintenance.logMaintenance', 'Log Maintenance'),
             onPress: handleLogMaintenance,

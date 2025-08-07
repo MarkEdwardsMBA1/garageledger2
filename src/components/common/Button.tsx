@@ -153,26 +153,28 @@ const styles = StyleSheet.create({
     width: '100%',
   },
 
-  // Variant styles
+  // Variant styles - Enhanced with premium automotive shadows
   primary: {
     backgroundColor: theme.colors.primary,
-    ...theme.shadows.sm,
+    ...theme.shadows.sm, // Engine Blue with premium shadow
   },
   secondary: {
     backgroundColor: theme.colors.secondary,
-    ...theme.shadows.sm,
+    ...theme.shadows.sm, // Racing Green with premium shadow
   },
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: theme.colors.primary,
+    ...theme.shadows.xs, // Subtle shadow for outlined buttons
   },
   ghost: {
     backgroundColor: 'transparent',
+    // No shadow for ghost buttons
   },
   danger: {
     backgroundColor: theme.colors.error,
-    ...theme.shadows.sm,
+    ...theme.shadows.sm, // Critical Red with premium shadow
   },
   text: {
     backgroundColor: 'transparent',
@@ -199,11 +201,12 @@ const styles = StyleSheet.create({
   },
   textDisabled: {},
 
-  // Text styles
+  // Text styles - Enhanced typography
   textStyle: {
     fontFamily: theme.typography.fontFamily.semibold,
     fontWeight: theme.typography.fontWeight.semibold,
     textAlign: 'center',
+    letterSpacing: theme.typography.letterSpacing.wide,
   },
 
   // Text size variants

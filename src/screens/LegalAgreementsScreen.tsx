@@ -298,10 +298,10 @@ GarageLedger provides tracking tools only. We make no warranties about maintenan
           <View style={styles.disclaimerSection}>
             <View style={styles.disclaimerHeader}>
               <Typography variant="body" style={styles.disclaimerIcon}>
-                ⚠️
+                ℹ️
               </Typography>
               <Typography variant="heading" style={styles.disclaimerTitle}>
-                Important: Maintenance Disclaimer
+                Quick Reminder: Maintenance Disclaimer
               </Typography>
             </View>
             
@@ -413,11 +413,11 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.xs,
   },
   disclaimerSection: {
-    backgroundColor: theme.colors.warning + '10',
+    backgroundColor: theme.colors.info + '10',
     borderRadius: theme.spacing.sm,
     padding: theme.spacing.md,
     borderWidth: 1,
-    borderColor: theme.colors.warning + '30',
+    borderColor: theme.colors.info + '30',
     marginTop: theme.spacing.md,
   },
   disclaimerHeader: {
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
   },
   disclaimerTitle: {
     flex: 1,
-    color: theme.colors.warning,
+    color: theme.colors.info,
     fontWeight: theme.typography.fontWeight.semibold,
   },
   disclaimerText: {

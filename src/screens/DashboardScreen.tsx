@@ -12,6 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import { theme } from '../utils/theme';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
+import { ActivityIcon } from '../components/icons';
 import { vehicleRepository } from '../repositories/VehicleRepository';
 import { Vehicle } from '../types';
 
@@ -23,11 +24,14 @@ const DashboardScreen: React.FC = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Load vehicles on component mount
   useEffect(() => {
     const loadVehicles = async () => {
+      // Set loading to true only if data takes longer than 100ms
+      const loadingTimer = setTimeout(() => setLoading(true), 100);
+      
       try {
         const userVehicles = await vehicleRepository.getUserVehicles();
         setVehicles(userVehicles);
@@ -35,6 +39,7 @@ const DashboardScreen: React.FC = () => {
         console.error('Error loading vehicles for dashboard:', error);
         setVehicles([]);
       } finally {
+        clearTimeout(loadingTimer);
         setLoading(false);
       }
     };
@@ -65,15 +70,17 @@ const DashboardScreen: React.FC = () => {
             onPress={() => navigation.navigate('Vehicles')}
             activeOpacity={0.7}
           >
-            <Card style={styles.statCard}>
-              <Text style={styles.statNumber}>{loading ? '...' : vehicles.length}</Text>
+            <Card variant="elevated" style={styles.statCard}>
+              <Text style={[styles.statNumber, loading && styles.loadingText]}>
+                {loading ? '–' : vehicles.length}
+              </Text>
               <Text style={styles.statLabel}>
                 {t('dashboard.totalVehicles', 'Total Vehicles')}
               </Text>
             </Card>
           </TouchableOpacity>
           
-          <Card style={styles.statCard}>
+          <Card variant="elevated" style={styles.statCard}>
             <Text style={styles.statNumber}>0</Text>
             <Text style={styles.statLabel}>
               {t('dashboard.upcomingMaintenance', 'Upcoming')}
@@ -88,7 +95,7 @@ const DashboardScreen: React.FC = () => {
           {t('dashboard.quickActions', 'Quick Actions')}
         </Text>
         
-        <Card>
+        <Card variant="elevated">
           <View style={styles.actionGrid}>
             <Button
               title={t('dashboard.addVehicle', 'Add Vehicle')}
@@ -116,10 +123,10 @@ const DashboardScreen: React.FC = () => {
           {t('dashboard.recentActivity', 'Recent Activity')}
         </Text>
         
-        <Card>
+        <Card variant="filled">
           <View style={styles.emptyState}>
-            <Text style={styles.emptyStateIcon}>📋</Text>
-            <Text style={styles.emptyStateTitle}>
+            <ActivityIcon size={48} color={theme.colors.textSecondary} />
+            <Text style={[styles.emptyStateTitle, { marginTop: theme.spacing.md }]}>
               {t('dashboard.noActivity', 'No recent activity')}
             </Text>
             <Text style={styles.emptyStateMessage}>
@@ -146,22 +153,31 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xl,
   },
   welcomeTitle: {
-    fontSize: theme.typography.fontSize['2xl'],
+    fontSize: theme.typography.fontSize['3xl'],
     fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text,
+    fontFamily: theme.typography.fontFamily.bold,
+    color: theme.colors.carbon, // Premium Oil Black
     marginBottom: theme.spacing.xs,
+    letterSpacing: theme.typography.letterSpacing.tight,
+    lineHeight: theme.typography.lineHeight.tight * theme.typography.fontSize['3xl'],
   },
   welcomeSubtitle: {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.textSecondary,
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.normal,
+    fontFamily: theme.typography.fontFamily.regular,
+    color: theme.colors.luxury, // Titanium Gray
+    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.lg,
   },
 
-  // Section titles
+  // Section titles - Enhanced typography
   sectionTitle: {
-    fontSize: theme.typography.fontSize.lg,
+    fontSize: theme.typography.fontSize.xl,
     fontWeight: theme.typography.fontWeight.semibold,
+    fontFamily: theme.typography.fontFamily.semibold,
     color: theme.colors.text,
     marginBottom: theme.spacing.md,
+    letterSpacing: theme.typography.letterSpacing.normal,
+    lineHeight: theme.typography.lineHeight.snug * theme.typography.fontSize.xl,
   },
 
   // Stats section
@@ -188,6 +204,10 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     textAlign: 'center',
   },
+  loadingText: {
+    color: theme.colors.textSecondary,
+    opacity: 0.7,
+  },
 
   // Actions section
   actionsSection: {
@@ -208,20 +228,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: theme.spacing.xl,
   },
-  emptyStateIcon: {
-    fontSize: 48,
-    marginBottom: theme.spacing.md,
-  },
   emptyStateTitle: {
-    fontSize: theme.typography.fontSize.lg,
+    fontSize: theme.typography.fontSize.xl,
     fontWeight: theme.typography.fontWeight.semibold,
+    fontFamily: theme.typography.fontFamily.semibold,
     color: theme.colors.text,
     marginBottom: theme.spacing.sm,
+    letterSpacing: theme.typography.letterSpacing.normal,
+    lineHeight: theme.typography.lineHeight.snug * theme.typography.fontSize.xl,
   },
   emptyStateMessage: {
     fontSize: theme.typography.fontSize.base,
+    fontFamily: theme.typography.fontFamily.regular,
     color: theme.colors.textSecondary,
     textAlign: 'center',
+    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.base,
   },
 });
 

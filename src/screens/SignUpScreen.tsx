@@ -20,14 +20,12 @@ import { theme } from '../utils/theme';
 interface SignUpFormData {
   email: string;
   password: string;
-  confirmPassword: string;
   displayName: string;
 }
 
 interface SignUpFormErrors {
   email?: string;
   password?: string;
-  confirmPassword?: string;
   displayName?: string;
 }
 
@@ -36,7 +34,6 @@ export const SignUpScreen: React.FC = () => {
   const [formData, setFormData] = useState<SignUpFormData>({
     email: '',
     password: '',
-    confirmPassword: '',
     displayName: '',
   });
   const [errors, setErrors] = useState<SignUpFormErrors>({});
@@ -60,20 +57,11 @@ export const SignUpScreen: React.FC = () => {
       newErrors.email = 'Please enter a valid email address';
     }
 
-    // Password validation
+    // Password validation - simplified for better UX
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      newErrors.password = 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
-    }
-
-    // Confirm password validation
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
     }
 
     setErrors(newErrors);
@@ -103,8 +91,8 @@ export const SignUpScreen: React.FC = () => {
         displayName: formData.displayName.trim(),
       });
 
-      // Navigate to legal agreements screen
-      navigation.navigate('LegalAgreements' as never);
+      // Navigate to legal consent screen (integrated, not blocking)
+      navigation.navigate('LegalConsent' as never);
     } catch (error) {
       let message = error instanceof AuthError ? error.message : 'An unexpected error occurred';
       
@@ -133,21 +121,28 @@ export const SignUpScreen: React.FC = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: Math.max(theme.spacing.xl, 60) } // Account for status bar + safe area
+        ]}
         keyboardShouldPersistTaps="handled"
       >
+        {/* Progress indicator */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBar}>
+            <View style={[styles.progressFill, { width: '60%' }]} />
+          </View>
+          <Typography variant="caption" style={styles.progressText}>
+            Step 3 of 5
+          </Typography>
+        </View>
+
         <View style={styles.header}>
-          <Image 
-            source={require('../../assets/logos/garageledger_logo_transparent.png')} 
-            style={styles.logo}
-            resizeMode="contain"
-            testID="garage-ledger-logo"
-          />
           <Typography variant="title" style={styles.title}>
-            Create Account
+            Create Your Account
           </Typography>
           <Typography variant="body" style={styles.subtitle}>
-            Join GarageLedger to track your vehicle maintenance
+            Just a few details to get you started
           </Typography>
         </View>
 
@@ -188,33 +183,9 @@ export const SignUpScreen: React.FC = () => {
             testID="password-input"
           />
 
-          <Input
-            label="Confirm Password"
-            value={formData.confirmPassword}
-            onChangeText={(value) => handleInputChange('confirmPassword', value)}
-            placeholder="Confirm your password"
-            secureTextEntry
-            autoComplete="new-password"
-            textContentType="newPassword"
-            error={errors.confirmPassword}
-            testID="confirm-password-input"
-          />
-
           <View style={styles.passwordRequirements}>
             <Typography variant="caption" style={styles.requirementsText}>
-              Password must contain:
-            </Typography>
-            <Typography variant="caption" style={styles.requirementsText}>
-              • At least 6 characters
-            </Typography>
-            <Typography variant="caption" style={styles.requirementsText}>
-              • One uppercase letter
-            </Typography>
-            <Typography variant="caption" style={styles.requirementsText}>
-              • One lowercase letter
-            </Typography>
-            <Typography variant="caption" style={styles.requirementsText}>
-              • One number
+              • Password must be at least 6 characters
             </Typography>
           </View>
 
@@ -261,9 +232,27 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.xl,
+  },
+  progressContainer: {
+    marginBottom: theme.spacing.xl,
+    alignItems: 'center',
+  },
+  progressBar: {
+    width: '100%',
+    height: 4,
+    backgroundColor: theme.colors.borderLight,
+    borderRadius: 2,
+    marginBottom: theme.spacing.sm,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: theme.colors.primary,
+    borderRadius: 2,
+  },
+  progressText: {
+    color: theme.colors.textSecondary,
   },
   header: {
     alignItems: 'center',

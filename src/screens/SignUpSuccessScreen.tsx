@@ -118,21 +118,37 @@ export const SignUpSuccessScreen: React.FC<SignUpSuccessProps> = ({ navigation }
       
       <View style={[
         styles.content,
-        { paddingBottom: Math.max(insets.bottom + theme.spacing.lg, theme.spacing.xl) }
+        { 
+          paddingTop: Math.max(insets.top + theme.spacing.md, theme.spacing.xl),
+          paddingBottom: Math.max(insets.bottom + theme.spacing.lg, theme.spacing.xl) 
+        }
       ]}>
-        {/* Welcome Icon */}
+        {/* Progress indicator */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBar}>
+            <View style={[styles.progressFill, { width: '100%' }]} />
+          </View>
+          <Typography variant="caption" style={styles.progressText}>
+            Step 5 Complete! 🎉
+          </Typography>
+        </View>
+
+        {/* Celebration Icon */}
         <View style={styles.iconContainer}>
-          <CarIcon size={80} color={theme.colors.primary} />
+          <Typography variant="title" style={styles.celebrationIcon}>
+            🎉
+          </Typography>
+          <CarIcon size={60} color={theme.colors.primary} />
         </View>
 
         {/* Welcome Message */}
         <View style={styles.messageContainer}>
           <Typography variant="title" style={styles.title}>
-            {t('signupSuccess.title', 'Welcome to the Garage!')}
+            {t('signupSuccess.title', 'You\'re all set!')}
           </Typography>
           
           <Typography variant="body" style={styles.message}>
-            {t('signupSuccess.message', 'Your account is ready. Let\'s add your first car to get started.')}
+            {t('signupSuccess.message', 'Your GarageLedger account is ready. Let\'s add your first vehicle and start tracking.')}
           </Typography>
         </View>
 
@@ -179,10 +195,39 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  progressContainer: {
+    marginBottom: theme.spacing.xl,
+    alignItems: 'center',
+    width: '100%',
+  },
+  progressBar: {
+    width: '100%',
+    height: 4,
+    backgroundColor: theme.colors.borderLight,
+    borderRadius: 2,
+    marginBottom: theme.spacing.sm,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: theme.colors.success,
+    borderRadius: 2,
+  },
+  progressText: {
+    color: theme.colors.success,
+    fontWeight: theme.typography.fontWeight.semibold,
+  },
   iconContainer: {
     marginBottom: theme.spacing.xl,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
+  },
+  celebrationIcon: {
+    fontSize: 40,
+    position: 'absolute',
+    top: -20,
+    right: -10,
+    zIndex: 1,
   },
   messageContainer: {
     alignItems: 'center',

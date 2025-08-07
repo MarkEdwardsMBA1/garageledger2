@@ -241,11 +241,13 @@ const styles = StyleSheet.create({
     marginVertical: theme.spacing.sm,
   },
 
-  // Label styles
+  // Label styles - Enhanced typography
   label: {
     marginBottom: theme.spacing.xs,
     fontWeight: theme.typography.fontWeight.medium,
+    fontFamily: theme.typography.fontFamily.medium,
     color: theme.colors.text,
+    letterSpacing: theme.typography.letterSpacing.wide,
   },
   smLabel: {
     fontSize: theme.typography.fontSize.sm,
@@ -322,13 +324,15 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.borderLight,
   },
 
-  // Input styles
+  // Input styles - Enhanced typography
   input: {
     flex: 1,
     fontFamily: theme.typography.fontFamily.regular,
+    fontWeight: theme.typography.fontWeight.normal,
     color: theme.colors.text,
     paddingVertical: theme.spacing.xs, // Better touch target
     minHeight: 20, // Ensure minimum touch area
+    letterSpacing: theme.typography.letterSpacing.normal,
   },
   smInput: {
     fontSize: theme.typography.fontSize.sm,

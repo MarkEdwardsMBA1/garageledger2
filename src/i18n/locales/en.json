@@ -29,7 +29,9 @@
     "ownData": "Your data stays yours — complete ownership and export",
     "getStarted": "Get Started",
     "signIn": "Sign In",
-    "alreadyHaveAccount": "Already have an account?"
+    "alreadyHaveAccount": "Already have an account?",
+    "language": "Language",
+    "switchLanguage": "Switch to {{language}}"
   },
   "firstVehicle": {
     "title": "Add Your First Vehicle",

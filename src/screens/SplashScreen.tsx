@@ -70,9 +70,9 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: theme.typography.fontSize['2xl'], // 24px
     fontWeight: theme.typography.fontWeight.bold,
-    color: '#2563eb', // Blue color as specified
+    color: theme.colors.primary, // Engine Blue to match new brand colors
     textAlign: 'center',
-    letterSpacing: 0.5, // Subtle letter spacing for professional look
+    letterSpacing: theme.typography.letterSpacing.tight, // Use theme letter spacing
   },
 });
 

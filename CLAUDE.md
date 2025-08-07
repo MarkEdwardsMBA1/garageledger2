@@ -54,7 +54,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 GarageLedger2 is a React Native mobile application for vehicle maintenance tracking. The app emphasizes offline-first functionality, bilingual support (English/Spanish), and complete user data ownership with Firebase backend.
 
-**Current Status**: Phase 1 MVP complete with production-ready security architecture and hardened development environment.
+**Current Status**: Phase 1 MVP complete with production-ready security architecture, hardened development environment, and premium automotive-inspired design system.
 
 ## Environment Stability
 
@@ -82,6 +82,56 @@ GarageLedger2 is a React Native mobile application for vehicle maintenance track
 - **Security-First Design**: All operations require authentication via `ProtectedRoute.tsx`
 - **Component-Based Architecture**: Reusable components in `src/components/common/`
 
+## Design System
+
+### Premium Automotive Visual Identity
+GarageLedger features a sophisticated automotive-inspired design system that creates a professional, cohesive user experience with emotional connection to car culture.
+
+#### Color Palette
+- **Engine Blue** `#1e40af` - Primary brand color (trust, reliability, precision)
+- **Racing Green** `#166534` - Secondary color (efficiency, eco-friendly) 
+- **Performance Red** `#dc2626` - Accent color (action, power, excitement)
+- **Oil Black** `#111827` - Premium text color (deep, sophisticated)
+- **Titanium Gray** `#374151` - Secondary text (modern automotive)
+- **Chrome Silver** `#9ca3af` - Subtle accents and hints
+
+#### Strategic Alert System
+- **Performance Red** `#dc2626` → Positive actions, CTAs, brand elements
+- **Signal Orange** `#ea580c` → Warnings, maintenance alerts (like dashboard warning lights)
+- **Critical Red** `#b91c1c` → Errors, critical failures
+- **Racing Green** `#166534` → Success states, achievements
+- **Electric Blue** `#0284c7` → Modern info states, technology features
+
+#### Typography Hierarchy
+Enhanced typography system with automotive precision:
+- **Display** (36px) - Hero/display text with tight letter spacing
+- **Title** (24px) - Page titles with premium weight
+- **Heading** (20px) - Section headings with proper hierarchy
+- **Subheading** (18px) - Sub-section organization
+- **Body/BodyLarge/BodySmall** (14-18px) - Optimized reading experience
+- **Caption/Label** (12-14px) - UI labels with wide letter spacing
+- **Button** (16px) - Optimized for interaction with wide spacing
+- **Overline** (12px) - Small caps with extensive letter spacing
+
+#### Premium Shadows & Depth
+Oil Black shadow system for sophisticated visual hierarchy:
+- **xs/sm** - Subtle card depth and button elevation  
+- **md/lg** - Important content and floating elements
+- **xl** - Modal and overlay emphasis
+- **Special**: `floating` and `pressed` states for interaction feedback
+
+#### Professional Icon System
+Custom SVG automotive icon collection replacing emoji:
+- **Functional Icons**: Maintenance, Fuel, Modifications, Reminders, Activity, Camera, Mail
+- **Brand Integration**: Consistent sizing, coloring, and automotive theming
+- **Accessibility**: Proper contrast and sizing for all interaction states
+
+#### Component Variants
+- **Cards**: `default`, `elevated`, `floating`, `outlined`, `filled` with automotive shadows
+- **Buttons**: Premium shadows on solid variants, subtle depth on outlined
+- **Typography**: Semantic variants for consistent hierarchy
+- **Navigation**: Safe area handling for progress indicators and headers
+
 ## Development Commands
 
 ```bash
@@ -108,11 +158,13 @@ npm run format              # Prettier formatting
 ## Code Structure
 
 ### Core Directories
-- `src/components/common/` - Reusable UI components (Button, Card, Input, PhotoPicker)
+- `src/components/common/` - Reusable UI components (Button, Card, Input, PhotoPicker, Typography)
+- `src/components/icons/` - Professional automotive SVG icon system
 - `src/repositories/` - Data access layer with Firebase implementation
 - `src/screens/` - App screens with navigation integration
 - `src/services/` - External service integrations (Firebase auth)
 - `src/contexts/` - React contexts (AuthContext)
+- `src/utils/theme.ts` - Comprehensive design system (colors, typography, shadows)
 
 ### Security Architecture
 - **Authentication**: Enforced via `AuthContext.tsx` and `ProtectedRoute.tsx`
@@ -145,9 +197,11 @@ interface Vehicle {
 ## Internationalization
 
 - **Languages**: English (default), Spanish
-- **Implementation**: react-i18next with AsyncStorage persistence
+- **Implementation**: react-i18next with AsyncStorage persistence  
+- **Device Detection**: Automatic detection with graceful fallback to English
 - **Files**: `src/i18n/locales/en.json`, `src/i18n/locales/es.json`
-- **Status**: Currently mocked in `src/i18n/index.ts`
+- **Language Toggle**: Intuitive bottom-placement with current language display
+- **Persistence**: User language choice stored and maintained across sessions
 
 ## Firebase Configuration
 
@@ -165,9 +219,14 @@ When adding new data entities, create:
 3. Secure wrapper following `SecureFirebaseVehicleRepository.ts`
 
 ### Component Development
-- Use theme utilities from `src/utils/theme.ts`
-- Follow existing component patterns in `src/components/common/`
-- Implement TypeScript interfaces from `src/types/index.ts`
+- **Theme System**: Use comprehensive theme from `src/utils/theme.ts` (colors, typography, shadows)
+- **Typography**: Use semantic variants (`display`, `title`, `heading`, `body`, etc.)
+- **Icons**: Import from `src/components/icons/` automotive icon collection
+- **Cards**: Choose appropriate variant (`elevated`, `floating`, `outlined`, `filled`)  
+- **Colors**: Use automotive color palette (Engine Blue, Racing Green, Performance Red)
+- **Shadows**: Apply Oil Black shadow system for premium depth
+- **Patterns**: Follow existing component patterns in `src/components/common/`
+- **Types**: Implement TypeScript interfaces from `src/types/index.ts`
 
 ### Authentication Requirements
 - All screens except Login/SignUp must use `ProtectedRoute`
