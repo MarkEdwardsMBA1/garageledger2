@@ -447,6 +447,32 @@ export const MailIcon: React.FC<IconProps> = ({
   </Svg>
 );
 
+// Car Silhouette Icon - Default placeholder for vehicle photos
+export const CarSilhouetteIcon: React.FC<IconProps> = ({ 
+  size = 24, 
+  color = '#666', 
+  strokeWidth = 2 
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path 
+      d="M5 12h2l1-3h8l1 3h2v8a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H8v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8z"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Circle cx="8.5" cy="16.5" r="1.5" stroke={color} strokeWidth={strokeWidth} />
+    <Circle cx="15.5" cy="16.5" r="1.5" stroke={color} strokeWidth={strokeWidth} />
+    <Path 
+      d="M5 12V9a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
 export default {
   MaintenanceIcon,
   ModificationsIcon,
@@ -466,4 +492,5 @@ export default {
   ActivityIcon,
   CameraIcon,
   MailIcon,
+  CarSilhouetteIcon,
 };

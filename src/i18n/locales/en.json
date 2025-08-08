@@ -231,7 +231,8 @@
     "logMaintenance": "Log Maintenance",
     "recentActivity": "Recent Activity",
     "noActivity": "No recent activity",
-    "noActivityMessage": "Start by adding your first vehicle"
+    "noActivityMessage": "Start by adding your first vehicle",
+    "noMaintenanceActivity": "Start logging maintenance to build your activity history"
   },
   "errors": {
     "generic": {

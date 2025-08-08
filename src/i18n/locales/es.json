@@ -231,7 +231,8 @@
     "logMaintenance": "Registrar Mantenimiento",
     "recentActivity": "Actividad Reciente",
     "noActivity": "Sin actividad reciente",
-    "noActivityMessage": "Comienza agregando tu primer vehículo"
+    "noActivityMessage": "Comienza agregando tu primer vehículo",
+    "noMaintenanceActivity": "Comienza registrando mantenimiento para construir tu historial de actividad"
   },
   "errors": {
     "generic": {

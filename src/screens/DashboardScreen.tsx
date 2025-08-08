@@ -69,6 +69,7 @@ const DashboardScreen: React.FC = () => {
           <TouchableOpacity
             onPress={() => navigation.navigate('Vehicles')}
             activeOpacity={0.7}
+            style={styles.statCardTouchable}
           >
             <Card variant="elevated" style={styles.statCard}>
               <Text style={[styles.statNumber, loading && styles.loadingText]}>
@@ -80,12 +81,18 @@ const DashboardScreen: React.FC = () => {
             </Card>
           </TouchableOpacity>
           
-          <Card variant="elevated" style={styles.statCard}>
-            <Text style={styles.statNumber}>0</Text>
-            <Text style={styles.statLabel}>
-              {t('dashboard.upcomingMaintenance', 'Upcoming')}
-            </Text>
-          </Card>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Maintenance')}
+            activeOpacity={0.7}
+            style={styles.statCardTouchable}
+          >
+            <Card variant="elevated" style={styles.statCard}>
+              <Text style={styles.statNumber}>0</Text>
+              <Text style={styles.statLabel}>
+                {t('dashboard.upcomingMaintenance', 'Upcoming')}
+              </Text>
+            </Card>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -130,7 +137,10 @@ const DashboardScreen: React.FC = () => {
               {t('dashboard.noActivity', 'No recent activity')}
             </Text>
             <Text style={styles.emptyStateMessage}>
-              {t('dashboard.noActivityMessage', 'Start by adding your first vehicle')}
+              {vehicles.length === 0 
+                ? t('dashboard.noActivityMessage', 'Start by adding your first vehicle')
+                : t('dashboard.noMaintenanceActivity', 'Start logging maintenance to build your activity history')
+              }
             </Text>
           </View>
         </Card>
@@ -188,8 +198,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: theme.spacing.md,
   },
-  statCard: {
+  statCardTouchable: {
     flex: 1,
+  },
+  statCard: {
     alignItems: 'center',
     padding: theme.spacing.lg,
   },

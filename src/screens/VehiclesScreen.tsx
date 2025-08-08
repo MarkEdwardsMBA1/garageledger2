@@ -13,7 +13,7 @@ import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { EmptyState } from '../components/common/ErrorState';
 import { Loading } from '../components/common/Loading';
-import { CameraIcon } from '../components/icons';
+import { CameraIcon, CarSilhouetteIcon } from '../components/icons';
 import { Vehicle } from '../types';
 import { vehicleRepository } from '../repositories/VehicleRepository';
 import { useAuth } from '../contexts/AuthContext';
@@ -119,10 +119,12 @@ const VehiclesScreen: React.FC<VehiclesScreenProps> = ({ navigation }) => {
             />
           ) : (
             <View style={styles.vehicleImagePlaceholder}>
-              <CameraIcon size={24} color={theme.colors.textSecondary} />
-              <Text style={styles.vehicleImagePlaceholderSubtext}>
-                {t('vehicles.photo', 'Photo')}
-              </Text>
+              <View style={styles.carSilhouetteBackground}>
+                <CarSilhouetteIcon size={80} color={theme.colors.textLight} />
+              </View>
+              <View style={styles.cameraOverlay}>
+                <CameraIcon size={20} color={theme.colors.textSecondary} />
+              </View>
             </View>
           )}
         </Card>
@@ -199,16 +201,30 @@ const styles = StyleSheet.create({
   vehicleImagePlaceholder: {
     width: '100%',
     height: 120,
-    backgroundColor: theme.colors.borderLight,
+    backgroundColor: theme.colors.backgroundSecondary,
     borderRadius: theme.borderRadius.md,
     marginBottom: theme.spacing.sm,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  carSilhouetteBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
+    opacity: 0.25,
   },
-  vehicleImagePlaceholderSubtext: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.xs,
+  cameraOverlay: {
+    position: 'absolute',
+    bottom: theme.spacing.sm,
+    right: theme.spacing.sm,
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.borderRadius.full,
+    padding: theme.spacing.xs,
+    ...theme.shadows.sm,
   },
 });
 

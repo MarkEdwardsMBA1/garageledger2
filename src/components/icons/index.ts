@@ -24,4 +24,5 @@ export {
   ActivityIcon,
   CameraIcon,
   MailIcon,
+  CarSilhouetteIcon,
 } from './AutomotiveIcons';

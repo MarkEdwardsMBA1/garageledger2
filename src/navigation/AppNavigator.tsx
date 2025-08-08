@@ -61,6 +61,7 @@ const VehiclesStack: React.FC = () => {
         component={VehiclesScreen}
         options={({ navigation }) => ({
           title: t('vehicles.title', 'My Vehicles'),
+          headerBackTitle: ' ', // Prevent long titles from showing in back button
           headerRight: () => (
             <TouchableOpacity
               onPress={() => navigation.navigate('AddVehicle')}
@@ -68,14 +69,17 @@ const VehiclesStack: React.FC = () => {
                 marginRight: theme.spacing.md,
                 paddingHorizontal: theme.spacing.sm,
                 paddingVertical: theme.spacing.xs,
+                borderRadius: theme.borderRadius.sm,
+                backgroundColor: theme.colors.primary,
               }}
             >
               <Text style={{
-                color: theme.colors.primary,
-                fontSize: theme.typography.fontSize.base,
+                color: theme.colors.surface,
+                fontSize: theme.typography.fontSize.sm,
                 fontWeight: theme.typography.fontWeight.semibold,
+                letterSpacing: theme.typography.letterSpacing.wide,
               }}>
-                {t('vehicles.add', 'Add')}
+                {t('common.add', 'ADD')}
               </Text>
             </TouchableOpacity>
           ),
@@ -86,6 +90,7 @@ const VehiclesStack: React.FC = () => {
         component={AddVehicleScreen}
         options={{
           title: t('vehicles.addNew', 'Add Vehicle'),
+          headerBackTitle: t('vehicles.title', 'Vehicles'), // Clean back button text
         }}
       />
       <Stack.Screen
@@ -93,6 +98,7 @@ const VehiclesStack: React.FC = () => {
         component={EditVehicleScreen}
         options={{
           title: t('vehicles.editVehicle', 'Edit Vehicle'),
+          headerBackTitle: t('vehicles.title', 'Vehicles'), // Clean back button text
         }}
       />
     </Stack.Navigator>

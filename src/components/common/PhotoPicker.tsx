@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { theme } from '../../utils/theme';
 import { Button } from './Button';
 import { Loading } from './Loading';
+import { CameraIcon } from '../icons';
 import { imageUploadService } from '../../services/ImageUploadService';
 
 export interface PhotoPickerProps {
@@ -307,7 +308,7 @@ export const PhotoPicker: React.FC<PhotoPickerProps> = ({
           <Image source={{ uri: photoUri }} style={styles.photo} />
         ) : (
           <View style={styles.placeholderContainer}>
-            <Text style={styles.placeholderIcon}>📸</Text>
+            <CameraIcon size={48} color={theme.colors.textSecondary} />
             <Text style={styles.placeholderText}>
               {placeholder || t('photo.addPhoto', 'Add Photo')}
             </Text>
@@ -361,10 +362,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: theme.spacing.xl,
-  },
-  placeholderIcon: {
-    fontSize: 48,
-    marginBottom: theme.spacing.md,
+    gap: theme.spacing.md,
   },
   placeholderText: {
     fontSize: theme.typography.fontSize.base,
