@@ -180,7 +180,25 @@
       "bodywork": "Bodywork",
       "interior": "Interior",
       "other": "Other"
-    }
+    },
+    "basicInfo": "Basic Information",
+    "mileageAndDate": "Mileage & Date",
+    "logTitle": "Title",
+    "titlePlaceholder": "e.g., Oil Change",
+    "mileage": "Mileage",
+    "additionalDetails": "Additional Details",
+    "notesPlaceholder": "Additional notes about the maintenance...",
+    "tagsPlaceholder": "warranty, dealer, DIY",
+    "tagsHelper": "Separate tags with commas",
+    "addPhoto": "Add maintenance photo",
+    "saving": "Saving maintenance log...",
+    "saveError": "Failed to save maintenance log",
+    "selectCategory": "Select Maintenance Category",
+    "selectSubcategory": "Select Specific Maintenance",
+    "selectMaintenanceType": "Select Maintenance Type",
+    "categories": "Categories",
+    "searchPlaceholder": "Search maintenance records...",
+    "loading": "Loading maintenance history..."
   },
   "reminders": {
     "title": "Reminders",
@@ -218,7 +236,8 @@
     "about": "About",
     "user": "User",
     "notSignedIn": "Not signed in",
-    "signIn": "Sign In"
+    "signIn": "Sign In",
+    "signOut": "Sign Out"
   },
   "dashboard": {
     "welcome": "Welcome to GarageLedger",
@@ -232,7 +251,8 @@
     "recentActivity": "Recent Activity",
     "noActivity": "No recent activity",
     "noActivityMessage": "Start by adding your first vehicle",
-    "noMaintenanceActivity": "Start logging maintenance to build your activity history"
+    "noMaintenanceActivity": "Start logging maintenance to build your activity history",
+    "viewAllActivity": "View All Activity"
   },
   "errors": {
     "generic": {
@@ -268,7 +288,12 @@
     "invalidEmail": "Please enter a valid email",
     "invalidYear": "Please enter a valid year",
     "invalidMileage": "Please enter a valid mileage",
-    "invalidVin": "VIN should be 17 characters"
+    "invalidVin": "VIN should be 17 characters",
+    "selectVehicle": "Please select a vehicle to log maintenance for",
+    "titleRequired": "What type of maintenance did you perform? Please add a title",
+    "mileageRequired": "We need your current mileage to track maintenance intervals",
+    "dateRequired": "When was this maintenance performed? Please select a date",
+    "categoryRequired": "Please select what type of maintenance was performed"
   },
   "auth": {
     "emailAlreadyExists": "Oops! An account with this email already exists. Please sign in.",

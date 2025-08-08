@@ -8,7 +8,8 @@ import * as FileSystem from 'expo-file-system';
  * Handles uploading images to Firebase Storage and managing vehicle photos
  */
 export class ImageUploadService {
-  private readonly STORAGE_PATH = 'vehicle-photos';
+  private readonly VEHICLE_STORAGE_PATH = 'vehicle-photos';
+  private readonly MAINTENANCE_STORAGE_PATH = 'maintenance-photos';
 
   /**
    * Upload vehicle photo to Firebase Storage
@@ -103,7 +104,7 @@ export class ImageUploadService {
 
       // Create storage reference with user ID and vehicle ID for organization
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.jpg`;
-      const storagePath = `${this.STORAGE_PATH}/${currentUser.uid}/${vehicleId}/${fileName}`;
+      const storagePath = `${this.VEHICLE_STORAGE_PATH}/${currentUser.uid}/${vehicleId}/${fileName}`;
       const storageRef = ref(storage, storagePath);
 
       console.log('Uploading to Firebase Storage path:', storagePath);
@@ -239,6 +240,127 @@ export class ImageUploadService {
       // Don't throw errors for migration - it's a background operation
       // Just return null and let the caller handle it gracefully
       return null;
+    }
+  }
+
+  /**
+   * Upload maintenance log photo to Firebase Storage
+   * @param imageUri - Local image URI from device
+   * @param maintenanceLogId - Maintenance log ID for organizing photos
+   * @returns Firebase Storage download URL
+   */
+  async uploadMaintenancePhoto(imageUri: string, maintenanceLogId: string): Promise<string> {
+    try {
+      const currentUser = authService.getCurrentUser();
+      if (!currentUser) {
+        throw new Error('User must be authenticated to upload photos');
+      }
+
+      // Convert image URI to blob using the same method as vehicle photos
+      let blob: Blob;
+      
+      if (imageUri.startsWith('file://') || imageUri.startsWith('content://') || imageUri.startsWith('ph://')) {
+        try {
+          const fileInfoPromise = FileSystem.getInfoAsync(imageUri);
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('File operation timeout')), 10000)
+          );
+          
+          const fileInfo = await Promise.race([fileInfoPromise, timeoutPromise]) as FileSystem.FileInfo;
+          
+          if (!fileInfo.exists) {
+            throw new Error('Image file not found on device');
+          }
+          
+          const readPromise = FileSystem.readAsStringAsync(imageUri, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          const timeoutReadPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('File read timeout')), 15000)
+          );
+          
+          const base64Data = await Promise.race([readPromise, timeoutReadPromise]) as string;
+          
+          // Convert base64 to blob
+          const binaryString = atob(base64Data);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          blob = new Blob([bytes], { type: 'image/jpeg' });
+        } catch (fsError) {
+          console.warn('FileSystem method failed, falling back to fetch:', fsError);
+          const response = await fetch(imageUri);
+          blob = await response.blob();
+        }
+      } else {
+        // For HTTP URLs, use fetch
+        const response = await fetch(imageUri);
+        blob = await response.blob();
+      }
+
+      // Create storage reference with user ID and maintenance log ID for organization
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.jpg`;
+      const storagePath = `${this.MAINTENANCE_STORAGE_PATH}/${currentUser.uid}/${maintenanceLogId}/${fileName}`;
+      const storageRef = ref(storage, storagePath);
+
+      // Upload with metadata
+      const metadata = {
+        contentType: 'image/jpeg',
+        customMetadata: {
+          uploadedBy: currentUser.uid,
+          maintenanceLogId: maintenanceLogId,
+          uploadedAt: new Date().toISOString(),
+        },
+      };
+      
+      const uploadResult = await uploadBytes(storageRef, blob, metadata);
+      const downloadURL = await getDownloadURL(uploadResult.ref);
+      
+      return downloadURL;
+    } catch (error: any) {
+      console.error('Failed to upload maintenance photo:', error);
+      
+      if (error.code === 'storage/unauthorized') {
+        throw new Error('Permission denied: Please check Firebase Storage security rules');
+      } else if (error.code === 'storage/unknown') {
+        throw new Error('Storage error: Please check your internet connection and try again');
+      } else if (error.message?.includes('Network request failed')) {
+        throw new Error('Image file not accessible - may have been cleaned up by system');
+      } else {
+        throw new Error(`Maintenance photo upload failed: ${error.message || 'Unknown error'}`);
+      }
+    }
+  }
+
+  /**
+   * Delete maintenance photo from Firebase Storage
+   * @param photoUrl - Firebase Storage URL of the photo to delete
+   */
+  async deleteMaintenancePhoto(photoUrl: string): Promise<void> {
+    try {
+      if (!this.isFirebaseStorageUrl(photoUrl)) {
+        console.warn('Cannot delete non-Firebase photo URL:', photoUrl);
+        return;
+      }
+
+      const currentUser = authService.getCurrentUser();
+      if (!currentUser) {
+        throw new Error('User must be authenticated to delete photos');
+      }
+
+      const storageRef = ref(storage, photoUrl);
+      await deleteObject(storageRef);
+      
+      console.log('Maintenance photo deleted successfully:', photoUrl);
+    } catch (error: any) {
+      console.error('Failed to delete maintenance photo:', error);
+      
+      if (error.code === 'storage/object-not-found') {
+        console.warn('Photo already deleted or does not exist:', photoUrl);
+      } else {
+        throw new Error(`Failed to delete maintenance photo: ${error.message || 'Unknown error'}`);
+      }
     }
   }
 }

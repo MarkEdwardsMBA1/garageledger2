@@ -5,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import '../i18n'; // Initialize i18n
 import { theme } from '../utils/theme';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
@@ -16,6 +17,7 @@ import { SpeedometerIcon, CarIcon, SpannerIcon, GearIcon } from '../components/i
 import DashboardScreen from '../screens/DashboardScreen';
 import VehiclesScreen from '../screens/VehiclesScreen';
 import MaintenanceScreen from '../screens/MaintenanceScreen';
+import AddMaintenanceLogScreen from '../screens/AddMaintenanceLogScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import AddVehicleScreen from '../screens/AddVehicleScreen';
 import EditVehicleScreen from '../screens/EditVehicleScreen';
@@ -99,6 +101,48 @@ const VehiclesStack: React.FC = () => {
         options={{
           title: t('vehicles.editVehicle', 'Edit Vehicle'),
           headerBackTitle: t('vehicles.title', 'Vehicles'), // Clean back button text
+        }}
+      />
+    </Stack.Navigator>
+  );
+};
+
+/**
+ * Maintenance stack navigator
+ * Handles maintenance logging and viewing
+ */
+const MaintenanceStackNavigator: React.FC = () => {
+  const { t } = useTranslation();
+  
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: theme.colors.surface,
+          borderBottomWidth: 1,
+          borderBottomColor: theme.colors.borderLight,
+        },
+        headerTitleStyle: {
+          fontSize: theme.typography.fontSize.lg,
+          fontWeight: theme.typography.fontWeight.semibold,
+          color: theme.colors.text,
+        },
+        headerTintColor: theme.colors.primary,
+      }}
+    >
+      <Stack.Screen
+        name="MaintenanceList"
+        component={MaintenanceScreen}
+        options={{
+          title: t('navigation.maintenance', 'Maintenance'),
+        }}
+      />
+      <Stack.Screen
+        name="AddMaintenanceLog"
+        component={AddMaintenanceLogScreen}
+        options={{
+          title: t('maintenance.logMaintenance', 'Log Maintenance'),
+          headerBackTitle: t('navigation.maintenance', 'Maintenance'),
         }}
       />
     </Stack.Navigator>
@@ -216,12 +260,13 @@ const MainAppNavigator: React.FC = () => {
         />
         <Tab.Screen
           name="Maintenance"
-          component={MaintenanceScreen}
+          component={MaintenanceStackNavigator}
           options={{
             title: t('navigation.maintenance', 'Maintenance'),
             tabBarIcon: ({ color, size }) => (
               <TabIcon name="maintenance" color={color} size={size} />
             ),
+            headerShown: false, // Let the stack handle the header
           }}
         />
         <Tab.Screen

@@ -106,9 +106,23 @@ const VehiclesScreen: React.FC<VehiclesScreenProps> = ({ navigation }) => {
             navigation.navigate('EditVehicle', { vehicleId: vehicle.id });
           }}
           rightContent={
-            <Text style={styles.vehicleStatusReady}>
-              📋 Ready to track
-            </Text>
+            <View style={styles.vehicleActions}>
+              <Button
+                title={t('maintenance.logMaintenance', 'Log Maintenance')}
+                variant="primary"
+                size="sm"
+                style={styles.logMaintenanceButton}
+                onPress={() => {
+                  navigation.navigate('Maintenance', { 
+                    screen: 'AddMaintenanceLog',
+                    params: { vehicleId: vehicle.id }
+                  });
+                }}
+              />
+              <Text style={styles.vehicleStatusReady}>
+                📋 Ready to track
+              </Text>
+            </View>
           }
         >
           {vehicle.photoUri ? (
@@ -186,6 +200,13 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     padding: theme.spacing.lg,
+  },
+  vehicleActions: {
+    alignItems: 'flex-end',
+    gap: theme.spacing.sm,
+  },
+  logMaintenanceButton: {
+    minWidth: 120,
   },
   vehicleStatusReady: {
     fontSize: theme.typography.fontSize.sm,

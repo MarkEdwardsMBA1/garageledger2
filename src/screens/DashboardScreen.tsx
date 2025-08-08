@@ -14,7 +14,9 @@ import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { ActivityIcon } from '../components/icons';
 import { vehicleRepository } from '../repositories/VehicleRepository';
-import { Vehicle } from '../types';
+import { maintenanceLogRepository } from '../repositories/FirebaseMaintenanceLogRepository';
+import { getCategoryName, getSubcategoryName } from '../types/MaintenanceCategories';
+import { Vehicle, MaintenanceLog } from '../types';
 
 /**
  * Dashboard screen - main overview of the app
@@ -24,27 +26,35 @@ const DashboardScreen: React.FC = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [maintenanceLogs, setMaintenanceLogs] = useState<MaintenanceLog[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Load vehicles on component mount
+  // Load vehicles and maintenance logs on component mount
   useEffect(() => {
-    const loadVehicles = async () => {
+    const loadDashboardData = async () => {
       // Set loading to true only if data takes longer than 100ms
       const loadingTimer = setTimeout(() => setLoading(true), 100);
       
       try {
-        const userVehicles = await vehicleRepository.getUserVehicles();
+        // Load vehicles and recent maintenance logs in parallel
+        const [userVehicles, recentLogs] = await Promise.all([
+          vehicleRepository.getUserVehicles(),
+          maintenanceLogRepository.getRecentLogs(5) // Get 5 most recent logs
+        ]);
+        
         setVehicles(userVehicles);
+        setMaintenanceLogs(recentLogs);
       } catch (error) {
-        console.error('Error loading vehicles for dashboard:', error);
+        console.error('Error loading dashboard data:', error);
         setVehicles([]);
+        setMaintenanceLogs([]);
       } finally {
         clearTimeout(loadingTimer);
         setLoading(false);
       }
     };
 
-    loadVehicles();
+    loadDashboardData();
   }, []);
 
   return (
@@ -115,35 +125,85 @@ const DashboardScreen: React.FC = () => {
               title={t('dashboard.logMaintenance', 'Log Maintenance')}
               variant="outline"
               style={styles.actionButton}
-              onPress={() => {
-                // TODO: Navigate to log maintenance screen
-                console.log('Navigate to log maintenance');
-              }}
+              onPress={() => navigation.navigate('Maintenance', { screen: 'AddMaintenanceLog' })}
             />
           </View>
         </Card>
       </View>
 
-      {/* Recent Activity - Empty State */}
+      {/* Recent Activity */}
       <View style={styles.recentSection}>
         <Text style={styles.sectionTitle}>
           {t('dashboard.recentActivity', 'Recent Activity')}
         </Text>
         
-        <Card variant="filled">
-          <View style={styles.emptyState}>
-            <ActivityIcon size={48} color={theme.colors.textSecondary} />
-            <Text style={[styles.emptyStateTitle, { marginTop: theme.spacing.md }]}>
-              {t('dashboard.noActivity', 'No recent activity')}
-            </Text>
-            <Text style={styles.emptyStateMessage}>
-              {vehicles.length === 0 
-                ? t('dashboard.noActivityMessage', 'Start by adding your first vehicle')
-                : t('dashboard.noMaintenanceActivity', 'Start logging maintenance to build your activity history')
-              }
-            </Text>
-          </View>
-        </Card>
+        {maintenanceLogs.length > 0 ? (
+          <Card variant="filled">
+            {maintenanceLogs.map((log, index) => {
+              const vehicle = vehicles.find(v => v.id === log.vehicleId);
+              const [categoryKey, subcategoryKey] = log.category.split(':');
+              const categoryName = getCategoryName(categoryKey);
+              const subcategoryName = getSubcategoryName(categoryKey, subcategoryKey);
+              
+              return (
+                <TouchableOpacity
+                  key={log.id}
+                  style={[
+                    styles.activityItem,
+                    index < maintenanceLogs.length - 1 && styles.activityItemBorder
+                  ]}
+                  onPress={() => navigation.navigate('Maintenance')}
+                >
+                  <View style={styles.activityContent}>
+                    <View style={styles.activityHeader}>
+                      <Text style={styles.activityTitle}>{log.title}</Text>
+                      <Text style={styles.activityDate}>
+                        {log.date.toLocaleDateString()}
+                      </Text>
+                    </View>
+                    <View style={styles.activityDetails}>
+                      <Text style={styles.activityVehicle}>
+                        {vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Vehicle'}
+                      </Text>
+                      <Text style={styles.activityCategory}>
+                        {subcategoryName || categoryName}
+                      </Text>
+                    </View>
+                    {log.mileage > 0 && (
+                      <Text style={styles.activityMileage}>
+                        {log.mileage.toLocaleString()} {t('vehicles.miles', 'miles')}
+                      </Text>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+            
+            <TouchableOpacity
+              style={styles.viewAllButton}
+              onPress={() => navigation.navigate('Maintenance')}
+            >
+              <Text style={styles.viewAllText}>
+                {t('dashboard.viewAllActivity', 'View All Activity')}
+              </Text>
+            </TouchableOpacity>
+          </Card>
+        ) : (
+          <Card variant="filled">
+            <View style={styles.emptyState}>
+              <ActivityIcon size={48} color={theme.colors.textSecondary} />
+              <Text style={[styles.emptyStateTitle, { marginTop: theme.spacing.md }]}>
+                {t('dashboard.noActivity', 'No recent activity')}
+              </Text>
+              <Text style={styles.emptyStateMessage}>
+                {vehicles.length === 0 
+                  ? t('dashboard.noActivityMessage', 'Start by adding your first vehicle')
+                  : t('dashboard.noMaintenanceActivity', 'Start logging maintenance to build your activity history')
+                }
+              </Text>
+            </View>
+          </Card>
+        )}
       </View>
     </ScrollView>
   );
@@ -235,6 +295,61 @@ const styles = StyleSheet.create({
   // Recent activity section
   recentSection: {
     marginBottom: theme.spacing.xl,
+  },
+  activityItem: {
+    padding: theme.spacing.md,
+  },
+  activityItemBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.borderLight,
+  },
+  activityContent: {
+    gap: theme.spacing.xs,
+  },
+  activityHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  activityTitle: {
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.medium,
+    color: theme.colors.text,
+    flex: 1,
+    marginRight: theme.spacing.sm,
+  },
+  activityDate: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
+  },
+  activityDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  activityVehicle: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.primary,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  activityCategory: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
+  },
+  activityMileage: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.textSecondary,
+  },
+  viewAllButton: {
+    padding: theme.spacing.md,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.borderLight,
+  },
+  viewAllText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.primary,
+    fontWeight: theme.typography.fontWeight.medium,
   },
   emptyState: {
     alignItems: 'center',

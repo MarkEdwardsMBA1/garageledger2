@@ -221,7 +221,8 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.content}>
       <Card style={styles.formCard}>
         <Text style={styles.title}>
           {t('vehicles.addNew', 'Add Vehicle')}
@@ -311,6 +312,8 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
         </View>
       </Card>
 
+      </ScrollView>
+
       {/* Action Buttons */}
       <View style={styles.buttonContainer}>
         <Button
@@ -318,6 +321,7 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
           variant="outline"
           onPress={handleCancel}
           style={styles.button}
+          disabled={loading}
         />
         <Button
           title={t('common.save', 'Save')}
@@ -327,7 +331,7 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
           loading={loading}
         />
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
@@ -372,10 +376,15 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     gap: theme.spacing.md,
-    marginTop: theme.spacing.lg,
+    padding: theme.spacing.lg,
+    backgroundColor: theme.colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.borderLight,
+    ...theme.shadows.sm,
   },
   button: {
     flex: 1,
+    minHeight: 48,
   },
 });
 

@@ -180,7 +180,25 @@
       "bodywork": "Carrocería",
       "interior": "Interior",
       "other": "Otro"
-    }
+    },
+    "basicInfo": "Información Básica",
+    "mileageAndDate": "Kilometraje y Fecha",
+    "logTitle": "Título",
+    "titlePlaceholder": "ej., Cambio de Aceite",
+    "mileage": "Kilometraje",
+    "additionalDetails": "Detalles Adicionales",
+    "notesPlaceholder": "Notas adicionales sobre el mantenimiento...",
+    "tagsPlaceholder": "garantía, concesionario, DIY",
+    "tagsHelper": "Separa las etiquetas con comas",
+    "addPhoto": "Agregar foto de mantenimiento",
+    "saving": "Guardando registro de mantenimiento...",
+    "saveError": "Error al guardar registro de mantenimiento",
+    "selectCategory": "Seleccionar Categoría de Mantenimiento",
+    "selectSubcategory": "Seleccionar Mantenimiento Específico",
+    "selectMaintenanceType": "Seleccionar Tipo de Mantenimiento",
+    "categories": "Categorías",
+    "searchPlaceholder": "Buscar registros de mantenimiento...",
+    "loading": "Cargando historial de mantenimiento..."
   },
   "reminders": {
     "title": "Recordatorios",
@@ -218,7 +236,8 @@
     "about": "Acerca de",
     "user": "Usuario",
     "notSignedIn": "No has iniciado sesión",
-    "signIn": "Iniciar Sesión"
+    "signIn": "Iniciar Sesión",
+    "signOut": "Cerrar Sesión"
   },
   "dashboard": {
     "welcome": "Bienvenido a GarageLedger",
@@ -232,7 +251,8 @@
     "recentActivity": "Actividad Reciente",
     "noActivity": "Sin actividad reciente",
     "noActivityMessage": "Comienza agregando tu primer vehículo",
-    "noMaintenanceActivity": "Comienza registrando mantenimiento para construir tu historial de actividad"
+    "noMaintenanceActivity": "Comienza registrando mantenimiento para construir tu historial de actividad",
+    "viewAllActivity": "Ver Toda la Actividad"
   },
   "errors": {
     "generic": {
@@ -268,7 +288,12 @@
     "invalidEmail": "Por favor ingresa un email válido",
     "invalidYear": "Por favor ingresa un año válido",
     "invalidMileage": "Por favor ingresa un kilometraje válido",
-    "invalidVin": "El VIN debe tener 17 caracteres"
+    "invalidVin": "El VIN debe tener 17 caracteres",
+    "selectVehicle": "Por favor selecciona un vehículo para registrar el mantenimiento",
+    "titleRequired": "¿Qué tipo de mantenimiento realizaste? Por favor agrega un título",
+    "mileageRequired": "Necesitamos tu kilometraje actual para rastrear intervalos de mantenimiento",
+    "dateRequired": "¿Cuándo se realizó este mantenimiento? Por favor selecciona una fecha",
+    "categoryRequired": "Por favor selecciona qué tipo de mantenimiento se realizó"
   },
   "auth": {
     "emailAlreadyExists": "¡Ups! Ya existe una cuenta con este email. Por favor inicia sesión.",
