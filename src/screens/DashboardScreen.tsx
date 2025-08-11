@@ -121,12 +121,6 @@ const DashboardScreen: React.FC = () => {
               onPress={() => navigation.navigate('Vehicles', { screen: 'AddVehicle' })}
             />
             
-            <Button
-              title={t('dashboard.logMaintenance', 'Log Maintenance')}
-              variant="outline"
-              style={styles.actionButton}
-              onPress={() => navigation.navigate('Maintenance', { screen: 'AddMaintenanceLog' })}
-            />
           </View>
         </Card>
       </View>
@@ -152,7 +146,16 @@ const DashboardScreen: React.FC = () => {
                     styles.activityItem,
                     index < maintenanceLogs.length - 1 && styles.activityItemBorder
                   ]}
-                  onPress={() => navigation.navigate('Maintenance')}
+                  onPress={() => {
+                    if (log.vehicleId) {
+                      navigation.navigate('Vehicles', { 
+                        screen: 'VehicleHome',
+                        params: { vehicleId: log.vehicleId }
+                      });
+                    } else {
+                      navigation.navigate('Maintenance');
+                    }
+                  }}
                 >
                   <View style={styles.activityContent}>
                     <View style={styles.activityHeader}>

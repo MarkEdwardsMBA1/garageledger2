@@ -17,23 +17,24 @@ import { Input } from '../components/common/Input';
 import { Loading } from '../components/common/Loading';
 import { EmptyState } from '../components/common/ErrorState';
 import { ActivityIcon } from '../components/icons';
+import { Typography } from '../components/common/Typography';
 import { maintenanceLogRepository } from '../repositories/FirebaseMaintenanceLogRepository';
 import { vehicleRepository } from '../repositories/VehicleRepository';
 import { getCategoryName, getSubcategoryName } from '../types/MaintenanceCategories';
 import { MaintenanceLog, Vehicle } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 
-type MaintenanceTab = 'upcoming' | 'history';
+type MaintenanceTab = 'status' | 'history';
 
 /**
- * Maintenance screen - track upcoming and completed maintenance
- * Shows tabs for upcoming and history views
+ * Maintenance screen - fleet command center for maintenance management
+ * Shows fleet status overview and maintenance history across all vehicles
  */
 const MaintenanceScreen: React.FC = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const { isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState<MaintenanceTab>('history'); // Start with history tab
+  const [activeTab, setActiveTab] = useState<MaintenanceTab>('status'); // Start with status overview
   const [maintenanceLogs, setMaintenanceLogs] = useState<MaintenanceLog[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(false);
@@ -43,9 +44,6 @@ const MaintenanceScreen: React.FC = () => {
   // TODO: Replace with actual upcoming maintenance data (reminders)
   const upcomingMaintenance: any[] = [];
 
-  const handleLogMaintenance = () => {
-    navigation.navigate('AddMaintenanceLog');
-  };
 
   // Load maintenance data
   const loadMaintenanceData = async () => {
@@ -113,16 +111,27 @@ const MaintenanceScreen: React.FC = () => {
     />
   );
 
-  const renderUpcoming = () => {
-    if (upcomingMaintenance.length === 0) {
+  const renderFleetStatus = () => {
+    // Calculate fleet statistics
+    const totalMiles = vehicles.reduce((sum, vehicle) => sum + (vehicle.mileage || 0), 0);
+    const totalLogs = maintenanceLogs.length;
+    const totalVehicles = vehicles.length;
+    
+    // For now, assume all vehicles are up to date (no overdue maintenance)
+    // This will be enhanced with actual reminder system later
+    const overdueCount = 0;
+    const dueSoonCount = 0;
+    const upToDateCount = totalVehicles - overdueCount - dueSoonCount;
+
+    if (totalVehicles === 0) {
       return (
         <EmptyState
-          title={t('maintenance.upcoming.empty.title', 'No Upcoming Maintenance')}
-          message={t('maintenance.upcoming.empty.message', 'All your vehicles are up to date!')}
-          icon="✅"
+          title="No Vehicles to Track"
+          message="Add your first vehicle to start building your fleet status"
+          icon="🚗"
           primaryAction={{
-            title: t('maintenance.logMaintenance', 'Log Maintenance'),
-            onPress: handleLogMaintenance,
+            title: t('vehicles.addVehicle', 'Add Vehicle'),
+            onPress: () => navigation.navigate('Vehicles', { screen: 'AddVehicle' }),
           }}
         />
       );
@@ -130,26 +139,146 @@ const MaintenanceScreen: React.FC = () => {
 
     return (
       <ScrollView contentContainerStyle={styles.listContainer}>
-        {upcomingMaintenance.map((maintenance) => (
-          <Card
-            key={maintenance.id}
-            title={maintenance.type}
-            subtitle={`${maintenance.vehicle} • Due: ${maintenance.dueDate}`}
-            pressable
-            onPress={() => {
-              console.log('View maintenance details:', maintenance.id);
-            }}
-            rightContent={
-              <View style={styles.dueBadge}>
-                <Text style={styles.dueBadgeText}>
-                  {maintenance.priority}
-                </Text>
+        {/* Fleet Summary Stats */}
+        <Card variant="elevated" style={styles.summaryCard}>
+          <Typography variant="heading" style={styles.sectionTitle}>
+            📊 Fleet Overview
+          </Typography>
+          
+          <View style={styles.statsGrid}>
+            <View style={styles.statCard}>
+              <Typography variant="title" style={styles.statNumber}>
+                {totalVehicles}
+              </Typography>
+              <Typography variant="caption" style={styles.statLabel}>
+                {totalVehicles === 1 ? 'Vehicle' : 'Vehicles'}
+              </Typography>
+            </View>
+            
+            <View style={styles.statCard}>
+              <Typography variant="title" style={styles.statNumber}>
+                {totalMiles.toLocaleString()}
+              </Typography>
+              <Typography variant="caption" style={styles.statLabel}>
+                Total Miles
+              </Typography>
+            </View>
+            
+            <View style={styles.statCard}>
+              <Typography variant="title" style={styles.statNumber}>
+                {totalLogs}
+              </Typography>
+              <Typography variant="caption" style={styles.statLabel}>
+                Maintenance Logs
+              </Typography>
+            </View>
+          </View>
+        </Card>
+
+        {/* Vehicle Status Overview */}
+        <Card variant="elevated" style={styles.statusCard}>
+          <Typography variant="heading" style={styles.sectionTitle}>
+            🚦 Status Summary
+          </Typography>
+          
+          <View style={styles.statusItems}>
+            <View style={styles.statusItem}>
+              <View style={[styles.statusIndicator, styles.statusGoodIndicator]} />
+              <View style={styles.statusContent}>
+                <Typography variant="bodyLarge" style={styles.statusText}>
+                  {upToDateCount} {upToDateCount === 1 ? 'vehicle' : 'vehicles'} up to date
+                </Typography>
+                <Typography variant="caption" style={styles.statusSubtext}>
+                  No known maintenance needed
+                </Typography>
               </View>
-            }
-          >
-            <></>
-          </Card>
-        ))}
+            </View>
+            
+            {dueSoonCount > 0 && (
+              <View style={styles.statusItem}>
+                <View style={[styles.statusIndicator, styles.statusWarningIndicator]} />
+                <View style={styles.statusContent}>
+                  <Typography variant="bodyLarge" style={styles.statusWarningText}>
+                    {dueSoonCount} {dueSoonCount === 1 ? 'vehicle' : 'vehicles'} due soon
+                  </Typography>
+                  <Typography variant="caption" style={styles.statusSubtext}>
+                    Maintenance needed within 30 days
+                  </Typography>
+                </View>
+              </View>
+            )}
+            
+            {overdueCount > 0 && (
+              <View style={styles.statusItem}>
+                <View style={[styles.statusIndicator, styles.statusErrorIndicator]} />
+                <View style={styles.statusContent}>
+                  <Typography variant="bodyLarge" style={styles.statusErrorText}>
+                    {overdueCount} {overdueCount === 1 ? 'vehicle' : 'vehicles'} overdue
+                  </Typography>
+                  <Typography variant="caption" style={styles.statusSubtext}>
+                    Immediate attention required
+                  </Typography>
+                </View>
+              </View>
+            )}
+          </View>
+        </Card>
+
+        {/* Vehicle List with Status */}
+        <Card variant="elevated" style={styles.vehicleListCard}>
+          <Typography variant="heading" style={styles.sectionTitle}>
+            🚗 Vehicle Details
+          </Typography>
+          
+          {vehicles.map((vehicle) => {
+            const vehicleLogs = maintenanceLogs.filter(log => log.vehicleId === vehicle.id);
+            const lastMaintenance = vehicleLogs.length > 0 ? vehicleLogs[0] : null;
+            
+            return (
+              <TouchableOpacity
+                key={vehicle.id}
+                style={styles.vehicleItem}
+                onPress={() => navigation.navigate('Vehicles', {
+                  screen: 'VehicleHome',
+                  params: { vehicleId: vehicle.id }
+                })}
+              >
+                <View style={styles.vehicleInfo}>
+                  <Typography variant="bodyLarge" style={styles.vehicleName}>
+                    {vehicle.year} {vehicle.make} {vehicle.model}
+                  </Typography>
+                  
+                  <View style={styles.vehicleDetails}>
+                    {vehicle.mileage > 0 && (
+                      <Typography variant="caption" style={styles.vehicleMileage}>
+                        {vehicle.mileage.toLocaleString()} miles
+                      </Typography>
+                    )}
+                    
+                    {lastMaintenance && (
+                      <Typography variant="caption" style={styles.lastMaintenance}>
+                        Last: {lastMaintenance.title} ({lastMaintenance.date.toLocaleDateString()})
+                      </Typography>
+                    )}
+                    
+                    {!lastMaintenance && (
+                      <Typography variant="caption" style={styles.noMaintenance}>
+                        No maintenance logged yet
+                      </Typography>
+                    )}
+                  </View>
+                </View>
+                
+                <View style={styles.vehicleStatus}>
+                  <View style={[styles.statusIndicator, styles.statusGoodIndicator]} />
+                  <Typography variant="caption" style={styles.statusGoodText}>
+                    Up to date
+                  </Typography>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </Card>
       </ScrollView>
     );
   };
@@ -167,11 +296,11 @@ const MaintenanceScreen: React.FC = () => {
       return (
         <EmptyState
           title={t('maintenance.history.empty.title', 'No Maintenance History')}
-          message={t('maintenance.history.empty.message', 'Start logging maintenance to build your history.')}
+          message="Visit your individual vehicles to start logging maintenance"
           icon={<ActivityIcon size={48} color={theme.colors.textSecondary} />}
           primaryAction={{
-            title: t('maintenance.logMaintenance', 'Log Maintenance'),
-            onPress: handleLogMaintenance,
+            title: t('vehicles.title', 'View Vehicles'),
+            onPress: () => navigation.navigate('Vehicles'),
           }}
         />
       );
@@ -277,28 +406,22 @@ const MaintenanceScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header with Log Button */}
+      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>
           {t('maintenance.title', 'Maintenance')}
         </Text>
-        <Button
-          title={t('maintenance.log', 'Log')}
-          variant="primary"
-          size="sm"
-          onPress={handleLogMaintenance}
-        />
       </View>
 
       {/* Tab Navigation */}
       <View style={styles.tabContainer}>
-        {renderTabButton('upcoming', t('maintenance.upcoming.title', 'Upcoming'))}
+        {renderTabButton('status', 'Fleet Status')}
         {renderTabButton('history', t('maintenance.history.title', 'History'))}
       </View>
 
       {/* Content */}
       <View style={styles.content}>
-        {activeTab === 'upcoming' ? renderUpcoming() : renderHistory()}
+        {activeTab === 'status' ? renderFleetStatus() : renderHistory()}
       </View>
     </View>
   );
@@ -408,6 +531,122 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.success,
     fontWeight: theme.typography.fontWeight.medium,
+  },
+  
+  // Fleet Status Styles
+  summaryCard: {
+    marginBottom: theme.spacing.lg,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    gap: theme.spacing.md,
+  },
+  statCard: {
+    flex: 1,
+    alignItems: 'center',
+    padding: theme.spacing.sm,
+    backgroundColor: theme.colors.backgroundSecondary,
+    borderRadius: theme.borderRadius.md,
+  },
+  statNumber: {
+    color: theme.colors.primary,
+    fontWeight: theme.typography.fontWeight.bold,
+    marginBottom: theme.spacing.xs,
+  },
+  statLabel: {
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+  },
+  
+  statusCard: {
+    marginBottom: theme.spacing.lg,
+  },
+  statusItems: {
+    gap: theme.spacing.sm,
+  },
+  statusItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+  },
+  statusIndicator: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  statusGoodIndicator: {
+    backgroundColor: theme.colors.success,
+  },
+  statusWarningIndicator: {
+    backgroundColor: theme.colors.warning,
+  },
+  statusErrorIndicator: {
+    backgroundColor: theme.colors.error,
+  },
+  statusContent: {
+    flex: 1,
+  },
+  statusText: {
+    color: theme.colors.text,
+  },
+  statusWarningText: {
+    color: theme.colors.warning,
+  },
+  statusErrorText: {
+    color: theme.colors.error,
+  },
+  statusGoodText: {
+    color: theme.colors.success,
+  },
+  statusSubtext: {
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.xs,
+  },
+  
+  vehicleListCard: {
+    marginBottom: theme.spacing.lg,
+  },
+  vehicleItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.borderLight,
+  },
+  vehicleInfo: {
+    flex: 1,
+    gap: theme.spacing.xs,
+  },
+  vehicleName: {
+    color: theme.colors.text,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  vehicleDetails: {
+    gap: theme.spacing.xs,
+  },
+  vehicleMileage: {
+    color: theme.colors.textSecondary,
+  },
+  lastMaintenance: {
+    color: theme.colors.primary,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  noMaintenance: {
+    color: theme.colors.textSecondary,
+    fontStyle: 'italic',
+  },
+  vehicleStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+  },
+  
+  sectionTitle: {
+    color: theme.colors.text,
+    fontWeight: theme.typography.fontWeight.semibold,
+    marginBottom: theme.spacing.sm,
   },
 });
 

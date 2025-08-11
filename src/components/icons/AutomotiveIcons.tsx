@@ -447,6 +447,23 @@ export const MailIcon: React.FC<IconProps> = ({
   </Svg>
 );
 
+// ChevronRight Icon for CTAs and navigation
+export const ChevronRightIcon: React.FC<IconProps> = ({ 
+  size = 24, 
+  color = '#666', 
+  strokeWidth = 2 
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path 
+      d="M9 18l6-6-6-6"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
 // Car Silhouette Icon - Default placeholder for vehicle photos
 export const CarSilhouetteIcon: React.FC<IconProps> = ({ 
   size = 24, 

@@ -74,7 +74,13 @@ export const LoginScreen: React.FC = () => {
       });
       // Navigation will be handled by auth state change
     } catch (error) {
-      const message = error instanceof AuthError ? error.message : 'An unexpected error occurred';
+      let message = error instanceof AuthError ? error.message : 'An unexpected error occurred';
+      
+      // Provide more helpful messages for common errors
+      if (error instanceof AuthError && error.code === 'auth/invalid-credential') {
+        message = 'Email or password is incorrect. Please check your credentials or create a new account.';
+      }
+      
       Alert.alert('Sign In Failed', message);
     } finally {
       setIsLoading(false);

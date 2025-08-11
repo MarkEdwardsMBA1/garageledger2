@@ -17,25 +17,18 @@ import { theme } from '../utils/theme';
 import { Vehicle } from '../types';
 import { vehicleRepository } from '../repositories/VehicleRepository';
 import { useAuth } from '../contexts/AuthContext';
+import { validateVehicleForm, formDataToVehicle, VehicleFormData, VehicleValidationErrors } from '../utils/vehicleValidation';
 
 interface FirstVehicleWizardProps {
   navigation: any;
 }
 
-interface FormData {
-  make: string;
-  model: string;
-  year: string;
+interface FormData extends VehicleFormData {
   nickname: string;
-  mileage: string;
 }
 
-interface FormErrors {
-  make?: string;
-  model?: string;
-  year?: string;
+interface FormErrors extends VehicleValidationErrors {
   nickname?: string;
-  mileage?: string;
 }
 
 export const FirstVehicleWizardScreen: React.FC<FirstVehicleWizardProps> = ({ navigation }) => {
@@ -64,36 +57,10 @@ export const FirstVehicleWizardScreen: React.FC<FirstVehicleWizardProps> = ({ na
   };
 
   const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-
-    // Required fields - only 3 for A1 activation
-    if (!formData.make.trim()) {
-      newErrors.make = t('validation.required', 'This field is required');
-    }
-    if (!formData.model.trim()) {
-      newErrors.model = t('validation.required', 'This field is required');
-    }
-    if (!formData.year.trim()) {
-      newErrors.year = t('validation.required', 'This field is required');
-    }
-
-    // Year validation
-    if (formData.year.trim()) {
-      const yearNum = parseInt(formData.year);
-      const currentYear = new Date().getFullYear();
-      if (isNaN(yearNum) || yearNum < 1900 || yearNum > currentYear + 1) {
-        newErrors.year = t('validation.invalidYear', 'Please enter a valid year');
-      }
-    }
-
-    // Optional mileage validation (if provided)
-    if (formData.mileage.trim()) {
-      const mileageNum = parseInt(formData.mileage.replace(/,/g, ''));
-      if (isNaN(mileageNum) || mileageNum < 0) {
-        newErrors.mileage = t('validation.invalidMileage', 'Please enter a valid mileage');
-      }
-    }
-
+    // Use shared validation logic with translation function wrapper
+    const translateFn = (key: string, fallback?: string) => fallback || key.split('.').pop() || key;
+    const newErrors = validateVehicleForm(formData, translateFn);
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -113,17 +80,12 @@ export const FirstVehicleWizardScreen: React.FC<FirstVehicleWizardProps> = ({ na
 
     setLoading(true);
     try {
-      // Create vehicle data for A1 activation
-      const vehicleData: Omit<Vehicle, 'id'> = {
-        userId: user.uid,
-        make: formData.make.trim(),
-        model: formData.model.trim(),
-        year: parseInt(formData.year),
-        mileage: formData.mileage.trim() ? parseInt(formData.mileage.replace(/,/g, '')) : 0,
-        ...(formData.nickname.trim() && { nickname: formData.nickname.trim() }),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+      // Create vehicle data using shared utility
+      const vehicleData = formDataToVehicle(formData, user.uid);
+      // Add nickname if provided (specific to first vehicle wizard)
+      if (formData.nickname.trim()) {
+        vehicleData.nickname = formData.nickname.trim();
+      }
 
       console.log('Creating first vehicle for A1 activation:', vehicleData);
       
@@ -177,7 +139,10 @@ export const FirstVehicleWizardScreen: React.FC<FirstVehicleWizardProps> = ({ na
       <ScrollView 
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: Math.max(insets.bottom + theme.spacing.xl, theme.spacing['4xl']) }
+          { 
+            paddingTop: Math.max(insets.top + theme.spacing.md, theme.spacing.xl),
+            paddingBottom: Math.max(insets.bottom + theme.spacing.xl, theme.spacing['4xl']) 
+          }
         ]}
       >
         {/* Header */}
@@ -301,21 +266,24 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.xl,
   },
   header: {
     alignItems: 'center',
     marginBottom: theme.spacing.xl,
   },
   title: {
+    fontSize: theme.typography.fontSize['2xl'],
+    fontWeight: theme.typography.fontWeight.bold,
     textAlign: 'center',
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
     color: theme.colors.text,
   },
   subtitle: {
+    fontSize: theme.typography.fontSize.base,
     textAlign: 'center',
     color: theme.colors.textSecondary,
     lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.base,
+    paddingHorizontal: theme.spacing.md,
   },
   formCard: {
     marginBottom: theme.spacing.xl,
@@ -336,6 +304,7 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.lg,
   },
   primaryButton: {
+    width: '100%',
     marginBottom: theme.spacing.md,
   },
   skipButton: {

@@ -167,6 +167,7 @@ export const SignUpSuccessScreen: React.FC<SignUpSuccessProps> = ({ navigation }
             variant="primary"
             onPress={handleAddFirstVehicle}
             style={styles.primaryButton}
+            textStyle={styles.primaryButtonText}
             fullWidth
           />
         </Card>
@@ -265,6 +266,13 @@ const styles = StyleSheet.create({
   primaryButton: {
     width: '100%',
     alignSelf: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  primaryButtonText: {
+    textAlign: 'center',
+    alignSelf: 'center',
+    width: '100%',
   },
   skipButton: {
     alignSelf: 'center',

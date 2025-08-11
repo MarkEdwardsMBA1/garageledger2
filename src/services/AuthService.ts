@@ -126,7 +126,8 @@ export class AuthService {
 
       return this.formatUser(userCredential.user);
     } catch (error: any) {
-      console.error('🔑 AuthService: signIn error:', error.code, error.message);
+      // Log for debugging but don't make it prominent
+      console.log('🔑 AuthService: signIn failed for user:', email.split('@')[0] + '@***');
       throw this.handleAuthError(error);
     }
   }
@@ -218,7 +219,7 @@ export class AuthService {
       
       return refreshedUser;
     } catch (error: any) {
-      console.error('Failed to refresh user:', error);
+      console.log('🔐 AuthService: Failed to refresh user');
       throw this.handleAuthError(error);
     }
   }

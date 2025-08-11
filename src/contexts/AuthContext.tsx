@@ -58,7 +58,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // User state will be updated by the onAuthStateChanged listener
       // setIsLoading(false) will be called by the listener
     } catch (error) {
-      console.error('🔐 AuthContext: signIn failed:', error);
+      // Log without error level to avoid showing in user interface
+      console.log('🔐 AuthContext: signIn failed');
       setIsLoading(false);
       throw error;
     }
@@ -95,7 +96,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await authService.refreshUser();
       // User state will be updated by the onAuthStateChanged listener
     } catch (error) {
-      console.error('Failed to refresh user:', error);
+      console.log('🔐 AuthContext: Failed to refresh user');
       // Don't throw error - not critical
     }
   };

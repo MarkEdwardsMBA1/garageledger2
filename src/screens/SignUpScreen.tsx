@@ -91,8 +91,8 @@ export const SignUpScreen: React.FC = () => {
         displayName: formData.displayName.trim(),
       });
 
-      // Navigate to legal consent screen (integrated, not blocking)
-      navigation.navigate('LegalConsent' as never);
+      // Navigate to legal agreements screen (integrated, not blocking)
+      navigation.navigate('LegalAgreements' as never);
     } catch (error) {
       let message = error instanceof AuthError ? error.message : 'An unexpected error occurred';
       

@@ -16,6 +16,7 @@ import { SpeedometerIcon, CarIcon, SpannerIcon, GearIcon } from '../components/i
 // Import screens
 import DashboardScreen from '../screens/DashboardScreen';
 import VehiclesScreen from '../screens/VehiclesScreen';
+import VehicleHomeScreen from '../screens/VehicleHomeScreen';
 import MaintenanceScreen from '../screens/MaintenanceScreen';
 import AddMaintenanceLogScreen from '../screens/AddMaintenanceLogScreen';
 import SettingsScreen from '../screens/SettingsScreen';
@@ -27,7 +28,7 @@ import { SplashScreen } from '../screens/SplashScreen';
 import { WelcomeScreen } from '../screens/WelcomeScreen';
 import { SignUpSuccessScreen } from '../screens/SignUpSuccessScreen';
 import { LegalAgreementsScreen } from '../screens/LegalAgreementsScreen';
-import { LegalConsentScreen } from '../screens/LegalConsentScreen';
+import { OnboardingFlowScreen } from '../screens/OnboardingFlowScreen';
 import { GoalsSetupScreen } from '../screens/GoalsSetupScreen';
 import { GoalsSuccessScreen } from '../screens/GoalsSuccessScreen';
 import { FirstVehicleWizardScreen } from '../screens/FirstVehicleWizardScreen';
@@ -96,6 +97,36 @@ const VehiclesStack: React.FC = () => {
         }}
       />
       <Stack.Screen
+        name="VehicleHome"
+        component={VehicleHomeScreen}
+        options={({ route, navigation }) => {
+          // Extract vehicle info from params if available for dynamic title
+          const params = route.params as any;
+          return {
+            title: 'Vehicle Details', // Will be updated with actual vehicle name when loaded
+            headerBackTitle: t('vehicles.title', 'Vehicles'), // Clean back button text
+            headerRight: () => (
+              <TouchableOpacity
+                onPress={() => navigation.navigate('EditVehicle', { vehicleId: params?.vehicleId })}
+                style={{
+                  marginRight: theme.spacing.md,
+                  paddingHorizontal: theme.spacing.sm,
+                  paddingVertical: theme.spacing.xs,
+                }}
+              >
+                <Text style={{
+                  color: theme.colors.primary,
+                  fontSize: theme.typography.fontSize.sm,
+                  fontWeight: theme.typography.fontWeight.semibold,
+                }}>
+                  {t('common.edit', 'EDIT')}
+                </Text>
+              </TouchableOpacity>
+            ),
+          };
+        }}
+      />
+      <Stack.Screen
         name="EditVehicle"
         component={EditVehicleScreen}
         options={{
@@ -161,11 +192,11 @@ const OnboardingStack: React.FC = () => {
       }}
     >
       <Stack.Screen name="Welcome" component={WelcomeScreen} />
+      <Stack.Screen name="OnboardingFlow" component={OnboardingFlowScreen} />
       <Stack.Screen name="GoalsSetup" component={GoalsSetupScreen} />
       <Stack.Screen name="GoalsSuccess" component={GoalsSuccessScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="SignUp" component={SignUpScreen} />
-      <Stack.Screen name="LegalConsent" component={LegalConsentScreen} />
       <Stack.Screen name="LegalAgreements" component={LegalAgreementsScreen} />
       <Stack.Screen name="SignUpSuccess" component={SignUpSuccessScreen} />
       <Stack.Screen name="FirstVehicleWizard" component={FirstVehicleWizardScreen} />
@@ -188,6 +219,7 @@ const LegalComplianceStack: React.FC = () => {
       initialRouteName="LegalAgreements"
     >
       <Stack.Screen name="LegalAgreements" component={LegalAgreementsScreen} />
+      <Stack.Screen name="OnboardingFlow" component={OnboardingFlowScreen} />
       <Stack.Screen name="SignUpSuccess" component={SignUpSuccessScreen} />
       <Stack.Screen name="FirstVehicleWizard" component={FirstVehicleWizardScreen} />
       <Stack.Screen name="FirstVehicleSuccess" component={FirstVehicleSuccessScreen} />

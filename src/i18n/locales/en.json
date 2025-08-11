@@ -1,5 +1,9 @@
 {
   "common": {
+    "appName": "GarageLedger",
+    "continueToSetup": "Continue to setup",
+    "navigateToNextScreen": "Navigate to the next screen",
+    "signInToExistingAccount": "Sign in to your existing account",
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
@@ -294,6 +298,9 @@
     "mileageRequired": "We need your current mileage to track maintenance intervals",
     "dateRequired": "When was this maintenance performed? Please select a date",
     "categoryRequired": "Please select what type of maintenance was performed"
+  },
+  "splash": {
+    "tagline": "Track your car's life"
   },
   "auth": {
     "emailAlreadyExists": "Oops! An account with this email already exists. Please sign in.",

@@ -103,7 +103,7 @@ const VehiclesScreen: React.FC<VehiclesScreenProps> = ({ navigation }) => {
           subtitle={vehicle.mileage ? `${vehicle.mileage.toLocaleString()} ${t('vehicles.miles', 'miles')}` : t('vehicles.mileageNotSet', 'Mileage not set')}
           pressable
           onPress={() => {
-            navigation.navigate('EditVehicle', { vehicleId: vehicle.id });
+            navigation.navigate('VehicleHome', { vehicleId: vehicle.id });
           }}
           rightContent={
             <View style={styles.vehicleActions}>

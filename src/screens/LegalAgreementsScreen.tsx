@@ -144,8 +144,8 @@ export const LegalAgreementsScreen: React.FC = () => {
   const handleAccept = async () => {
     if (!canProceed) {
       Alert.alert(
-        'Legal Agreements Required',
-        'Please accept all legal agreements to continue.',
+        'Almost There!',
+        'Please review and accept all agreements to continue.',
         [{ text: 'OK' }]
       );
       return;
@@ -173,8 +173,8 @@ export const LegalAgreementsScreen: React.FC = () => {
       // Record legal acceptance
       await legalComplianceService.recordAcceptance(currentUser.uid, acceptanceData);
 
-      // Navigate to welcome screen - SignUpSuccess will handle vehicle checking
-      navigation.navigate('SignUpSuccess' as never);
+      // Navigate to value proposition onboarding after legal agreements  
+      navigation.navigate('OnboardingFlow' as never);
     } catch (error) {
       console.error('Failed to record legal acceptance:', error);
       Alert.alert(
@@ -269,14 +269,51 @@ GarageLedger provides tracking tools only. We make no warranties about maintenan
         ]}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.header}>
-          <Typography variant="title" style={styles.title}>
-            {t('legal.justOneMoreStep', 'Just One More Step')}
-          </Typography>
-          <Typography variant="body" style={styles.subtitle}>
-            To keep your data safe and provide the best service, please review our policies:
+        {/* Progress indicator */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBar}>
+            <View style={[styles.progressFill, { width: '80%' }]} />
+          </View>
+          <Typography variant="caption" style={styles.progressText}>
+            Step 4 of 5
           </Typography>
         </View>
+
+        <View style={styles.header}>
+          <Typography variant="body" style={styles.headerIcon}>
+            🔒
+          </Typography>
+          <Typography variant="title" style={styles.title}>
+            Privacy & Terms
+          </Typography>
+          <Typography variant="body" style={styles.subtitle}>
+            We value your privacy and want to be transparent about how we handle your data.
+          </Typography>
+        </View>
+
+        {/* Friendly summary */}
+        <Card style={styles.summaryCard}>
+          <View style={styles.summaryItem}>
+            <Typography variant="body" style={styles.summaryIcon}>✓</Typography>
+            <Typography variant="body" style={styles.summaryText}>
+              Your vehicle data stays yours — export anytime
+            </Typography>
+          </View>
+          
+          <View style={styles.summaryItem}>
+            <Typography variant="body" style={styles.summaryIcon}>✓</Typography>
+            <Typography variant="body" style={styles.summaryText}>
+              We provide tracking tools, not professional advice
+            </Typography>
+          </View>
+          
+          <View style={styles.summaryItem}>
+            <Typography variant="body" style={styles.summaryIcon}>✓</Typography>
+            <Typography variant="body" style={styles.summaryText}>
+              Secure cloud storage with data encryption
+            </Typography>
+          </View>
+        </Card>
 
         <Card style={styles.agreementsCard}>
           <LegalCheckbox
@@ -295,46 +332,28 @@ GarageLedger provides tracking tools only. We make no warranties about maintenan
             testID="privacy-checkbox"
           />
 
-          <View style={styles.disclaimerSection}>
-            <View style={styles.disclaimerHeader}>
-              <Typography variant="body" style={styles.disclaimerIcon}>
-                ℹ️
-              </Typography>
-              <Typography variant="heading" style={styles.disclaimerTitle}>
-                Quick Reminder: Maintenance Disclaimer
-              </Typography>
-            </View>
-            
-            <Typography variant="body" style={styles.disclaimerText}>
-              This app provides tracking tools, not professional advice. Always consult your owner's manual or qualified mechanic for maintenance decisions.
-            </Typography>
-
-            <LegalCheckbox
-              checked={maintenanceDisclaimerAccepted}
-              onToggle={setMaintenanceDisclaimerAccepted}
-              label="I understand and agree to the maintenance disclaimer"
-              onShowSummary={showMaintenanceDisclaimer}
-              testID="disclaimer-checkbox"
-            />
-          </View>
+          <LegalCheckbox
+            checked={maintenanceDisclaimerAccepted}
+            onToggle={setMaintenanceDisclaimerAccepted}
+            label="I understand the maintenance disclaimer"
+            onShowSummary={showMaintenanceDisclaimer}
+            testID="disclaimer-checkbox"
+          />
         </Card>
 
         <View style={styles.buttons}>
           <Button
-            title="Accept & Continue"
+            title="I Understand & Continue"
             onPress={handleAccept}
             disabled={!canProceed || isLoading}
             style={!canProceed ? {...styles.acceptButton, ...styles.acceptButtonDisabled} : styles.acceptButton}
+            textStyle={styles.acceptButtonText}
             testID="accept-continue-button"
           />
 
-          <Button
-            title="Back"
-            onPress={handleBack}
-            variant="text"
-            style={styles.backButton}
-            testID="back-button"
-          />
+          <Typography variant="caption" style={styles.footerText}>
+            You can review these anytime in Settings
+          </Typography>
         </View>
       </ScrollView>
 
@@ -358,19 +377,65 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.xl,
   },
+  progressContainer: {
+    marginBottom: theme.spacing.xl,
+    alignItems: 'center',
+  },
+  progressBar: {
+    width: '100%',
+    height: 4,
+    backgroundColor: theme.colors.borderLight,
+    borderRadius: 2,
+    marginBottom: theme.spacing.sm,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: theme.colors.primary,
+    borderRadius: 2,
+  },
+  progressText: {
+    color: theme.colors.textSecondary,
+  },
   header: {
     alignItems: 'center',
     marginBottom: theme.spacing.xl,
   },
+  headerIcon: {
+    fontSize: theme.typography.fontSize['3xl'],
+    marginBottom: theme.spacing.md,
+  },
   title: {
-    marginBottom: theme.spacing.sm,
+    fontSize: theme.typography.fontSize['2xl'],
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.md,
     textAlign: 'center',
-    color: theme.colors.primary,
   },
   subtitle: {
-    textAlign: 'center',
+    fontSize: theme.typography.fontSize.base,
     color: theme.colors.textSecondary,
-    paddingHorizontal: theme.spacing.sm,
+    textAlign: 'center',
+    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.base,
+    paddingHorizontal: theme.spacing.md,
+  },
+  summaryCard: {
+    padding: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
+  },
+  summaryItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: theme.spacing.md,
+  },
+  summaryIcon: {
+    color: theme.colors.success,
+    marginRight: theme.spacing.md,
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.bold,
+  },
+  summaryText: {
+    flex: 1,
+    color: theme.colors.text,
     lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.base,
   },
   agreementsCard: {
@@ -412,33 +477,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
     paddingVertical: theme.spacing.xs,
   },
-  disclaimerSection: {
-    backgroundColor: theme.colors.info + '10',
-    borderRadius: theme.spacing.sm,
-    padding: theme.spacing.md,
-    borderWidth: 1,
-    borderColor: theme.colors.info + '30',
-    marginTop: theme.spacing.md,
-  },
-  disclaimerHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.sm,
-  },
-  disclaimerIcon: {
-    fontSize: 20,
-    marginRight: theme.spacing.sm,
-  },
-  disclaimerTitle: {
-    flex: 1,
-    color: theme.colors.info,
-    fontWeight: theme.typography.fontWeight.semibold,
-  },
-  disclaimerText: {
-    color: theme.colors.text,
-    marginBottom: theme.spacing.md,
-    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.base,
-  },
   buttons: {
     alignItems: 'center',
   },
@@ -446,11 +484,16 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: theme.spacing.md,
   },
+  acceptButtonText: {
+    textAlign: 'center',
+  },
   acceptButtonDisabled: {
     opacity: 0.5,
   },
-  backButton: {
-    alignSelf: 'center',
+  footerText: {
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    marginTop: theme.spacing.md,
   },
   
   // Modal styles

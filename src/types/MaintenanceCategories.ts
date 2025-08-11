@@ -24,16 +24,6 @@ export interface MaintenanceComponents {
 
 // Complete maintenance category system based on Mark's comprehensive document
 export const MAINTENANCE_CATEGORIES: MaintenanceCategorySystem = {
-  'user-defined': {
-    name: 'User-Defined (Custom)',
-    subcategories: {
-      'custom': {
-        name: 'Custom Category & Sub-Category',
-        description: 'User-defined maintenance not covered by standard categories'
-      }
-    }
-  },
-  
   'brake-system': {
     name: 'Brake System',
     subcategories: {
@@ -412,6 +402,16 @@ export const MAINTENANCE_CATEGORIES: MaintenanceCategorySystem = {
         components: {
           parts: ['Shop Rags', 'Gloves', 'Filters', 'Gaskets']
         }
+      }
+    }
+  },
+
+  'user-defined': {
+    name: 'User-Defined (Custom)',
+    subcategories: {
+      'custom': {
+        name: 'Custom Category & Sub-Category',
+        description: 'User-defined maintenance not covered by standard categories'
       }
     }
   }
