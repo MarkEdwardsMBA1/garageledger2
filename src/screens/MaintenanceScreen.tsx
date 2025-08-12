@@ -112,10 +112,44 @@ const MaintenanceScreen: React.FC = () => {
   );
 
   const renderFleetStatus = () => {
-    // Calculate fleet statistics
-    const totalMiles = vehicles.reduce((sum, vehicle) => sum + (vehicle.mileage || 0), 0);
-    const totalLogs = maintenanceLogs.length;
+    // Calculate comprehensive fleet analytics
     const totalVehicles = vehicles.length;
+    const totalLogs = maintenanceLogs.length;
+    const totalMiles = vehicles.reduce((sum, vehicle) => sum + (vehicle.mileage || 0), 0);
+    const averageMileage = totalVehicles > 0 ? Math.round(totalMiles / totalVehicles) : 0;
+    
+    // Calculate average age
+    const currentYear = new Date().getFullYear();
+    const totalAge = vehicles.reduce((sum, vehicle) => sum + (currentYear - vehicle.year), 0);
+    const averageAge = totalVehicles > 0 ? (totalAge / totalVehicles).toFixed(1) : 0;
+    
+    // Calculate total service costs
+    const totalServiceCosts = maintenanceLogs.reduce((sum, log) => sum + (log.cost || 0), 0);
+    
+    // Calculate category breakdown
+    const categoryStats = maintenanceLogs.reduce((acc, log) => {
+      const [categoryKey] = log.category.split(':');
+      const categoryName = getCategoryName(categoryKey);
+      const cost = log.cost || 0;
+      
+      if (!acc[categoryName]) {
+        acc[categoryName] = { count: 0, cost: 0 };
+      }
+      acc[categoryName].count++;
+      acc[categoryName].cost += cost;
+      return acc;
+    }, {} as Record<string, { count: number; cost: number }>);
+    
+    // Get top 3 categories by cost
+    const topCategories = Object.entries(categoryStats)
+      .sort(([, a], [, b]) => b.cost - a.cost)
+      .slice(0, 3)
+      .map(([category, stats]) => ({
+        name: category,
+        cost: stats.cost,
+        percentage: totalServiceCosts > 0 ? Math.round((stats.cost / totalServiceCosts) * 100) : 0,
+        count: stats.count
+      }));
     
     // For now, assume all vehicles are up to date (no overdue maintenance)
     // This will be enhanced with actual reminder system later
@@ -142,143 +176,101 @@ const MaintenanceScreen: React.FC = () => {
         {/* Fleet Summary Stats */}
         <Card variant="elevated" style={styles.summaryCard}>
           <Typography variant="heading" style={styles.sectionTitle}>
-            📊 Fleet Overview
+            Garage Overview
           </Typography>
           
           <View style={styles.statsGrid}>
-            <View style={styles.statCard}>
-              <Typography variant="title" style={styles.statNumber}>
-                {totalVehicles}
-              </Typography>
-              <Typography variant="caption" style={styles.statLabel}>
-                {totalVehicles === 1 ? 'Vehicle' : 'Vehicles'}
-              </Typography>
-            </View>
-            
-            <View style={styles.statCard}>
-              <Typography variant="title" style={styles.statNumber}>
-                {totalMiles.toLocaleString()}
-              </Typography>
-              <Typography variant="caption" style={styles.statLabel}>
-                Total Miles
-              </Typography>
-            </View>
-            
-            <View style={styles.statCard}>
-              <Typography variant="title" style={styles.statNumber}>
-                {totalLogs}
-              </Typography>
-              <Typography variant="caption" style={styles.statLabel}>
-                Maintenance Logs
-              </Typography>
-            </View>
-          </View>
-        </Card>
-
-        {/* Vehicle Status Overview */}
-        <Card variant="elevated" style={styles.statusCard}>
-          <Typography variant="heading" style={styles.sectionTitle}>
-            🚦 Status Summary
-          </Typography>
-          
-          <View style={styles.statusItems}>
-            <View style={styles.statusItem}>
-              <View style={[styles.statusIndicator, styles.statusGoodIndicator]} />
-              <View style={styles.statusContent}>
-                <Typography variant="bodyLarge" style={styles.statusText}>
-                  {upToDateCount} {upToDateCount === 1 ? 'vehicle' : 'vehicles'} up to date
+            {/* First row - 3 stats */}
+            <View style={styles.statsRow}>
+              <View style={styles.statCard}>
+                <Typography variant="title" style={styles.statNumber}>
+                  {totalVehicles}
                 </Typography>
-                <Typography variant="caption" style={styles.statusSubtext}>
-                  No known maintenance needed
+                <Typography variant="caption" style={styles.statLabel}>
+                  {totalVehicles === 1 ? 'Vehicle' : 'Vehicles'} in Garage
+                </Typography>
+              </View>
+              
+              <View style={styles.statCard}>
+                <Typography variant="title" style={styles.statNumber}>
+                  {averageAge}
+                </Typography>
+                <Typography variant="caption" style={styles.statLabel}>
+                  Average Age (years)
+                </Typography>
+              </View>
+              
+              <View style={styles.statCard}>
+                <Typography variant="title" style={styles.statNumber}>
+                  {averageMileage.toLocaleString()}
+                </Typography>
+                <Typography variant="caption" style={styles.statLabel}>
+                  Average Mileage
                 </Typography>
               </View>
             </View>
             
-            {dueSoonCount > 0 && (
-              <View style={styles.statusItem}>
-                <View style={[styles.statusIndicator, styles.statusWarningIndicator]} />
-                <View style={styles.statusContent}>
-                  <Typography variant="bodyLarge" style={styles.statusWarningText}>
-                    {dueSoonCount} {dueSoonCount === 1 ? 'vehicle' : 'vehicles'} due soon
-                  </Typography>
-                  <Typography variant="caption" style={styles.statusSubtext}>
-                    Maintenance needed within 30 days
-                  </Typography>
-                </View>
+            {/* Second row - 2 stats */}
+            <View style={styles.statsRow}>
+              <View style={styles.statCard}>
+                <Typography variant="title" style={styles.statNumber}>
+                  ${totalServiceCosts.toFixed(0)}
+                </Typography>
+                <Typography variant="caption" style={styles.statLabel}>
+                  Total Service Costs
+                </Typography>
               </View>
-            )}
-            
-            {overdueCount > 0 && (
-              <View style={styles.statusItem}>
-                <View style={[styles.statusIndicator, styles.statusErrorIndicator]} />
-                <View style={styles.statusContent}>
-                  <Typography variant="bodyLarge" style={styles.statusErrorText}>
-                    {overdueCount} {overdueCount === 1 ? 'vehicle' : 'vehicles'} overdue
-                  </Typography>
-                  <Typography variant="caption" style={styles.statusSubtext}>
-                    Immediate attention required
-                  </Typography>
-                </View>
+              
+              <View style={styles.statCard}>
+                <Typography variant="title" style={styles.statNumber}>
+                  {totalLogs}
+                </Typography>
+                <Typography variant="caption" style={styles.statLabel}>
+                  Total Services
+                </Typography>
               </View>
-            )}
+              
+              {/* Spacer for alignment */}
+              <View style={styles.statCard} />
+            </View>
           </View>
         </Card>
 
-        {/* Vehicle List with Status */}
-        <Card variant="elevated" style={styles.vehicleListCard}>
-          <Typography variant="heading" style={styles.sectionTitle}>
-            🚗 Vehicle Details
-          </Typography>
-          
-          {vehicles.map((vehicle) => {
-            const vehicleLogs = maintenanceLogs.filter(log => log.vehicleId === vehicle.id);
-            const lastMaintenance = vehicleLogs.length > 0 ? vehicleLogs[0] : null;
+        {/* Cost Breakdown by Category */}
+        {totalServiceCosts > 0 && topCategories.length > 0 && (
+          <Card variant="elevated" style={styles.summaryCard}>
+            <Typography variant="heading" style={styles.sectionTitle}>
+              Cost Breakdown by Category
+            </Typography>
             
-            return (
-              <TouchableOpacity
-                key={vehicle.id}
-                style={styles.vehicleItem}
-                onPress={() => navigation.navigate('Vehicles', {
-                  screen: 'VehicleHome',
-                  params: { vehicleId: vehicle.id }
-                })}
-              >
-                <View style={styles.vehicleInfo}>
-                  <Typography variant="bodyLarge" style={styles.vehicleName}>
-                    {vehicle.year} {vehicle.make} {vehicle.model}
+            {topCategories.map((category, index) => (
+              <View key={category.name} style={styles.categoryBreakdownItem}>
+                <View style={styles.categoryInfo}>
+                  <Typography variant="bodyLarge" style={styles.categoryName}>
+                    {category.name}
                   </Typography>
-                  
-                  <View style={styles.vehicleDetails}>
-                    {vehicle.mileage > 0 && (
-                      <Typography variant="caption" style={styles.vehicleMileage}>
-                        {vehicle.mileage.toLocaleString()} miles
-                      </Typography>
-                    )}
-                    
-                    {lastMaintenance && (
-                      <Typography variant="caption" style={styles.lastMaintenance}>
-                        Last: {lastMaintenance.title} ({lastMaintenance.date.toLocaleDateString()})
-                      </Typography>
-                    )}
-                    
-                    {!lastMaintenance && (
-                      <Typography variant="caption" style={styles.noMaintenance}>
-                        No maintenance logged yet
-                      </Typography>
-                    )}
-                  </View>
-                </View>
-                
-                <View style={styles.vehicleStatus}>
-                  <View style={[styles.statusIndicator, styles.statusGoodIndicator]} />
-                  <Typography variant="caption" style={styles.statusGoodText}>
-                    Up to date
+                  <Typography variant="body" style={styles.categoryStats}>
+                    ${category.cost.toFixed(0)} ({category.percentage}%) • {category.count} services
                   </Typography>
                 </View>
-              </TouchableOpacity>
-            );
-          })}
-        </Card>
+                <View style={styles.categoryBar}>
+                  <View 
+                    style={[
+                      styles.categoryBarFill, 
+                      { 
+                        width: `${category.percentage}%`,
+                        backgroundColor: index === 0 ? theme.colors.primary : 
+                                        index === 1 ? theme.colors.secondary : 
+                                        theme.colors.accent
+                      }
+                    ]} 
+                  />
+                </View>
+              </View>
+            ))}
+          </Card>
+        )}
+
       </ScrollView>
     );
   };
@@ -338,6 +330,7 @@ const MaintenanceScreen: React.FC = () => {
             return (
               <Card
                 key={log.id}
+                variant="elevated"
                 title={log.title}
                 subtitle={vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Vehicle'}
                 pressable
@@ -406,13 +399,6 @@ const MaintenanceScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>
-          {t('maintenance.title', 'Maintenance')}
-        </Text>
-      </View>
-
       {/* Tab Navigation */}
       <View style={styles.tabContainer}>
         {renderTabButton('status', 'Fleet Status')}
@@ -432,24 +418,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: theme.spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.borderLight,
-    backgroundColor: theme.colors.surface,
-  },
-  headerTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text,
-  },
   tabContainer: {
     flexDirection: 'row',
     backgroundColor: theme.colors.surface,
     paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.lg, // Add top spacing from Engine Blue header
     paddingBottom: theme.spacing.md,
     gap: theme.spacing.sm,
   },
@@ -538,16 +511,20 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
   },
   statsGrid: {
+    gap: theme.spacing.md,
+  },
+  statsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     gap: theme.spacing.md,
   },
   statCard: {
     flex: 1,
     alignItems: 'center',
     padding: theme.spacing.sm,
-    backgroundColor: theme.colors.backgroundSecondary,
+    backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.md,
+    ...theme.shadows.xs,
   },
   statNumber: {
     color: theme.colors.primary,
@@ -647,6 +624,33 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     fontWeight: theme.typography.fontWeight.semibold,
     marginBottom: theme.spacing.sm,
+  },
+  
+  // Category Breakdown Styles
+  categoryBreakdownItem: {
+    marginBottom: theme.spacing.md,
+  },
+  categoryInfo: {
+    marginBottom: theme.spacing.xs,
+  },
+  categoryName: {
+    color: theme.colors.text,
+    fontWeight: theme.typography.fontWeight.semibold,
+    marginBottom: theme.spacing.xs,
+  },
+  categoryStats: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.fontSize.sm,
+  },
+  categoryBar: {
+    height: 8,
+    backgroundColor: theme.colors.borderLight,
+    borderRadius: theme.borderRadius.sm,
+    overflow: 'hidden',
+  },
+  categoryBarFill: {
+    height: '100%',
+    borderRadius: theme.borderRadius.sm,
   },
 });
 

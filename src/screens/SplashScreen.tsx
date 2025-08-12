@@ -41,14 +41,14 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={theme.colors.primaryDark} />
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.textLight} />
       <LinearGradient
         colors={[
-          theme.colors.primaryDark,   // Darker Engine Blue at top
-          '#2563eb',                  // Mid Engine Blue
-          theme.colors.primary,       // Engine Blue at bottom
+          theme.colors.textLight,     // Chrome Silver at top (lighter for logo contrast)
+          theme.colors.luxury,        // Titanium Gray middle
+          '#1f2937',                  // Dark Titanium Gray at bottom (darker for depth)
         ]}
-        locations={[0, 0.6, 1]}
+        locations={[0, 0.5, 1]}
         style={styles.gradient}
       >
         <View style={styles.content}>
@@ -120,9 +120,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: theme.typography.letterSpacing.tight,
     marginBottom: theme.spacing.sm,
-    textShadowColor: 'rgba(17, 24, 39, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadowColor: 'rgba(0, 0, 0, 0.4)', // Darker shadow for better contrast on gray
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 3,
   },
   tagline: {
     fontFamily: theme.typography.fontFamily.medium,
@@ -132,9 +132,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: theme.typography.letterSpacing.wide,
     opacity: 0.95,
-    textShadowColor: 'rgba(17, 24, 39, 0.2)',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)', // Darker shadow for tagline too
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 1,
+    textShadowRadius: 2,
   },
 });
 

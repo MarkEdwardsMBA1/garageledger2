@@ -12,11 +12,14 @@ import { useNavigation } from '@react-navigation/native';
 import { theme } from '../utils/theme';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
+import { EmailVerificationPrompt } from '../components/common/EmailVerificationPrompt';
 import { ActivityIcon } from '../components/icons';
 import { vehicleRepository } from '../repositories/VehicleRepository';
 import { maintenanceLogRepository } from '../repositories/FirebaseMaintenanceLogRepository';
 import { getCategoryName, getSubcategoryName } from '../types/MaintenanceCategories';
 import { Vehicle, MaintenanceLog } from '../types';
+import { useEmailVerificationPrompt } from '../hooks/useEmailVerificationPrompt';
+import { useAuth } from '../contexts/AuthContext';
 
 /**
  * Dashboard screen - main overview of the app
@@ -25,9 +28,13 @@ import { Vehicle, MaintenanceLog } from '../types';
 const DashboardScreen: React.FC = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
+  const { user } = useAuth();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [maintenanceLogs, setMaintenanceLogs] = useState<MaintenanceLog[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Smart email verification prompt management
+  const verificationPrompt = useEmailVerificationPrompt('dashboard');
 
   // Load vehicles and maintenance logs on component mount
   useEffect(() => {
@@ -68,6 +75,52 @@ const DashboardScreen: React.FC = () => {
           {t('dashboard.subtitle', 'Keep track of your vehicle maintenance')}
         </Text>
       </View>
+
+      {/* Email Verification Prompt - Show after user engagement */}
+      {verificationPrompt.shouldShow && vehicles.length > 0 && (
+        <EmailVerificationPrompt
+          variant="security"
+          onDismiss={verificationPrompt.recordDismissed}
+          onVerificationSent={verificationPrompt.recordVerificationSent}
+          style={styles.verificationPrompt}
+        />
+      )}
+
+      {/* Maintenance Insights */}
+      {vehicles.length > 0 && (
+        <View style={styles.insightsSection}>
+          <Text style={styles.sectionTitle}>
+            {t('dashboard.maintenanceInsights', 'Maintenance Insights')}
+          </Text>
+          
+          <Card variant="elevated" style={styles.insightsCard}>
+            <View style={styles.statusItems}>
+              <View style={styles.statusItem}>
+                <View style={[styles.statusIndicator, styles.statusGoodIndicator]} />
+                <View style={styles.statusContent}>
+                  <Text style={styles.statusText}>
+                    {vehicles.length} {vehicles.length === 1 ? 'vehicle' : 'vehicles'} up to date
+                  </Text>
+                  <Text style={styles.statusSubtext}>
+                    No known maintenance needed
+                  </Text>
+                </View>
+              </View>
+              
+              {/* Future: Dynamic status based on actual reminders */}
+              {/* 
+              <View style={styles.statusItem}>
+                <View style={[styles.statusIndicator, styles.statusWarningIndicator]} />
+                <View style={styles.statusContent}>
+                  <Text style={styles.statusWarningText}>Oil change due soon</Text>
+                  <Text style={styles.statusSubtext}>Service needed within 500 miles</Text>
+                </View>
+              </View>
+              */}
+            </View>
+          </Card>
+        </View>
+      )}
 
       {/* Quick Stats */}
       <View style={styles.statsSection}>
@@ -148,10 +201,18 @@ const DashboardScreen: React.FC = () => {
                   ]}
                   onPress={() => {
                     if (log.vehicleId) {
-                      navigation.navigate('Vehicles', { 
-                        screen: 'VehicleHome',
-                        params: { vehicleId: log.vehicleId }
+                      // Navigate to Vehicles tab and ensure proper navigation stack
+                      navigation.navigate('Vehicles', {
+                        screen: 'VehiclesList'
                       });
+                      
+                      // Then navigate to specific vehicle detail
+                      setTimeout(() => {
+                        navigation.navigate('Vehicles', {
+                          screen: 'VehicleHome',
+                          params: { vehicleId: log.vehicleId }
+                        });
+                      }, 100);
                     } else {
                       navigation.navigate('Maintenance');
                     }
@@ -192,20 +253,32 @@ const DashboardScreen: React.FC = () => {
             </TouchableOpacity>
           </Card>
         ) : (
-          <Card variant="filled">
-            <View style={styles.emptyState}>
-              <ActivityIcon size={48} color={theme.colors.textSecondary} />
-              <Text style={[styles.emptyStateTitle, { marginTop: theme.spacing.md }]}>
-                {t('dashboard.noActivity', 'No recent activity')}
-              </Text>
-              <Text style={styles.emptyStateMessage}>
-                {vehicles.length === 0 
-                  ? t('dashboard.noActivityMessage', 'Start by adding your first vehicle')
-                  : t('dashboard.noMaintenanceActivity', 'Start logging maintenance to build your activity history')
-                }
-              </Text>
-            </View>
-          </Card>
+          <>
+            {/* Email Verification Prompt for new users */}
+            {verificationPrompt.shouldShow && vehicles.length === 0 && (
+              <EmailVerificationPrompt
+                variant="completion"
+                onDismiss={verificationPrompt.recordDismissed}
+                onVerificationSent={verificationPrompt.recordVerificationSent}
+                style={styles.verificationPrompt}
+              />
+            )}
+            
+            <Card variant="filled">
+              <View style={styles.emptyState}>
+                <ActivityIcon size={48} color={theme.colors.textSecondary} />
+                <Text style={[styles.emptyStateTitle, { marginTop: theme.spacing.md }]}>
+                  {t('dashboard.noActivity', 'No recent activity')}
+                </Text>
+                <Text style={styles.emptyStateMessage}>
+                  {vehicles.length === 0 
+                    ? t('dashboard.noActivityMessage', 'Start by adding your first vehicle')
+                    : t('dashboard.noMaintenanceActivity', 'Start logging maintenance to build your activity history')
+                  }
+                </Text>
+              </View>
+            </Card>
+          </>
         )}
       </View>
     </ScrollView>
@@ -223,6 +296,11 @@ const styles = StyleSheet.create({
 
   // Welcome section
   welcomeSection: {
+    marginBottom: theme.spacing.xl,
+  },
+  
+  // Email verification prompt
+  verificationPrompt: {
     marginBottom: theme.spacing.xl,
   },
   welcomeTitle: {
@@ -373,6 +451,52 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     textAlign: 'center',
     lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.base,
+  },
+
+  // Maintenance Insights styles
+  insightsSection: {
+    marginBottom: theme.spacing.xl,
+  },
+  insightsCard: {
+    padding: theme.spacing.lg,
+  },
+  statusItems: {
+    gap: theme.spacing.sm,
+  },
+  statusItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+  },
+  statusIndicator: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  statusGoodIndicator: {
+    backgroundColor: theme.colors.success,
+  },
+  statusWarningIndicator: {
+    backgroundColor: theme.colors.warning,
+  },
+  statusContent: {
+    flex: 1,
+  },
+  statusText: {
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.medium,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  },
+  statusWarningText: {
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.medium,
+    color: theme.colors.warning,
+    marginBottom: theme.spacing.xs,
+  },
+  statusSubtext: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
   },
 });
 

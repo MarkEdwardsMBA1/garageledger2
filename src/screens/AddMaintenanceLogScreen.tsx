@@ -55,8 +55,8 @@ const AddMaintenanceLogScreen: React.FC = () => {
   const params = route.params as AddMaintenanceLogParams;
 
   const [loading, setLoading] = useState(false);
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string>(params?.vehicleId || '');
+  const [currentVehicle, setCurrentVehicle] = useState<Vehicle | null>(null);
+  const vehicleId = params?.vehicleId;
   const [formData, setFormData] = useState<MaintenanceLogFormData>({
     title: '',
     date: new Date(),
@@ -69,27 +69,45 @@ const AddMaintenanceLogScreen: React.FC = () => {
     photos: [],
   });
 
-  // Load user's vehicles on component mount
+  // Load the specific vehicle for this maintenance log
   useEffect(() => {
-    loadVehicles();
-  }, [isAuthenticated]);
+    loadVehicle();
+  }, [vehicleId, isAuthenticated]);
 
-  const loadVehicles = async () => {
-    if (!isAuthenticated) return;
+  const loadVehicle = async () => {
+    if (!isAuthenticated || !vehicleId) {
+      // No vehicle specified - redirect to vehicle selection
+      Alert.alert(
+        t('maintenance.noVehicle', 'No Vehicle Selected'),
+        t('maintenance.selectVehicleFirst', 'Please select a vehicle first to log maintenance.'),
+        [
+          {
+            text: t('common.ok', 'OK'),
+            onPress: () => navigation.goBack(),
+          },
+        ]
+      );
+      return;
+    }
     
     try {
-      const userVehicles = await vehicleRepository.getUserVehicles();
-      setVehicles(userVehicles);
-      
-      // If no vehicle pre-selected and user has vehicles, select the first one
-      if (!selectedVehicleId && userVehicles.length > 0) {
-        setSelectedVehicleId(userVehicles[0].id);
+      const vehicle = await vehicleRepository.getById(vehicleId);
+      if (vehicle) {
+        setCurrentVehicle(vehicle);
+      } else {
+        throw new Error('Vehicle not found');
       }
     } catch (error) {
-      console.error('Error loading vehicles:', error);
+      console.error('Error loading vehicle:', error);
       Alert.alert(
         t('common.error', 'Error'),
-        t('vehicles.loadError', 'Failed to load vehicles')
+        t('vehicles.loadError', 'Failed to load vehicle information.'),
+        [
+          {
+            text: t('common.ok', 'OK'),
+            onPress: () => navigation.goBack(),
+          },
+        ]
       );
     }
   };
@@ -101,7 +119,7 @@ const AddMaintenanceLogScreen: React.FC = () => {
     try {
       // Parse form data - handle optional fields properly for Firestore
       const maintenanceData: Omit<MaintenanceLog, 'id'> = {
-        vehicleId: selectedVehicleId,
+        vehicleId: vehicleId!,
         title: formData.title.trim(),
         date: formData.date,
         mileage: parseInt(formData.mileage) || 0,
@@ -144,59 +162,53 @@ const AddMaintenanceLogScreen: React.FC = () => {
   };
 
   const validateForm = (): boolean => {
-    if (!selectedVehicleId) {
+    if (!vehicleId || !currentVehicle) {
       Alert.alert(
         t('maintenance.logMaintenance', 'Log Maintenance'),
-        t('validation.selectVehicle', 'Please select a vehicle to log maintenance for')
+        t('maintenance.noVehicle', 'No vehicle selected for maintenance logging.')
       );
       return false;
     }
 
-    if (!formData.title.trim()) {
-      Alert.alert(
-        t('maintenance.logTitle', 'Title'),
-        t('validation.titleRequired', 'What type of maintenance did you perform? Please add a title')
-      );
-      return false;
-    }
+    // Collect missing required fields for friendly batch validation
+    const missingFields = [];
+    const invalidFields = [];
 
+    // Check required fields
     if (!formData.mileage || !formData.mileage.trim()) {
-      Alert.alert(
-        t('maintenance.mileage', 'Mileage'),
-        t('validation.mileageRequired', 'We need your current mileage to track maintenance intervals')
-      );
-      return false;
-    }
-
-    if (isNaN(parseInt(formData.mileage))) {
-      Alert.alert(
-        t('maintenance.mileage', 'Mileage'),
-        t('validation.invalidMileage', 'Please enter a valid mileage')
-      );
-      return false;
+      missingFields.push('• Current mileage');
+    } else if (isNaN(parseInt(formData.mileage))) {
+      invalidFields.push('• Mileage must be a valid number (e.g., 75000)');
     }
 
     if (!formData.date) {
-      Alert.alert(
-        t('maintenance.date', 'Date'),
-        t('validation.dateRequired', 'When was this maintenance performed? Please select a date')
-      );
-      return false;
+      missingFields.push('• Service date');
     }
 
     if (!formData.categoryKey || !formData.subcategoryKey) {
-      Alert.alert(
-        t('maintenance.category', 'Category'),
-        t('validation.categoryRequired', 'Please select what type of maintenance was performed')
-      );
-      return false;
+      missingFields.push('• Maintenance type/category');
     }
 
+    // Check optional but formatted fields
     if (formData.cost && isNaN(parseFloat(formData.cost))) {
-      Alert.alert(
-        t('maintenance.cost', 'Cost'),
-        'Please enter a valid cost amount'
-      );
+      invalidFields.push('• Cost must be a valid amount (e.g., 45.99) or leave blank');
+    }
+
+    // Show friendly combined error message
+    if (missingFields.length > 0 || invalidFields.length > 0) {
+      let message = '';
+      
+      if (missingFields.length > 0) {
+        message += `Please fill in these required fields:\n${missingFields.join('\n')}`;
+      }
+      
+      if (invalidFields.length > 0) {
+        if (message) message += '\n\nAlso fix these issues:\n';
+        else message += 'Please fix these issues:\n';
+        message += invalidFields.join('\n');
+      }
+
+      Alert.alert('🔧 Complete Your Maintenance Log', message);
       return false;
     }
 
@@ -225,50 +237,32 @@ const AddMaintenanceLogScreen: React.FC = () => {
     });
   };
 
-  const renderVehicleSelector = () => {
-    if (vehicles.length === 0) {
+  const renderVehicleContext = () => {
+    if (!currentVehicle) {
       return (
         <Card variant="outlined" style={styles.sectionCard}>
-          <Typography variant="bodyLarge" style={styles.noVehiclesText}>
-            {t('vehicles.noVehicles', 'No vehicles found. Please add a vehicle first.')}
+          <Typography variant="bodyLarge" style={styles.loadingText}>
+            {t('maintenance.loadingVehicle', 'Loading vehicle information...')}
           </Typography>
-          <Button
-            title={t('vehicles.addVehicle', 'Add Vehicle')}
-            variant="primary"
-            onPress={() => navigation.navigate('Vehicles', { screen: 'AddVehicle' })}
-            style={styles.addVehicleButton}
-          />
         </Card>
       );
     }
 
     return (
-      <Card variant="elevated" style={styles.sectionCard}>
-        <Typography variant="heading" style={styles.sectionTitle}>
-          {t('vehicles.title', 'Vehicle')}
-        </Typography>
-        <View style={styles.vehicleSelector}>
-          {vehicles.map((vehicle) => (
-            <TouchableOpacity
-              key={vehicle.id}
-              style={[
-                styles.vehicleOption,
-                selectedVehicleId === vehicle.id && styles.vehicleOptionSelected,
-              ]}
-              onPress={() => setSelectedVehicleId(vehicle.id)}
-            >
-              <Typography
-                variant="bodyLarge"
-                style={[
-                  styles.vehicleOptionText,
-                  selectedVehicleId === vehicle.id && styles.vehicleOptionTextSelected,
-                ]}
-              >
-                {vehicle.year} {vehicle.make} {vehicle.model}
-              </Typography>
-            </TouchableOpacity>
-          ))}
+      <Card variant="filled" style={styles.vehicleContextCard}>
+        <View style={styles.vehicleContextHeader}>
+          <Typography variant="caption" style={styles.vehicleContextLabel}>
+            {t('maintenance.loggingFor', 'LOGGING MAINTENANCE FOR')}
+          </Typography>
         </View>
+        <Typography variant="title" style={styles.vehicleContextName}>
+          {currentVehicle.year} {currentVehicle.make} {currentVehicle.model}
+        </Typography>
+        {currentVehicle.vin && (
+          <Typography variant="body" style={styles.vehicleContextVin}>
+            VIN: {currentVehicle.vin}
+          </Typography>
+        )}
       </Card>
     );
   };
@@ -294,8 +288,8 @@ const AddMaintenanceLogScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Vehicle Selection */}
-        {renderVehicleSelector()}
+        {/* Vehicle Context */}
+        {renderVehicleContext()}
 
         {/* Mileage & Date */}
         <Card variant="elevated" style={styles.sectionCard}>
@@ -358,8 +352,7 @@ const AddMaintenanceLogScreen: React.FC = () => {
             label={t('maintenance.tags', 'Tags')}
             value={formData.tags}
             onChangeText={(tags) => setFormData(prev => ({ ...prev, tags }))}
-            placeholder={t('maintenance.tagsPlaceholder', 'warranty, dealer, DIY')}
-            helper={t('maintenance.tagsHelper', 'Separate tags with commas')}
+            placeholder={t('maintenance.tagsPlaceholder', 'warranty, dealer, DIY (separate with commas)')}
           />
         </Card>
 
@@ -437,34 +430,32 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
     color: theme.colors.text,
   },
-  noVehiclesText: {
+  loadingText: {
     textAlign: 'center',
     color: theme.colors.textSecondary,
+  },
+  vehicleContextCard: {
+    padding: theme.spacing.lg,
     marginBottom: theme.spacing.lg,
   },
-  addVehicleButton: {
-    alignSelf: 'center',
+  vehicleContextHeader: {
+    marginBottom: theme.spacing.sm,
   },
-  vehicleSelector: {
-    gap: theme.spacing.sm,
-  },
-  vehicleOption: {
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 2,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-  },
-  vehicleOptionSelected: {
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primaryLight + '10',
-  },
-  vehicleOptionText: {
-    textAlign: 'center',
-  },
-  vehicleOptionTextSelected: {
-    color: theme.colors.primary,
+  vehicleContextLabel: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.semibold,
+    letterSpacing: theme.typography.letterSpacing.wide,
+    textTransform: 'uppercase',
+  },
+  vehicleContextName: {
+    color: theme.colors.primary,
+    marginBottom: theme.spacing.xs,
+  },
+  vehicleContextVin: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.fontSize.sm,
+    fontFamily: 'monospace',
   },
   dateSelector: {
     marginVertical: theme.spacing.sm,

@@ -245,7 +245,7 @@ const SettingsScreen: React.FC = () => {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* User Profile Section */}
-      <Card style={styles.profileCard}>
+      <Card variant="elevated" style={styles.profileCard}>
         <View style={styles.profileContent}>
           <View style={styles.profileAvatar}>
             <Text style={styles.profileAvatarText}>👤</Text>
@@ -304,7 +304,7 @@ const SettingsScreen: React.FC = () => {
       {settingSections.map((section) => (
         <View key={section.title} style={styles.section}>
           <Text style={styles.sectionTitle}>{section.title}</Text>
-          <Card style={styles.sectionCard}>
+          <Card variant="elevated" style={styles.sectionCard}>
             {section.items.map((item, index) => (
               <View key={item.id}>
                 {renderSettingItem(item)}
@@ -320,7 +320,7 @@ const SettingsScreen: React.FC = () => {
       {/* Legal Documents - only show for signed-in users */}
       {user && user.emailVerified && (
         <View style={styles.section}>
-          <Card style={styles.sectionCard}>
+          <Card variant="elevated" style={styles.sectionCard}>
             <TouchableOpacity
               style={styles.settingItem}
               onPress={() => console.log('Navigate to Terms of Service')}

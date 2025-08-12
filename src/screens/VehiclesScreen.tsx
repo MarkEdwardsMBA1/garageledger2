@@ -99,31 +99,13 @@ const VehiclesScreen: React.FC<VehiclesScreenProps> = ({ navigation }) => {
       {vehicles.map((vehicle) => (
         <Card
           key={vehicle.id}
+          variant="elevated"
           title={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
           subtitle={vehicle.mileage ? `${vehicle.mileage.toLocaleString()} ${t('vehicles.miles', 'miles')}` : t('vehicles.mileageNotSet', 'Mileage not set')}
           pressable
           onPress={() => {
             navigation.navigate('VehicleHome', { vehicleId: vehicle.id });
           }}
-          rightContent={
-            <View style={styles.vehicleActions}>
-              <Button
-                title={t('maintenance.logMaintenance', 'Log Maintenance')}
-                variant="primary"
-                size="sm"
-                style={styles.logMaintenanceButton}
-                onPress={() => {
-                  navigation.navigate('Maintenance', { 
-                    screen: 'AddMaintenanceLog',
-                    params: { vehicleId: vehicle.id }
-                  });
-                }}
-              />
-              <Text style={styles.vehicleStatusReady}>
-                📋 Ready to track
-              </Text>
-            </View>
-          }
         >
           {vehicle.photoUri ? (
             <Image 
@@ -200,18 +182,6 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     padding: theme.spacing.lg,
-  },
-  vehicleActions: {
-    alignItems: 'flex-end',
-    gap: theme.spacing.sm,
-  },
-  logMaintenanceButton: {
-    minWidth: 120,
-  },
-  vehicleStatusReady: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.primary,
-    fontWeight: theme.typography.fontWeight.medium,
   },
   vehicleImage: {
     width: '100%',

@@ -19,6 +19,7 @@ import { VehicleFormData, Vehicle } from '../types';
 import { vehicleRepository } from '../repositories/VehicleRepository';
 import { useAuth } from '../contexts/AuthContext';
 import { imageUploadService } from '../services/ImageUploadService';
+import { verificationPromptService } from '../services/VerificationPromptService';
 
 interface AddVehicleScreenProps {
   navigation: any;
@@ -169,6 +170,16 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
         notes: '',
         photoUri: '',
       });
+
+      // Trigger email verification prompt for next session
+      // This is a high-value moment - user just added their first vehicle
+      if (user && !user.emailVerified) {
+        try {
+          await verificationPromptService.recordPromptShown(user.uid, 'after_vehicle_added');
+        } catch (error) {
+          console.log('Failed to record verification prompt trigger:', error);
+        }
+      }
       
       Alert.alert(
         '🎉 Vehicle Added!',

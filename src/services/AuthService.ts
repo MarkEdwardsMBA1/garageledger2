@@ -127,7 +127,7 @@ export class AuthService {
       return this.formatUser(userCredential.user);
     } catch (error: any) {
       // Log for debugging but don't make it prominent
-      console.log('🔑 AuthService: signIn failed for user:', email.split('@')[0] + '@***');
+      console.log('🔑 AuthService: signIn failed for user:', data.email.split('@')[0] + '@***');
       throw this.handleAuthError(error);
     }
   }

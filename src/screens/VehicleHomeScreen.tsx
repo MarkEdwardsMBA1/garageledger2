@@ -167,7 +167,7 @@ const VehicleHomeScreen: React.FC = () => {
       return (
         <Card variant="filled" style={styles.sectionCard}>
           <Typography variant="heading" style={styles.sectionTitle}>
-            📈 Maintenance Timeline
+            Maintenance Timeline
           </Typography>
           
           <EmptyState
@@ -195,7 +195,7 @@ const VehicleHomeScreen: React.FC = () => {
       <Card variant="elevated" style={styles.sectionCard}>
         <View style={styles.timelineHeader}>
           <Typography variant="heading" style={styles.sectionTitle}>
-            📈 Recent Maintenance
+            Recent Maintenance
           </Typography>
           
           {maintenanceLogs.length > 5 && (
@@ -267,7 +267,7 @@ const VehicleHomeScreen: React.FC = () => {
     return (
       <Card variant="elevated" style={styles.sectionCard}>
         <Typography variant="heading" style={styles.sectionTitle}>
-          💰 Cost Insights
+          Cost Insights
         </Typography>
         
         <View style={styles.costSummary}>

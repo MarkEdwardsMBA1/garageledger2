@@ -15,16 +15,18 @@ Empower car enthusiasts and DIY mechanics with a flexible, detailed, and user-fr
 ## ✨ Key Features
 
 ### Core Functionality
-- **Vehicle Profiles** - Manage multiple vehicles with detailed metadata
-- **Maintenance Logs** - Create detailed entries with photos, costs, and notes  
-- **Smart Reminders** - Date and mileage-based maintenance alerts
-- **Offline-First** - Full functionality without internet connection
+- **Vehicle Profiles** - Manage multiple vehicles with detailed metadata and VIN tracking
+- **Maintenance Logging** - Comprehensive maintenance records with category selection, photos, and cost tracking
+- **Fleet Analytics Dashboard** - Command center with fleet metrics, cost breakdowns, and maintenance insights
+- **Smart Reminders** - Date and mileage-based maintenance alerts (coming soon)
+- **Offline-First** - Full functionality without internet connection via repository pattern
 - **Data Ownership** - Complete export capabilities, no vendor lock-in  
-- **Photo Documentation** - Visual records with camera/gallery integration
-- **Bilingual Support** - Complete English and Spanish localization
+- **Photo Documentation** - Professional camera/gallery integration with secure cloud storage
+- **Bilingual Support** - Complete English and Spanish localization with device detection
 - **Premium Automotive Design** - Sophisticated Engine Blue branding with automotive-inspired UI
-- **Professional Typography** - Enhanced hierarchy with proper letter spacing and weights
-- **Premium Visual Depth** - Oil Black shadow system and floating elements
+- **Professional Typography** - Enhanced hierarchy with automotive precision and proper letter spacing
+- **Premium Visual Depth** - Oil Black shadow system with floating elements and card variants
+- **Security-First Architecture** - Firebase authentication with complete user data isolation
 
 ### Advanced Features (Pro/Expert Tiers)
 - **Cloud Sync** - Backup and sync across devices
@@ -36,13 +38,17 @@ Empower car enthusiasts and DIY mechanics with a flexible, detailed, and user-fr
 ## 🏗️ Tech Stack
 
 - **Frontend**: React Native (Expo managed workflow)
+- **Language**: TypeScript (strict mode)
 - **Backend**: Firebase (Authentication, Firestore, Storage)
-- **Database**: Firestore with offline persistence
-- **Data Layer**: Abstracted repository pattern for future flexibility
-- **State Management**: Redux Toolkit with RTK Query
-- **Internationalization**: react-i18next for multi-language support
-- **Push Notifications**: Expo Notifications + Firebase Cloud Messaging
+- **Database**: Firestore with offline persistence and security rules
+- **Data Layer**: Abstracted repository pattern with security-first design
+- **State Management**: React Context API with local state (Redux Toolkit planned)
+- **Navigation**: React Navigation v6 with stack and tab navigators
+- **Internationalization**: react-i18next with AsyncStorage persistence
+- **Push Notifications**: Expo Notifications + Firebase Cloud Messaging (planned)
 - **Image Processing**: Firebase Storage with automatic compression
+- **Testing**: Jest + React Native Testing Library with comprehensive coverage
+- **Code Quality**: ESLint, Prettier, and strict TypeScript configuration
 
 ## 🚀 Getting Started
 
@@ -83,29 +89,50 @@ npm start -- --host lan     # Local network
 ### Project Structure
 
 ```bash
-garageledger/
+garageledger2/
 ├── src/
 │   ├── components/           # Reusable UI components
-│   ├── screens/             # App screens/pages
+│   │   ├── common/          # Core components (Button, Card, Input, Typography, etc.)
+│   │   └── icons/           # Professional SVG icon system (automotive-themed)
+│   ├── screens/             # App screens with premium UX
+│   │   ├── auth/            # Authentication flow screens
+│   │   ├── onboarding/      # User onboarding and setup screens
+│   │   └── main/            # Core app screens (Dashboard, Vehicles, Maintenance)
 │   ├── services/            # External service integrations
-│   │   ├── firebase/        # Firebase configuration and utils
-│   │   └── api/             # API service definitions
-│   ├── repositories/        # Data access layer (abstracted)
-│   │   ├── VehicleRepository.ts
-│   │   ├── MaintenanceLogRepository.ts
-│   │   └── ReminderRepository.ts
-│   ├── i18n/                # Internationalization
+│   │   ├── firebase/        # Firebase configuration, auth, and security
+│   │   ├── AuthService.ts   # Authentication service with error handling
+│   │   └── LegalComplianceService.ts # Legal framework management
+│   ├── repositories/        # Security-first data access layer
+│   │   ├── BaseRepository.ts           # Abstract repository interfaces
+│   │   ├── VehicleRepository.ts        # Vehicle CRUD operations
+│   │   ├── SecureFirebaseVehicleRepository.ts # Security wrapper
+│   │   └── FirebaseMaintenanceLogRepository.ts # Maintenance logging
+│   ├── navigation/          # React Navigation v6 setup
+│   │   └── AppNavigator.tsx # Tab and stack navigation with auth flow
+│   ├── contexts/            # React contexts for state management
+│   │   └── AuthContext.tsx  # Authentication state management
+│   ├── i18n/                # Comprehensive internationalization
 │   │   ├── locales/         # Translation files
 │   │   │   ├── en.json      # English translations
-│   │   │   └── es.json      # Spanish translations
-│   │   └── index.ts         # i18n configuration
-│   ├── store/               # Redux store and slices
-│   ├── utils/               # Helper functions
+│   │   │   └── es.json      # Spanish translations (automotive terms)
+│   │   └── index.ts         # i18n configuration with device detection
+│   ├── utils/               # Helper functions and theme system
+│   │   └── theme.ts         # Comprehensive design system (colors, typography, shadows)
 │   ├── hooks/               # Custom React hooks
+│   │   └── useEmailVerificationPrompt.ts # Smart verification UX
 │   └── types/               # TypeScript type definitions
-├── assets/                  # Images, fonts, etc.
-├── docs/                    # Documentation
-├── __tests__/              # Test files
+│       ├── index.ts         # Core data models
+│       └── MaintenanceCategories.ts # Maintenance categorization system
+├── assets/                  # Images, fonts, and resources
+├── docs/                    # Comprehensive documentation
+│   ├── tech_docs/           # Technical documentation
+│   └── project_management/  # Development tracking
+├── __tests__/              # Comprehensive test suite
+│   ├── components/         # Component tests
+│   ├── screens/            # Screen integration tests
+│   ├── services/           # Service and business logic tests
+│   └── repositories/       # Data layer security tests
+├── CLAUDE.md               # Development guidelines and project context
 └── app.json                # Expo configuration
 ```
 
@@ -362,29 +389,77 @@ interface MaintenanceProgram {
 
 ## 🎨 Design System
 
-### Colors
-- **Primary**: #2563eb (Blue)
-- **Secondary**: #059669 (Green)
-- **Accent**: #dc2626 (Red)
-- **Background**: #f8fafc (Light Gray)
-- **Text**: #1e293b (Dark Gray)
+### Premium Automotive Color Palette
 
-### Navigation Icons
-- **Dashboard**: assets/icons/speedometer.svg
-- **Vehicles**: assets/icons/car.svg
-- **Maintenance***: assets/icons/spanner.svg
-- **Settings**: assets/icons/gear.svg
-- **Fuel**: assets/icons/fuel-pump.svg (post-MVP)
+**Core Brand Colors:**
+- **Engine Blue** `#1e40af` - Primary brand color (trust, reliability, precision)
+- **Racing Green** `#166534` - Secondary color (efficiency, eco-friendly)
+- **Performance Red** `#dc2626` - Accent color (action, power, excitement)
+- **Oil Black** `#111827` - Premium text color (deep, sophisticated)
+- **Titanium Gray** `#374151` - Secondary text (modern automotive)
+- **Chrome Silver** `#9ca3af` - Subtle accents and hints
 
-### Typography
-- **Font Family**: Inter (Google Fonts via Expo)
-- **Headers**: Inter Bold (700)
-- **Body**: Inter Regular (400)  
-- **Medium Text**: Inter Medium (500)
-- **Semibold Text**: Inter SemiBold (600)
-- **Monospace**: JetBrains Mono (planned)
+**Strategic Alert System:**
+- **Performance Red** `#dc2626` → Positive actions, CTAs, brand elements
+- **Signal Orange** `#ea580c` → Warnings, maintenance alerts (like dashboard warning lights)
+- **Critical Red** `#b91c1c` → Errors, critical failures
+- **Racing Green** `#166534` → Success states, achievements
+- **Electric Blue** `#0284c7` → Modern info states, technology features
+
+**Background System:**
+- **Primary Background** `#f1f5f9` - Main app background (light gray)
+- **Surface** `#ffffff` - Card and component backgrounds (white)
+- **Secondary Background** `#e2e8f0` - Subtle accent backgrounds
+
+### Professional Icon System
+
+**Custom SVG Automotive Icon Collection:**
+- **Dashboard**: SpeedometerIcon - Precision gauges and metrics
+- **Vehicles**: CarIcon - Vehicle silhouettes and automotive symbols
+- **Maintenance**: SpannerIcon - Professional tool icons
+- **Settings**: GearIcon - Configuration and system icons
+- **Functional Icons**: MaintenanceIcons, FuelIcon, ModificationIcon, ReminderIcon, ActivityIcon, CameraIcon, MailIcon
+
+**Icon Features:**
+- **Brand Integration**: Consistent sizing, coloring, and automotive theming
+- **Accessibility**: Proper contrast and sizing for all interaction states
+- **Professional Quality**: Custom SVG design replacing emoji for premium feel
+- **Scalable**: Vector-based for crisp rendering at all sizes
+
+### Premium Typography System
+
+**Font Family**: Inter (Google Fonts via Expo)
+**Automotive Precision Hierarchy:**
+- **Display** (36px) - Hero/display text with tight letter spacing
+- **Title** (24px) - Page titles with premium weight
+- **Heading** (20px) - Section headings with proper hierarchy
+- **Subheading** (18px) - Sub-section organization
+- **Body/BodyLarge/BodySmall** (14-18px) - Optimized reading experience
+- **Caption/Label** (12-14px) - UI labels with wide letter spacing
+- **Button** (16px) - Optimized for interaction with wide spacing
+- **Overline** (12px) - Small caps with extensive letter spacing
+
+**Weight System:**
+- **Headers**: Inter Bold (700) - Premium weight
+- **Body**: Inter Regular (400) - Readable text
+- **Medium Text**: Inter Medium (500) - Enhanced emphasis
+- **Semibold Text**: Inter SemiBold (600) - Strong hierarchy
 - **Loading**: Fonts load on app startup with splash screen
 - **Fallback**: System fonts (San Francisco/Roboto)
+
+### Premium Visual Depth System
+
+**Oil Black Shadow System:**
+- **xs/sm** - Subtle card depth and button elevation
+- **md/lg** - Important content and floating elements  
+- **xl** - Modal and overlay emphasis
+- **Special**: `floating` and `pressed` states for interaction feedback
+
+**Component Variants:**
+- **Cards**: `default`, `elevated`, `floating`, `outlined`, `filled` with automotive shadows
+- **Buttons**: Premium shadows on solid variants, subtle depth on outlined
+- **Typography**: Semantic variants for consistent hierarchy
+- **Navigation**: Safe area handling for progress indicators and headers
 
 ## 📊 Pricing Tiers
 

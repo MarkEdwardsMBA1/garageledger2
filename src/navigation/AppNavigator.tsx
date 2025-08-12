@@ -1,6 +1,7 @@
 // Main app navigation setup with bottom tabs
 import React, { useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -47,16 +48,15 @@ const VehiclesStack: React.FC = () => {
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: theme.colors.surface,
-          borderBottomWidth: 1,
-          borderBottomColor: theme.colors.borderLight,
+          backgroundColor: theme.colors.primary, // Engine Blue header
+          borderBottomWidth: 0, // Remove border for cleaner look
         },
         headerTitleStyle: {
           fontSize: theme.typography.fontSize.lg,
           fontWeight: theme.typography.fontWeight.semibold,
-          color: theme.colors.text,
+          color: theme.colors.surface, // White text on Engine Blue
         },
-        headerTintColor: theme.colors.primary,
+        headerTintColor: theme.colors.surface, // White back button and icons
       }}
     >
       <Stack.Screen
@@ -73,11 +73,13 @@ const VehiclesStack: React.FC = () => {
                 paddingHorizontal: theme.spacing.sm,
                 paddingVertical: theme.spacing.xs,
                 borderRadius: theme.borderRadius.sm,
-                backgroundColor: theme.colors.primary,
+                backgroundColor: theme.colors.surface, // White button on Engine Blue header
+                borderWidth: 1,
+                borderColor: theme.colors.surface,
               }}
             >
               <Text style={{
-                color: theme.colors.surface,
+                color: theme.colors.primary, // Engine Blue text on white button
                 fontSize: theme.typography.fontSize.sm,
                 fontWeight: theme.typography.fontWeight.semibold,
                 letterSpacing: theme.typography.letterSpacing.wide,
@@ -115,7 +117,7 @@ const VehiclesStack: React.FC = () => {
                 }}
               >
                 <Text style={{
-                  color: theme.colors.primary,
+                  color: theme.colors.surface, // White text on Engine Blue header
                   fontSize: theme.typography.fontSize.sm,
                   fontWeight: theme.typography.fontWeight.semibold,
                 }}>
@@ -149,16 +151,15 @@ const MaintenanceStackNavigator: React.FC = () => {
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: theme.colors.surface,
-          borderBottomWidth: 1,
-          borderBottomColor: theme.colors.borderLight,
+          backgroundColor: theme.colors.primary, // Engine Blue header
+          borderBottomWidth: 0, // Remove border for cleaner look
         },
         headerTitleStyle: {
           fontSize: theme.typography.fontSize.lg,
           fontWeight: theme.typography.fontWeight.semibold,
-          color: theme.colors.text,
+          color: theme.colors.surface, // White text on Engine Blue
         },
-        headerTintColor: theme.colors.primary,
+        headerTintColor: theme.colors.surface, // White back button and icons
       }}
     >
       <Stack.Screen
@@ -240,14 +241,13 @@ const MainAppNavigator: React.FC = () => {
     <Tab.Navigator
         screenOptions={{
           headerStyle: {
-            backgroundColor: theme.colors.surface,
-            borderBottomWidth: 1,
-            borderBottomColor: theme.colors.borderLight,
+            backgroundColor: theme.colors.primary, // Engine Blue header
+            borderBottomWidth: 0, // Remove border for cleaner look
           },
           headerTitleStyle: {
             fontSize: theme.typography.fontSize.lg,
             fontWeight: theme.typography.fontWeight.semibold,
-            color: theme.colors.text,
+            color: theme.colors.surface, // White text on Engine Blue
           },
           tabBarStyle: {
             backgroundColor: theme.colors.surface,
@@ -316,11 +316,10 @@ const MainAppNavigator: React.FC = () => {
 };
 
 /**
- * App navigation router that handles splash screen, auth state, and legal compliance
+ * App navigation router that handles auth state, and legal compliance
  */
 const AppNavigationRouter: React.FC = () => {
   const { isAuthenticated, isLoading, user } = useAuth();
-  const [showSplash, setShowSplash] = useState(true);
   const [isCheckingCompliance, setIsCheckingCompliance] = useState(false);
   const [needsLegalCompliance, setNeedsLegalCompliance] = useState(false);
 
@@ -334,20 +333,28 @@ const AppNavigationRouter: React.FC = () => {
           const { legalComplianceService } = await import('../services/LegalComplianceService');
           const { vehicleRepository } = await import('../repositories/VehicleRepository');
           
-          // Check if user has existing vehicles (indicating they're a returning user)
-          // This also pre-loads vehicle data to prevent Dashboard flicker
+          // TEMPORARY WORKAROUND: Check vehicle count to determine legal compliance
+          // Until Firestore indexes are properly configured for legal compliance collection
           const vehicles = await vehicleRepository.getAll();
           const hasVehicles = vehicles.length > 0;
           
           if (hasVehicles) {
-            // Existing users with vehicles should skip legal compliance
-            // Vehicle data is now cached for Dashboard
+            // Users with vehicles have likely already accepted terms - skip check
+            console.log('User has vehicles, assuming legal compliance completed');
             setNeedsLegalCompliance(false);
           } else {
-            // Only check legal compliance for users without vehicles (potentially new users)
-            const requiresAcceptance = await legalComplianceService.requiresNewAcceptance(user.uid);
-            setNeedsLegalCompliance(requiresAcceptance);
+            // New users without vehicles need to accept terms
+            console.log('New user without vehicles, requiring legal acceptance');
+            try {
+              const requiresAcceptance = await legalComplianceService.requiresNewAcceptance(user.uid);
+              setNeedsLegalCompliance(requiresAcceptance);
+            } catch (error) {
+              console.warn('Legal compliance check failed, defaulting to required for new users:', error);
+              setNeedsLegalCompliance(true);
+            }
           }
+          
+          // Vehicle data already loaded above for compliance check
         } catch (error) {
           console.error('Failed to check legal compliance:', error);
           // Default to NOT requiring compliance to prevent lockouts
@@ -364,15 +371,6 @@ const AppNavigationRouter: React.FC = () => {
 
     checkLegalCompliance();
   }, [isAuthenticated, user?.uid]); // Remove isCheckingCompliance from dependencies to prevent infinite loop
-
-  // Show branded splash screen first (for branding & future i18n)
-  if (showSplash) {
-    return (
-      <SplashScreen 
-        onComplete={() => setShowSplash(false)} 
-      />
-    );
-  }
 
   // Show loading spinner while checking auth state or compliance
   if (isLoading || isCheckingCompliance) {
@@ -394,14 +392,47 @@ const AppNavigationRouter: React.FC = () => {
 };
 
 /**
+ * Navigation container with splash screen and auth-based key for proper stack reset
+ */
+const AuthAwareNavigationContainer: React.FC = () => {
+  const { isAuthenticated } = useAuth();
+  const [showSplash, setShowSplash] = useState(true);
+  const [hasShownSplash, setHasShownSplash] = useState(false);
+  
+  // Only show splash screen on the very first app launch
+  React.useEffect(() => {
+    if (hasShownSplash) {
+      setShowSplash(false);
+    }
+  }, [hasShownSplash]);
+  
+  // Show branded splash screen first (for branding & future i18n)
+  if (showSplash && !hasShownSplash) {
+    return (
+      <SplashScreen 
+        onComplete={() => {
+          setShowSplash(false);
+          setHasShownSplash(true);
+        }} 
+      />
+    );
+  }
+  
+  return (
+    <NavigationContainer key={isAuthenticated ? 'authenticated' : 'unauthenticated'}>
+      <AppNavigationRouter />
+    </NavigationContainer>
+  );
+};
+
+/**
  * Main app navigator with authentication
  */
 export const AppNavigator: React.FC = () => {
   return (
     <AuthProvider>
-      <NavigationContainer>
-        <AppNavigationRouter />
-      </NavigationContainer>
+      <StatusBar style="light" backgroundColor={theme.colors.primary} />
+      <AuthAwareNavigationContainer />
     </AuthProvider>
   );
 };
