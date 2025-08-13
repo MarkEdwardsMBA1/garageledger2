@@ -114,6 +114,10 @@ export const LoginScreen: React.FC = () => {
     navigation.navigate('SignUp' as never);
   };
 
+  const navigateToWelcome = () => {
+    navigation.navigate('Welcome' as never);
+  };
+
   if (isLoading) {
     return <Loading />;
   }
@@ -195,6 +199,19 @@ export const LoginScreen: React.FC = () => {
             testID="navigate-sign-up-button"
           />
         </View>
+
+        <View style={styles.welcomeFooter}>
+          <Typography variant="bodySmall" style={styles.welcomeText}>
+            New to GarageLedger?
+          </Typography>
+          <Button
+            title="Learn More"
+            onPress={navigateToWelcome}
+            variant="text"
+            style={styles.welcomeButton}
+            testID="navigate-welcome-button"
+          />
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -250,5 +267,20 @@ const styles = StyleSheet.create({
   },
   signUpButton: {
     marginLeft: theme.spacing.xs,
+  },
+  welcomeFooter: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginTop: theme.spacing.lg,
+  },
+  welcomeText: {
+    color: theme.colors.textSecondary,
+    opacity: 0.8,
+  },
+  welcomeButton: {
+    marginLeft: theme.spacing.xs,
+    opacity: 0.8,
   },
 });

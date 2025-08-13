@@ -68,10 +68,11 @@ export class ImageUploadService {
           
           console.log('Created blob from FileSystem, size:', blob.size, 'bytes');
         } catch (fsError) {
-          console.warn('FileSystem approach failed:', fsError.message);
+          const errorMessage = fsError instanceof Error ? fsError.message : String(fsError);
+          console.warn('FileSystem approach failed:', errorMessage);
           
           // If file doesn't exist, don't try fetch - it will also fail
-          if (fsError.message?.includes('not found') || fsError.message?.includes('does not exist')) {
+          if (errorMessage?.includes('not found') || errorMessage?.includes('does not exist')) {
             throw new Error('Image file not found on device');
           }
           

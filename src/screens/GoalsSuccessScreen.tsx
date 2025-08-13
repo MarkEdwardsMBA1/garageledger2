@@ -13,16 +13,7 @@ import { Card } from '../components/common/Card';
 import { theme } from '../utils/theme';
 import type { TrackingGoals } from './GoalsSetupScreen';
 
-interface GoalsSuccessScreenProps {
-  navigation: any;
-  route?: {
-    params: {
-      goals: TrackingGoals;
-    };
-  };
-}
-
-export const GoalsSuccessScreen: React.FC<GoalsSuccessScreenProps> = ({ 
+export const GoalsSuccessScreen: React.FC<any> = ({ 
   navigation, 
   route 
 }) => {

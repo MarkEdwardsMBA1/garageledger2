@@ -125,6 +125,17 @@ const VehiclesScreen: React.FC<VehiclesScreenProps> = ({ navigation }) => {
           )}
         </Card>
       ))}
+      
+      {/* Add Vehicle button at bottom of list */}
+      <View style={styles.addVehicleButtonContainer}>
+        <Button
+          title={t('vehicles.addVehicle', 'Add Vehicle')}
+          onPress={handleAddVehicle}
+          variant="primary"
+          style={styles.addVehicleButton}
+          testID="add-vehicle-button"
+        />
+      </View>
     </ScrollView>
   );
 
@@ -182,6 +193,13 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     padding: theme.spacing.lg,
+  },
+  addVehicleButtonContainer: {
+    marginTop: theme.spacing.xl,
+    marginBottom: theme.spacing.lg,
+  },
+  addVehicleButton: {
+    minHeight: 48,
   },
   vehicleImage: {
     width: '100%',

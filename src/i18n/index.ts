@@ -96,7 +96,7 @@ i18n
     ns: ['translation'],
     
     // Compatibility settings
-    compatibilityJSON: 'v3', // Use v3 format for better React Native support
+    compatibilityJSON: 'v4', // Use v4 format for modern react-i18next versions
   });
 
 // Export configured i18n instance

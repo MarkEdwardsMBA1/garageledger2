@@ -24,6 +24,7 @@
     "previous": "Anterior",
     "continue": "Continuar",
     "ok": "OK",
+    "done": "Hecho",
     "networkError": "Error de red. Por favor verifica tu conexión."
   },
   "welcome": {
@@ -69,6 +70,7 @@
     "dashboard": "Panel",
     "vehicles": "Vehículos",
     "maintenance": "Mantenimiento",
+    "insights": "Perspectivas",
     "reminders": "Recordatorios",
     "settings": "Configuración"
   },
@@ -149,7 +151,8 @@
   "maintenance": {
     "title": "Mantenimiento",
     "addNew": "Agregar Registro",
-    "logMaintenance": "Registrar Mantenimiento",
+    "logMaintenance": "Registrar Mantenimiento", 
+    "logAnother": "Registrar Otro Servicio",
     "log": "Registrar",
     "logTitle": "Título",
     "date": "Fecha",

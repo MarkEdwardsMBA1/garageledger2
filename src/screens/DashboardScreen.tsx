@@ -145,7 +145,7 @@ const DashboardScreen: React.FC = () => {
           </TouchableOpacity>
           
           <TouchableOpacity
-            onPress={() => navigation.navigate('Maintenance')}
+            onPress={() => navigation.navigate('Insights')}
             activeOpacity={0.7}
             style={styles.statCardTouchable}
           >
@@ -214,7 +214,7 @@ const DashboardScreen: React.FC = () => {
                         });
                       }, 100);
                     } else {
-                      navigation.navigate('Maintenance');
+                      navigation.navigate('Insights');
                     }
                   }}
                 >
@@ -245,7 +245,7 @@ const DashboardScreen: React.FC = () => {
             
             <TouchableOpacity
               style={styles.viewAllButton}
-              onPress={() => navigation.navigate('Maintenance')}
+              onPress={() => navigation.navigate('Insights')}
             >
               <Text style={styles.viewAllText}>
                 {t('dashboard.viewAllActivity', 'View All Activity')}

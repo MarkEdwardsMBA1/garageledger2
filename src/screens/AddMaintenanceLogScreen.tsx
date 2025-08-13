@@ -8,7 +8,9 @@ import {
   Alert,
   TextInput,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { theme } from '../utils/theme';
@@ -39,6 +41,42 @@ interface MaintenanceLogFormData {
   notes: string;
   tags: string;
   photos: string[];
+  // Service type for detailed tracking
+  serviceType: 'shop' | 'diy';
+  // Shop service specific fields
+  shopName: string;
+  serviceDescription: string;
+  // Detailed parts tracking (for DIY services)
+  parts: MaintenancePartFormData[];
+  fluids: MaintenanceFluidFormData[];
+}
+
+interface MaintenancePartFormData {
+  name: string;
+  partNumber: string;
+  brand: string;
+  quantity: string;
+  unitCost: string;
+  supplier: string;
+}
+
+interface MaintenanceFluidFormData {
+  name: string;
+  type: string;
+  brand: string;
+  viscosity: string;
+  capacity: string;
+  unit: string;
+  cost: string;
+}
+
+interface MaintenancePartFormData {
+  name: string;
+  partNumber: string;
+  brand: string;
+  quantity: string;
+  unitCost: string;
+  supplier: string;
 }
 
 // Categories now handled by MaintenanceCategorySelector component
@@ -56,6 +94,8 @@ const AddMaintenanceLogScreen: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [currentVehicle, setCurrentVehicle] = useState<Vehicle | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showAdvancedParts, setShowAdvancedParts] = useState(false);
   const vehicleId = params?.vehicleId;
   const [formData, setFormData] = useState<MaintenanceLogFormData>({
     title: '',
@@ -67,6 +107,11 @@ const AddMaintenanceLogScreen: React.FC = () => {
     notes: '',
     tags: '',
     photos: [],
+    serviceType: 'diy',
+    shopName: '',
+    serviceDescription: '',
+    parts: [],
+    fluids: [],
   });
 
   // Load the specific vehicle for this maintenance log
@@ -117,15 +162,48 @@ const AddMaintenanceLogScreen: React.FC = () => {
     
     setLoading(true);
     try {
+      // Calculate total cost for DIY services
+      let totalCost: number | undefined;
+      if (formData.serviceType === 'shop') {
+        totalCost = formData.cost && parseFloat(formData.cost) > 0 ? parseFloat(formData.cost) : undefined;
+      } else if (formData.serviceType === 'diy') {
+        const partsCost = formData.parts.reduce((sum, part) => {
+          const quantity = parseFloat(part.quantity) || 0;
+          const unitCost = parseFloat(part.unitCost) || 0;
+          return sum + (quantity * unitCost);
+        }, 0);
+        
+        const fluidsCost = formData.fluids.reduce((sum, fluid) => {
+          return sum + (parseFloat(fluid.cost) || 0);
+        }, 0);
+        
+        totalCost = partsCost + fluidsCost > 0 ? partsCost + fluidsCost : undefined;
+      }
+
+      // Prepare title and notes based on service type
+      let title: string;
+      let notes: string | undefined;
+      
+      if (formData.serviceType === 'shop') {
+        title = formData.serviceDescription.trim();
+        // Combine shop name and additional notes
+        const shopInfo = formData.shopName.trim() ? `Shop: ${formData.shopName.trim()}` : '';
+        const additionalNotes = formData.notes.trim();
+        notes = [shopInfo, additionalNotes].filter(n => n).join('\n') || undefined;
+      } else {
+        title = formData.title.trim() || getSubcategoryName(formData.categoryKey, formData.subcategoryKey);
+        notes = formData.notes.trim() || undefined;
+      }
+
       // Parse form data - handle optional fields properly for Firestore
       const maintenanceData: Omit<MaintenanceLog, 'id'> = {
         vehicleId: vehicleId!,
-        title: formData.title.trim(),
+        title,
         date: formData.date,
         mileage: parseInt(formData.mileage) || 0,
         category: `${formData.categoryKey}:${formData.subcategoryKey}`, // Store as combined key
-        cost: formData.cost && parseFloat(formData.cost) > 0 ? parseFloat(formData.cost) : undefined,
-        notes: formData.notes.trim() || undefined,
+        cost: totalCost,
+        notes,
         tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0),
         photos: formData.photos,
         createdAt: new Date(),
@@ -140,13 +218,37 @@ const AddMaintenanceLogScreen: React.FC = () => {
 
       const savedLog = await maintenanceLogRepository.create(maintenanceData);
       
+      // Quick Multi-Entry Flow: Offer to log another service
       Alert.alert(
         t('common.success', 'Success'),
         t('maintenance.logMaintenance', 'Maintenance logged successfully'),
         [
           {
-            text: t('common.ok', 'OK'),
-            onPress: () => navigation.navigate('Maintenance'),
+            text: t('maintenance.logAnother', 'Log Another Service'),
+            onPress: () => {
+              // Reset form but keep date and mileage for quick entry
+              setFormData(prev => ({
+                title: '',
+                date: prev.date, // Keep same date
+                mileage: prev.mileage, // Keep same mileage
+                categoryKey: '',
+                subcategoryKey: '',
+                cost: '',
+                notes: '',
+                tags: '',
+                photos: [],
+                serviceType: 'diy',
+                shopName: '',
+                serviceDescription: '',
+                parts: [],
+                fluids: [],
+              }));
+            },
+          },
+          {
+            text: t('common.done', 'Done'),
+            style: 'cancel',
+            onPress: () => navigation.navigate('MaintenanceList'),
           },
         ]
       );
@@ -189,9 +291,37 @@ const AddMaintenanceLogScreen: React.FC = () => {
       missingFields.push('• Maintenance type/category');
     }
 
-    // Check optional but formatted fields
-    if (formData.cost && isNaN(parseFloat(formData.cost))) {
-      invalidFields.push('• Cost must be a valid amount (e.g., 45.99) or leave blank');
+    // Check shop service requirements
+    if (formData.serviceType === 'shop') {
+      if (!formData.serviceDescription || !formData.serviceDescription.trim()) {
+        missingFields.push('• Service description (what was performed)');
+      }
+      if (formData.cost && isNaN(parseFloat(formData.cost))) {
+        invalidFields.push('• Cost must be a valid amount (e.g., 45.99) or leave blank');
+      }
+    }
+
+    // Validate DIY parts and fluids if detailed tracking is enabled
+    if (formData.serviceType === 'diy' && supportsDetailedTracking(formData.categoryKey, formData.subcategoryKey)) {
+      // Validate parts
+      formData.parts.forEach((part, index) => {
+        if (part.quantity && isNaN(parseFloat(part.quantity))) {
+          invalidFields.push(`• Part ${index + 1}: Quantity must be a valid number`);
+        }
+        if (part.unitCost && isNaN(parseFloat(part.unitCost))) {
+          invalidFields.push(`• Part ${index + 1}: Unit cost must be a valid amount`);
+        }
+      });
+
+      // Validate fluids
+      formData.fluids.forEach((fluid, index) => {
+        if (fluid.capacity && isNaN(parseFloat(fluid.capacity))) {
+          invalidFields.push(`• Fluid ${index + 1}: Capacity must be a valid number`);
+        }
+        if (fluid.cost && isNaN(parseFloat(fluid.cost))) {
+          invalidFields.push(`• Fluid ${index + 1}: Cost must be a valid amount`);
+        }
+      });
     }
 
     // Show friendly combined error message
@@ -237,6 +367,13 @@ const AddMaintenanceLogScreen: React.FC = () => {
     });
   };
 
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setFormData(prev => ({ ...prev, date: selectedDate }));
+    }
+  };
+
   const renderVehicleContext = () => {
     if (!currentVehicle) {
       return (
@@ -250,11 +387,6 @@ const AddMaintenanceLogScreen: React.FC = () => {
 
     return (
       <Card variant="filled" style={styles.vehicleContextCard}>
-        <View style={styles.vehicleContextHeader}>
-          <Typography variant="caption" style={styles.vehicleContextLabel}>
-            {t('maintenance.loggingFor', 'LOGGING MAINTENANCE FOR')}
-          </Typography>
-        </View>
         <Typography variant="title" style={styles.vehicleContextName}>
           {currentVehicle.year} {currentVehicle.make} {currentVehicle.model}
         </Typography>
@@ -273,8 +405,280 @@ const AddMaintenanceLogScreen: React.FC = () => {
       categoryKey, 
       subcategoryKey,
       // Auto-populate title based on subcategory selection if title is empty
-      title: prev.title || getSubcategoryName(categoryKey, subcategoryKey)
+      title: prev.title || getSubcategoryName(categoryKey, subcategoryKey),
+      // Initialize parts/fluids for Oil & Filter Change
+      parts: supportsDetailedTracking(categoryKey, subcategoryKey) ? 
+        (prev.parts.length === 0 ? getDefaultParts(categoryKey, subcategoryKey) : prev.parts) : [],
+      fluids: supportsDetailedTracking(categoryKey, subcategoryKey) ? 
+        (prev.fluids.length === 0 ? getDefaultFluids(categoryKey, subcategoryKey) : prev.fluids) : []
     }));
+  };
+
+  // Check if category supports detailed part tracking
+  const supportsDetailedTracking = (categoryKey: string, subcategoryKey: string): boolean => {
+    // Oil & Filter Change
+    if (categoryKey === 'engine-powertrain' && subcategoryKey === 'oil-filter-change') {
+      return true;
+    }
+    
+    // Brake System
+    if (categoryKey === 'brake-system') {
+      return ['brake-pads-rotors', 'brake-fluid'].includes(subcategoryKey);
+    }
+    
+    // Engine & Powertrain (additional categories)
+    if (categoryKey === 'engine-powertrain') {
+      return ['oil-filter-change', 'engine-air-filter', 'spark-plugs'].includes(subcategoryKey);
+    }
+    
+    // Electrical
+    if (categoryKey === 'electrical') {
+      return ['battery'].includes(subcategoryKey);
+    }
+    
+    return false;
+  };
+
+  // Get default parts for specific maintenance types
+  const getDefaultParts = (categoryKey: string, subcategoryKey: string): MaintenancePartFormData[] => {
+    // Oil & Filter Change
+    if (categoryKey === 'engine-powertrain' && subcategoryKey === 'oil-filter-change') {
+      return [{
+        name: 'Oil Filter',
+        partNumber: '',
+        brand: '',
+        quantity: '1',
+        unitCost: '',
+        supplier: ''
+      }];
+    }
+    
+    // Brake Pads & Rotors - Simple mode (most common: front only)
+    if (categoryKey === 'brake-system' && subcategoryKey === 'brake-pads-rotors') {
+      return [
+        {
+          name: 'Brake Pads',
+          partNumber: '',
+          brand: '',
+          quantity: '1',
+          unitCost: '',
+          supplier: ''
+        },
+        {
+          name: 'Brake Rotors',
+          partNumber: '',
+          brand: '',
+          quantity: '2',
+          unitCost: '',
+          supplier: ''
+        }
+      ];
+    }
+    
+    // Engine Air Filter
+    if (categoryKey === 'engine-powertrain' && subcategoryKey === 'engine-air-filter') {
+      return [{
+        name: 'Engine Air Filter',
+        partNumber: '',
+        brand: '',
+        quantity: '1',
+        unitCost: '',
+        supplier: ''
+      }];
+    }
+    
+    // Spark Plugs
+    if (categoryKey === 'engine-powertrain' && subcategoryKey === 'spark-plugs') {
+      return [{
+        name: 'Spark Plugs',
+        partNumber: '',
+        brand: '',
+        quantity: '4', // Common 4-cylinder default
+        unitCost: '',
+        supplier: ''
+      }];
+    }
+    
+    // Battery
+    if (categoryKey === 'electrical' && subcategoryKey === 'battery') {
+      return [{
+        name: 'Car Battery',
+        partNumber: '',
+        brand: '',
+        quantity: '1',
+        unitCost: '',
+        supplier: ''
+      }];
+    }
+    
+    return [];
+  };
+
+  // Get default fluids for specific maintenance types
+  const getDefaultFluids = (categoryKey: string, subcategoryKey: string): MaintenanceFluidFormData[] => {
+    // Oil & Filter Change
+    if (categoryKey === 'engine-powertrain' && subcategoryKey === 'oil-filter-change') {
+      return [{
+        name: 'Motor Oil',
+        type: 'engine_oil',
+        brand: '',
+        viscosity: '',
+        capacity: '',
+        unit: 'quarts',
+        cost: ''
+      }];
+    }
+    
+    // Brake Fluid Service
+    if (categoryKey === 'brake-system' && subcategoryKey === 'brake-fluid') {
+      return [{
+        name: 'Brake Fluid',
+        type: 'brake_fluid',
+        brand: '',
+        viscosity: 'DOT 3/4', // Common brake fluid specification
+        capacity: '',
+        unit: 'ounces',
+        cost: ''
+      }];
+    }
+    
+    return [];
+  };
+
+
+  // Add new part
+  const addPart = () => {
+    setFormData(prev => ({
+      ...prev,
+      parts: [...prev.parts, {
+        name: '',
+        partNumber: '',
+        brand: '',
+        quantity: '1',
+        unitCost: '',
+        supplier: ''
+      }]
+    }));
+  };
+
+  // Remove part
+  const removePart = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      parts: prev.parts.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Update part
+  const updatePart = (index: number, field: keyof MaintenancePartFormData, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      parts: prev.parts.map((part, i) => 
+        i === index ? { ...part, [field]: value } : part
+      )
+    }));
+  };
+
+  // Add new fluid
+  const addFluid = () => {
+    setFormData(prev => ({
+      ...prev,
+      fluids: [...prev.fluids, {
+        name: '',
+        type: '',
+        brand: '',
+        viscosity: '',
+        capacity: '',
+        unit: 'quarts',
+        cost: ''
+      }]
+    }));
+  };
+
+  // Remove fluid
+  const removeFluid = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      fluids: prev.fluids.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Update fluid
+  const updateFluid = (index: number, field: keyof MaintenanceFluidFormData, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      fluids: prev.fluids.map((fluid, i) => 
+        i === index ? { ...fluid, [field]: value } : fluid
+      )
+    }));
+  };
+
+  // Toggle advanced parts for brake system (front/rear split)
+  const toggleAdvancedParts = () => {
+    if (!showAdvancedParts && formData.categoryKey === 'brake-system' && formData.subcategoryKey === 'brake-pads-rotors') {
+      // Expand to front/rear parts
+      setFormData(prev => ({
+        ...prev,
+        parts: [
+          {
+            name: 'Front Brake Pads',
+            partNumber: '',
+            brand: '',
+            quantity: '1',
+            unitCost: '',
+            supplier: ''
+          },
+          {
+            name: 'Rear Brake Pads',
+            partNumber: '',
+            brand: '',
+            quantity: '1',
+            unitCost: '',
+            supplier: ''
+          },
+          {
+            name: 'Front Brake Rotors',
+            partNumber: '',
+            brand: '',
+            quantity: '2',
+            unitCost: '',
+            supplier: ''
+          },
+          {
+            name: 'Rear Brake Rotors',
+            partNumber: '',
+            brand: '',
+            quantity: '2',
+            unitCost: '',
+            supplier: ''
+          }
+        ]
+      }));
+    } else if (showAdvancedParts && formData.categoryKey === 'brake-system' && formData.subcategoryKey === 'brake-pads-rotors') {
+      // Collapse back to simple parts
+      setFormData(prev => ({
+        ...prev,
+        parts: [
+          {
+            name: 'Brake Pads',
+            partNumber: '',
+            brand: '',
+            quantity: '1',
+            unitCost: '',
+            supplier: ''
+          },
+          {
+            name: 'Brake Rotors',
+            partNumber: '',
+            brand: '',
+            quantity: '2',
+            unitCost: '',
+            supplier: ''
+          }
+        ]
+      }));
+    }
+    setShowAdvancedParts(!showAdvancedParts);
   };
 
   if (loading) {
@@ -308,10 +712,7 @@ const AddMaintenanceLogScreen: React.FC = () => {
           
           <TouchableOpacity
             style={styles.dateSelector}
-            onPress={() => {
-              // For now, using current date. Date picker can be added later if needed
-              setFormData(prev => ({ ...prev, date: new Date() }));
-            }}
+            onPress={() => setShowDatePicker(true)}
           >
             <Typography variant="label" style={styles.dateLabel}>
               {t('maintenance.date', 'Date')} *
@@ -320,6 +721,67 @@ const AddMaintenanceLogScreen: React.FC = () => {
               {formatDate(formData.date)}
             </Typography>
           </TouchableOpacity>
+          
+          {showDatePicker && (
+            <DateTimePicker
+              value={formData.date}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={handleDateChange}
+              maximumDate={new Date()} // Prevent future dates
+            />
+          )}
+        </Card>
+
+        {/* Service Type Selection (at the top for better UX flow) */}
+        <Card variant="elevated" style={styles.sectionCard}>
+          <Typography variant="heading" style={styles.sectionTitle}>
+            Service Type
+          </Typography>
+          
+          <View style={styles.serviceTypeContainer}>
+            <TouchableOpacity
+              style={[
+                styles.serviceTypeOption,
+                formData.serviceType === 'diy' && styles.serviceTypeOptionSelected
+              ]}
+              onPress={() => setFormData(prev => ({ ...prev, serviceType: 'diy' }))}
+            >
+              <Typography variant="bodyLarge" style={[
+                styles.serviceTypeText,
+                formData.serviceType === 'diy' && styles.serviceTypeTextSelected
+              ]}>
+                🛠️ DIY Service
+              </Typography>
+              <Typography variant="body" style={[
+                styles.serviceTypeDescription,
+                formData.serviceType === 'diy' && styles.serviceTypeDescriptionSelected
+              ]}>
+                Self-service (track parts and materials)
+              </Typography>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                styles.serviceTypeOption,
+                formData.serviceType === 'shop' && styles.serviceTypeOptionSelected
+              ]}
+              onPress={() => setFormData(prev => ({ ...prev, serviceType: 'shop' }))}
+            >
+              <Typography variant="bodyLarge" style={[
+                styles.serviceTypeText,
+                formData.serviceType === 'shop' && styles.serviceTypeTextSelected
+              ]}>
+                🔧 Shop Service
+              </Typography>
+              <Typography variant="body" style={[
+                styles.serviceTypeDescription,
+                formData.serviceType === 'shop' && styles.serviceTypeDescriptionSelected
+              ]}>
+                Service performed at a shop (enter total cost)
+              </Typography>
+            </TouchableOpacity>
+          </View>
         </Card>
 
         {/* Category Selection */}
@@ -332,6 +794,215 @@ const AddMaintenanceLogScreen: React.FC = () => {
             required
           />
         </Card>
+
+        {/* Shop Service Details */}
+        {formData.serviceType === 'shop' && formData.categoryKey && (
+          <Card variant="elevated" style={styles.sectionCard}>
+            <Typography variant="heading" style={styles.sectionTitle}>
+              Shop Service Details
+            </Typography>
+            
+            <Input
+              label="Service Description"
+              value={formData.serviceDescription}
+              onChangeText={(serviceDescription) => setFormData(prev => ({ ...prev, serviceDescription }))}
+              placeholder="Oil change with synthetic oil"
+              multiline
+              numberOfLines={2}
+            />
+            
+            <Input
+              label="Shop Name (Optional)"
+              value={formData.shopName}
+              onChangeText={(shopName) => setFormData(prev => ({ ...prev, shopName }))}
+              placeholder="Jiffy Lube, Local Auto Shop, etc."
+            />
+            
+            <Input
+              label="Total Cost"
+              value={formData.cost}
+              onChangeText={(cost) => setFormData(prev => ({ ...prev, cost }))}
+              placeholder="89.99"
+              keyboardType="numeric"
+            />
+          </Card>
+        )}
+
+        {/* Detailed Parts & Fluids (DIY service for supported categories) */}
+        {formData.serviceType === 'diy' && supportsDetailedTracking(formData.categoryKey, formData.subcategoryKey) && (
+          <>
+            {/* Parts Section */}
+            <Card variant="elevated" style={styles.sectionCard}>
+              <View style={styles.sectionHeader}>
+                <Typography variant="heading" style={styles.sectionTitle}>
+                  Parts Used
+                </Typography>
+                <View style={styles.headerActions}>
+                  {formData.categoryKey === 'brake-system' && formData.subcategoryKey === 'brake-pads-rotors' && (
+                    <Button
+                      title={showAdvancedParts ? "Simple" : "Front/Rear"}
+                      variant="text"
+                      size="sm"
+                      onPress={toggleAdvancedParts}
+                      style={styles.advancedToggle}
+                    />
+                  )}
+                  <Button
+                    title="Add Part"
+                    variant="text"
+                    size="sm"
+                    onPress={addPart}
+                  />
+                </View>
+              </View>
+              
+              {formData.parts.map((part, index) => (
+                <View key={index} style={styles.partFluidItem}>
+                  <View style={styles.partFluidHeader}>
+                    <Typography variant="bodyLarge" style={styles.partFluidTitle}>
+                      {part.name || `Part ${index + 1}`}
+                    </Typography>
+                    {formData.parts.length > 1 && (
+                      <TouchableOpacity onPress={() => removePart(index)}>
+                        <Typography variant="body" style={styles.removeButton}>✕</Typography>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  
+                  <Input
+                    label="Part Name"
+                    value={part.name}
+                    onChangeText={(value) => updatePart(index, 'name', value)}
+                    placeholder="Oil Filter"
+                  />
+                  
+                  <View style={styles.partFluidRow}>
+                    <Input
+                      label="Brand"
+                      value={part.brand}
+                      onChangeText={(value) => updatePart(index, 'brand', value)}
+                      placeholder="Mobil 1"
+                      style={styles.partFluidInput}
+                    />
+                    <Input
+                      label="Part Number"
+                      value={part.partNumber}
+                      onChangeText={(value) => updatePart(index, 'partNumber', value)}
+                      placeholder="M1-110A"
+                      style={styles.partFluidInput}
+                    />
+                  </View>
+                  
+                  <View style={styles.partFluidRow}>
+                    <Input
+                      label="Quantity"
+                      value={part.quantity}
+                      onChangeText={(value) => updatePart(index, 'quantity', value)}
+                      placeholder="1"
+                      keyboardType="numeric"
+                      style={styles.partFluidInput}
+                    />
+                    <Input
+                      label="Unit Cost"
+                      value={part.unitCost}
+                      onChangeText={(value) => updatePart(index, 'unitCost', value)}
+                      placeholder="12.99"
+                      keyboardType="numeric"
+                      style={styles.partFluidInput}
+                    />
+                  </View>
+                  
+                  <Input
+                    label="Supplier (Optional)"
+                    value={part.supplier}
+                    onChangeText={(value) => updatePart(index, 'supplier', value)}
+                    placeholder="AutoZone, Amazon, etc."
+                  />
+                </View>
+              ))}
+            </Card>
+
+            {/* Fluids Section */}
+            <Card variant="elevated" style={styles.sectionCard}>
+              <View style={styles.sectionHeader}>
+                <Typography variant="heading" style={styles.sectionTitle}>
+                  Fluids Used
+                </Typography>
+                <Button
+                  title="Add Fluid"
+                  variant="text"
+                  size="sm"
+                  onPress={addFluid}
+                />
+              </View>
+              
+              {formData.fluids.map((fluid, index) => (
+                <View key={index} style={styles.partFluidItem}>
+                  <View style={styles.partFluidHeader}>
+                    <Typography variant="bodyLarge" style={styles.partFluidTitle}>
+                      {fluid.name || `Fluid ${index + 1}`}
+                    </Typography>
+                    {formData.fluids.length > 1 && (
+                      <TouchableOpacity onPress={() => removeFluid(index)}>
+                        <Typography variant="body" style={styles.removeButton}>✕</Typography>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  
+                  <Input
+                    label="Fluid Name"
+                    value={fluid.name}
+                    onChangeText={(value) => updateFluid(index, 'name', value)}
+                    placeholder="Motor Oil"
+                  />
+                  
+                  <View style={styles.partFluidRow}>
+                    <Input
+                      label="Brand"
+                      value={fluid.brand}
+                      onChangeText={(value) => updateFluid(index, 'brand', value)}
+                      placeholder="Mobil 1"
+                      style={styles.partFluidInput}
+                    />
+                    <Input
+                      label="Viscosity"
+                      value={fluid.viscosity}
+                      onChangeText={(value) => updateFluid(index, 'viscosity', value)}
+                      placeholder="5W-30"
+                      style={styles.partFluidInput}
+                    />
+                  </View>
+                  
+                  <View style={styles.partFluidRow}>
+                    <Input
+                      label="Capacity"
+                      value={fluid.capacity}
+                      onChangeText={(value) => updateFluid(index, 'capacity', value)}
+                      placeholder="5"
+                      keyboardType="numeric"
+                      style={styles.partFluidInput}
+                    />
+                    <Input
+                      label="Unit"
+                      value={fluid.unit}
+                      onChangeText={(value) => updateFluid(index, 'unit', value)}
+                      placeholder="quarts"
+                      style={styles.partFluidInput}
+                    />
+                  </View>
+                  
+                  <Input
+                    label="Cost"
+                    value={fluid.cost}
+                    onChangeText={(value) => updateFluid(index, 'cost', value)}
+                    placeholder="24.99"
+                    keyboardType="numeric"
+                  />
+                </View>
+              ))}
+            </Card>
+          </>
+        )}
 
         {/* Additional Details */}
         <Card variant="elevated" style={styles.sectionCard}>
@@ -393,7 +1064,7 @@ const AddMaintenanceLogScreen: React.FC = () => {
         <Button
           title={t('common.cancel', 'Cancel')}
           variant="outline"
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.navigate('MaintenanceList')}
           style={styles.button}
           disabled={loading}
         />
@@ -437,16 +1108,6 @@ const styles = StyleSheet.create({
   vehicleContextCard: {
     padding: theme.spacing.lg,
     marginBottom: theme.spacing.lg,
-  },
-  vehicleContextHeader: {
-    marginBottom: theme.spacing.sm,
-  },
-  vehicleContextLabel: {
-    color: theme.colors.textSecondary,
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.semibold,
-    letterSpacing: theme.typography.letterSpacing.wide,
-    textTransform: 'uppercase',
   },
   vehicleContextName: {
     color: theme.colors.primary,
@@ -498,6 +1159,84 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
     minHeight: 48,
+  },
+  // Service Type Selection
+  serviceTypeContainer: {
+    gap: theme.spacing.md,
+  },
+  serviceTypeOption: {
+    padding: theme.spacing.lg,
+    borderWidth: 2,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    backgroundColor: theme.colors.surface,
+  },
+  serviceTypeOptionSelected: {
+    borderColor: theme.colors.primary,
+    backgroundColor: `${theme.colors.primary}08`, // 8% opacity
+  },
+  serviceTypeText: {
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  },
+  serviceTypeTextSelected: {
+    color: theme.colors.primary,
+    fontWeight: theme.typography.fontWeight.semibold,
+  },
+  serviceTypeDescription: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.fontSize.sm,
+  },
+  serviceTypeDescriptionSelected: {
+    color: theme.colors.primary,
+  },
+  // Parts and Fluids
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  advancedToggle: {
+    backgroundColor: theme.colors.backgroundSecondary,
+    borderRadius: theme.borderRadius.sm,
+    paddingHorizontal: theme.spacing.sm,
+  },
+  partFluidItem: {
+    padding: theme.spacing.lg,
+    backgroundColor: theme.colors.backgroundSecondary,
+    borderRadius: theme.borderRadius.md,
+    marginBottom: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.borderLight,
+  },
+  partFluidHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  partFluidTitle: {
+    color: theme.colors.text,
+    fontWeight: theme.typography.fontWeight.semibold,
+  },
+  removeButton: {
+    color: theme.colors.error,
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.bold,
+    padding: theme.spacing.sm,
+  },
+  partFluidRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+  },
+  partFluidInput: {
+    flex: 1,
   },
 });
 

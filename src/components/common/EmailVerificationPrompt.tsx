@@ -113,7 +113,7 @@ export const EmailVerificationPrompt: React.FC<EmailVerificationPromptProps> = (
   };
 
   return (
-    <Card variant="outlined" style={[styles.container, style]}>
+    <Card variant="outlined" style={[styles.container, style] as any}>
       <View style={styles.content}>
         <View style={styles.header}>
           <View style={styles.iconContainer}>

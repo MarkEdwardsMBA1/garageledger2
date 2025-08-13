@@ -124,7 +124,7 @@ const VehicleHomeScreen: React.FC = () => {
           variant="primary"
           style={styles.actionButton}
           onPress={() => {
-            navigation.navigate('Maintenance', { 
+            navigation.navigate('Insights', { 
               screen: 'AddMaintenanceLog',
               params: { vehicleId: params.vehicleId }
             });
@@ -177,7 +177,7 @@ const VehicleHomeScreen: React.FC = () => {
             primaryAction={{
               title: t('maintenance.logMaintenance', 'Log Maintenance'),
               onPress: () => {
-                navigation.navigate('Maintenance', { 
+                navigation.navigate('Insights', { 
                   screen: 'AddMaintenanceLog',
                   params: { vehicleId: params.vehicleId }
                 });
@@ -200,7 +200,7 @@ const VehicleHomeScreen: React.FC = () => {
           
           {maintenanceLogs.length > 5 && (
             <TouchableOpacity
-              onPress={() => navigation.navigate('Maintenance')}
+              onPress={() => navigation.navigate('Insights')}
             >
               <Typography variant="bodySmall" style={styles.viewAllLink}>
                 View All ({maintenanceLogs.length})

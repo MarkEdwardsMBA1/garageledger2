@@ -24,6 +24,7 @@
     "previous": "Previous",
     "continue": "Continue",
     "ok": "OK",
+    "done": "Done",
     "networkError": "Network error. Please check your connection."
   },
   "welcome": {
@@ -69,6 +70,7 @@
     "dashboard": "Dashboard",
     "vehicles": "Vehicles",
     "maintenance": "Maintenance",
+    "insights": "Insights",
     "reminders": "Reminders",
     "settings": "Settings"
   },
@@ -150,6 +152,7 @@
     "title": "Maintenance",
     "addNew": "Add Log Entry",
     "logMaintenance": "Log Maintenance",
+    "logAnother": "Log Another Service",
     "log": "Log",
     "logTitle": "Title",
     "date": "Date",

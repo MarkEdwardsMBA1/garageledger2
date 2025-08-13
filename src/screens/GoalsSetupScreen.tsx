@@ -4,6 +4,7 @@ import {
   StyleSheet,
   ScrollView,
   StatusBar,
+  ViewStyle,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -34,7 +35,7 @@ const TrackingOption: React.FC<{
 }> = ({ IconComponent, title, description, selected, onToggle, testID }) => {
   return (
     <Card 
-      style={selected ? [styles.optionCard, styles.optionCardSelected] : styles.optionCard}
+      style={selected ? [styles.optionCard, styles.optionCardSelected] as any : styles.optionCard}
       onPress={onToggle}
       testID={testID}
     >

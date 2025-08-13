@@ -14,8 +14,7 @@ import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { Loading } from '../components/common/Loading';
 import { SpeedometerIcon, CarIcon, SpannerIcon, GearIcon } from '../components/icons';
 
-// Import screens
-import DashboardScreen from '../screens/DashboardScreen';
+// Import screens  
 import VehiclesScreen from '../screens/VehiclesScreen';
 import VehicleHomeScreen from '../screens/VehicleHomeScreen';
 import MaintenanceScreen from '../screens/MaintenanceScreen';
@@ -62,33 +61,10 @@ const VehiclesStack: React.FC = () => {
       <Stack.Screen
         name="VehiclesList"
         component={VehiclesScreen}
-        options={({ navigation }) => ({
+        options={{
           title: t('vehicles.title', 'My Vehicles'),
           headerBackTitle: ' ', // Prevent long titles from showing in back button
-          headerRight: () => (
-            <TouchableOpacity
-              onPress={() => navigation.navigate('AddVehicle')}
-              style={{
-                marginRight: theme.spacing.md,
-                paddingHorizontal: theme.spacing.sm,
-                paddingVertical: theme.spacing.xs,
-                borderRadius: theme.borderRadius.sm,
-                backgroundColor: theme.colors.surface, // White button on Engine Blue header
-                borderWidth: 1,
-                borderColor: theme.colors.surface,
-              }}
-            >
-              <Text style={{
-                color: theme.colors.primary, // Engine Blue text on white button
-                fontSize: theme.typography.fontSize.sm,
-                fontWeight: theme.typography.fontWeight.semibold,
-                letterSpacing: theme.typography.letterSpacing.wide,
-              }}>
-                {t('common.add', 'ADD')}
-              </Text>
-            </TouchableOpacity>
-          ),
-        })}
+        }}
       />
       <Stack.Screen
         name="AddVehicle"
@@ -166,7 +142,7 @@ const MaintenanceStackNavigator: React.FC = () => {
         name="MaintenanceList"
         component={MaintenanceScreen}
         options={{
-          title: t('navigation.maintenance', 'Maintenance'),
+          title: t('navigation.insights', 'Insights'),
         }}
       />
       <Stack.Screen
@@ -174,7 +150,7 @@ const MaintenanceStackNavigator: React.FC = () => {
         component={AddMaintenanceLogScreen}
         options={{
           title: t('maintenance.logMaintenance', 'Log Maintenance'),
-          headerBackTitle: t('navigation.maintenance', 'Maintenance'),
+          headerBackTitle: t('navigation.insights', 'Insights'),
         }}
       />
     </Stack.Navigator>
@@ -191,6 +167,7 @@ const OnboardingStack: React.FC = () => {
       screenOptions={{
         headerShown: false,
       }}
+      initialRouteName="Login" // Skip onboarding for returning users, go directly to Login
     >
       <Stack.Screen name="Welcome" component={WelcomeScreen} />
       <Stack.Screen name="OnboardingFlow" component={OnboardingFlowScreen} />
@@ -270,16 +247,6 @@ const MainAppNavigator: React.FC = () => {
         }}
       >
         <Tab.Screen
-          name="Dashboard"
-          component={DashboardScreen}
-          options={{
-            title: t('navigation.dashboard', 'Dashboard'),
-            tabBarIcon: ({ color, size }) => (
-              <TabIcon name="dashboard" color={color} size={size} />
-            ),
-          }}
-        />
-        <Tab.Screen
           name="Vehicles"
           component={VehiclesStack}
           options={{
@@ -291,12 +258,12 @@ const MainAppNavigator: React.FC = () => {
           }}
         />
         <Tab.Screen
-          name="Maintenance"
+          name="Insights"
           component={MaintenanceStackNavigator}
           options={{
-            title: t('navigation.maintenance', 'Maintenance'),
+            title: t('navigation.insights', 'Insights'),
             tabBarIcon: ({ color, size }) => (
-              <TabIcon name="maintenance" color={color} size={size} />
+              <TabIcon name="insights" color={color} size={size} />
             ),
             headerShown: false, // Let the stack handle the header
           }}
@@ -395,24 +362,31 @@ const AppNavigationRouter: React.FC = () => {
  * Navigation container with splash screen and auth-based key for proper stack reset
  */
 const AuthAwareNavigationContainer: React.FC = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const [showSplash, setShowSplash] = useState(true);
   const [hasShownSplash, setHasShownSplash] = useState(false);
   
-  // Only show splash screen on the very first app launch
-  React.useEffect(() => {
-    if (hasShownSplash) {
-      setShowSplash(false);
-    }
-  }, [hasShownSplash]);
-  
-  // Show branded splash screen first (for branding & future i18n)
+  // Show splash screen until auth is fully resolved to prevent flashing
   if (showSplash && !hasShownSplash) {
     return (
       <SplashScreen 
         onComplete={() => {
-          setShowSplash(false);
-          setHasShownSplash(true);
+          // Only complete splash when auth loading is done
+          // This prevents the flash between splash and sign-in screens
+          if (!isLoading) {
+            setTimeout(() => {
+              setShowSplash(false);
+              setHasShownSplash(true);
+            }, 200); // Small buffer for smooth transition
+          } else {
+            // Auth still loading, check again in a moment
+            setTimeout(() => {
+              if (!isLoading) {
+                setShowSplash(false);
+                setHasShownSplash(true);
+              }
+            }, 100);
+          }
         }} 
       />
     );
@@ -439,7 +413,7 @@ export const AppNavigator: React.FC = () => {
 
 // Custom SVG icon component for unique GarageLedger branding
 interface TabIconProps {
-  name: 'dashboard' | 'vehicles' | 'maintenance' | 'settings';
+  name: 'dashboard' | 'vehicles' | 'maintenance' | 'insights' | 'settings';
   color: string;
   size: number;
 }
@@ -466,6 +440,12 @@ const TabIcon: React.FC<TabIconProps> = ({ name, color, size }) => {
       return (
         <View style={iconStyle}>
           <SpannerIcon size={size} color={color} />
+        </View>
+      );
+    case 'insights':
+      return (
+        <View style={iconStyle}>
+          <SpeedometerIcon size={size} color={color} />
         </View>
       );
     case 'settings':
