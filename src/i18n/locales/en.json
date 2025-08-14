@@ -64,7 +64,7 @@
     "nextStepsDescription": "Get the most out of GarageLedger by tracking your maintenance:",
     "logMaintenance": "Log my last oil change",
     "addReminder": "Add a maintenance reminder",
-    "goToDashboard": "Take me to the dashboard"
+    "goToVehicles": "Take me to my vehicles"
   },
   "navigation": {
     "dashboard": "Dashboard",

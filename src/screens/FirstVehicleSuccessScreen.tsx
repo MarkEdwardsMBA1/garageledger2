@@ -40,8 +40,8 @@ export const FirstVehicleSuccessScreen: React.FC<any> = ({
     navigation.navigate('FirstReminder', { vehicle });
   };
 
-  const handleGoToDashboard = () => {
-    // Navigate to main app dashboard
+  const handleGoToVehicles = () => {
+    // Navigate to main app (Vehicles is now the home screen)
     navigation.navigate('MainApp');
   };
 
@@ -105,9 +105,9 @@ export const FirstVehicleSuccessScreen: React.FC<any> = ({
 
         {/* Skip Option */}
         <Button
-          title={t('success.goToDashboard', 'Take me to the dashboard')}
+          title={t('success.goToVehicles', 'Take me to my vehicles')}
           variant="text"
-          onPress={handleGoToDashboard}
+          onPress={handleGoToVehicles}
           style={styles.skipButton}
         />
       </View>

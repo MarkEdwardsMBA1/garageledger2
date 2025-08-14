@@ -173,68 +173,85 @@ const MaintenanceScreen: React.FC = () => {
 
     return (
       <ScrollView contentContainerStyle={styles.listContainer}>
-        {/* Fleet Summary Stats */}
-        <Card variant="elevated" style={styles.summaryCard}>
-          <Typography variant="heading" style={styles.sectionTitle}>
-            Garage Overview
-          </Typography>
+        {/* Unified Stats Cards - No section headers for cleaner look */}
+        
+        {/* Row 1: Navigation Cards */}
+        <View style={styles.statsRow}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Vehicles')}
+            activeOpacity={0.7}
+            style={styles.statCardTouchable}
+          >
+            <Card variant="elevated" style={styles.statCard}>
+              <Typography variant="display" style={styles.statNumber}>
+                {totalVehicles}
+              </Typography>
+              <Typography variant="caption" style={styles.statLabel}>
+                {t('dashboard.totalVehicles', 'Total Vehicles')}
+              </Typography>
+            </Card>
+          </TouchableOpacity>
           
-          <View style={styles.statsGrid}>
-            {/* First row - 3 stats */}
-            <View style={styles.statsRow}>
-              <View style={styles.statCard}>
-                <Typography variant="title" style={styles.statNumber}>
-                  {totalVehicles}
-                </Typography>
-                <Typography variant="caption" style={styles.statLabel}>
-                  {totalVehicles === 1 ? 'Vehicle' : 'Vehicles'} in Garage
-                </Typography>
-              </View>
-              
-              <View style={styles.statCard}>
-                <Typography variant="title" style={styles.statNumber}>
-                  {averageAge}
-                </Typography>
-                <Typography variant="caption" style={styles.statLabel}>
-                  Average Age (years)
-                </Typography>
-              </View>
-              
-              <View style={styles.statCard}>
-                <Typography variant="title" style={styles.statNumber}>
-                  {averageMileage.toLocaleString()}
-                </Typography>
-                <Typography variant="caption" style={styles.statLabel}>
-                  Average Mileage
-                </Typography>
-              </View>
-            </View>
-            
-            {/* Second row - 2 stats */}
-            <View style={styles.statsRow}>
-              <View style={styles.statCard}>
-                <Typography variant="title" style={styles.statNumber}>
-                  ${totalServiceCosts.toFixed(0)}
-                </Typography>
-                <Typography variant="caption" style={styles.statLabel}>
-                  Total Service Costs
-                </Typography>
-              </View>
-              
-              <View style={styles.statCard}>
-                <Typography variant="title" style={styles.statNumber}>
-                  {totalLogs}
-                </Typography>
-                <Typography variant="caption" style={styles.statLabel}>
-                  Total Services
-                </Typography>
-              </View>
-              
-              {/* Spacer for alignment */}
-              <View style={styles.statCard} />
-            </View>
-          </View>
-        </Card>
+          <TouchableOpacity
+            onPress={() => {
+              // TODO: Navigate to reminders/upcoming when implemented
+              // For now, stay on current screen
+            }}
+            activeOpacity={0.7}
+            style={styles.statCardTouchable}
+          >
+            <Card variant="elevated" style={styles.statCard}>
+              <Typography variant="display" style={styles.statNumber}>
+                {upcomingMaintenance.length}
+              </Typography>
+              <Typography variant="caption" style={styles.statLabel}>
+                {t('dashboard.upcomingMaintenance', 'Upcoming')}
+              </Typography>
+            </Card>
+          </TouchableOpacity>
+        </View>
+
+        {/* Row 2: Fleet Analytics */}
+        <View style={styles.statsRow}>
+          <Card variant="elevated" style={styles.statCard}>
+            <Typography variant="display" style={styles.statNumber}>
+              {averageAge}
+            </Typography>
+            <Typography variant="caption" style={styles.statLabel}>
+              Average Age (years)
+            </Typography>
+          </Card>
+          
+          <Card variant="elevated" style={styles.statCard}>
+            <Typography variant="display" style={styles.statNumber}>
+              {averageMileage.toLocaleString()}
+            </Typography>
+            <Typography variant="caption" style={styles.statLabel}>
+              Average Mileage
+            </Typography>
+          </Card>
+        </View>
+
+        {/* Row 3: Service Analytics */}
+        <View style={styles.statsRow}>
+          <Card variant="elevated" style={styles.statCard}>
+            <Typography variant="display" style={styles.statNumber}>
+              ${totalServiceCosts.toFixed(0)}
+            </Typography>
+            <Typography variant="caption" style={styles.statLabel}>
+              Total Service Costs
+            </Typography>
+          </Card>
+          
+          <Card variant="elevated" style={styles.statCard}>
+            <Typography variant="display" style={styles.statNumber}>
+              {totalLogs}
+            </Typography>
+            <Typography variant="caption" style={styles.statLabel}>
+              Total Services
+            </Typography>
+          </Card>
+        </View>
 
         {/* Cost Breakdown by Category */}
         {totalServiceCosts > 0 && topCategories.length > 0 && (
@@ -268,6 +285,81 @@ const MaintenanceScreen: React.FC = () => {
                 </View>
               </View>
             ))}
+          </Card>
+        )}
+
+        {/* Recent Activity - Fleet-wide maintenance overview */}
+        {maintenanceLogs.length > 0 && (
+          <Card variant="filled" style={styles.summaryCard}>
+            <Typography variant="heading" style={styles.sectionTitle}>
+              {t('dashboard.recentActivity', 'Recent Activity')}
+            </Typography>
+            
+            {maintenanceLogs.slice(0, 5).map((log, index) => {
+              const vehicle = vehicles.find(v => v.id === log.vehicleId);
+              const [categoryKey, subcategoryKey] = log.category.split(':');
+              const categoryName = getCategoryName(categoryKey);
+              const subcategoryName = getSubcategoryName(categoryKey, subcategoryKey);
+              
+              return (
+                <TouchableOpacity
+                  key={log.id}
+                  style={[
+                    styles.activityItem,
+                    index < Math.min(maintenanceLogs.length, 5) - 1 && styles.activityItemBorder
+                  ]}
+                  onPress={() => {
+                    if (log.vehicleId) {
+                      // Navigate to Vehicles tab and then to specific vehicle detail
+                      navigation.navigate('Vehicles', {
+                        screen: 'VehiclesList'
+                      });
+                      
+                      // Then navigate to specific vehicle detail
+                      setTimeout(() => {
+                        navigation.navigate('Vehicles', {
+                          screen: 'VehicleHome',
+                          params: { vehicleId: log.vehicleId }
+                        });
+                      }, 100);
+                    }
+                  }}
+                >
+                  <View style={styles.activityContent}>
+                    <View style={styles.activityHeader}>
+                      <Typography variant="body" style={styles.activityTitle}>{log.title}</Typography>
+                      <Typography variant="caption" style={styles.activityDate}>
+                        {log.date.toLocaleDateString()}
+                      </Typography>
+                    </View>
+                    <View style={styles.activityDetails}>
+                      <Typography variant="caption" style={styles.activityVehicle}>
+                        {vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Vehicle'}
+                      </Typography>
+                      <Typography variant="caption" style={styles.activityCategory}>
+                        {subcategoryName || categoryName}
+                      </Typography>
+                    </View>
+                    {log.mileage > 0 && (
+                      <Typography variant="caption" style={styles.activityMileage}>
+                        {log.mileage.toLocaleString()} {t('vehicles.miles', 'miles')}
+                      </Typography>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+            
+            {maintenanceLogs.length > 5 && (
+              <TouchableOpacity
+                style={styles.viewAllButton}
+                onPress={() => setActiveTab('history')}
+              >
+                <Typography variant="body" style={styles.viewAllText}>
+                  {t('dashboard.viewAllActivity', 'View All Activity')}
+                </Typography>
+              </TouchableOpacity>
+            )}
           </Card>
         )}
 
@@ -452,6 +544,31 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     paddingTop: theme.spacing.sm,
   },
+  
+  // Unified Stats styles
+  statsRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+  },
+  statCardTouchable: {
+    flex: 1,
+  },
+  statCard: {
+    alignItems: 'center',
+    padding: theme.spacing.lg,
+    flex: 1,
+  },
+  statNumber: {
+    color: theme.colors.primary,
+    marginBottom: theme.spacing.xs,
+    fontWeight: theme.typography.fontWeight.bold,
+    textAlign: 'center',
+  },
+  statLabel: {
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+  },
   logDetails: {
     alignItems: 'flex-end',
     gap: theme.spacing.xs,
@@ -509,31 +626,6 @@ const styles = StyleSheet.create({
   // Fleet Status Styles
   summaryCard: {
     marginBottom: theme.spacing.lg,
-  },
-  statsGrid: {
-    gap: theme.spacing.md,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: theme.spacing.md,
-  },
-  statCard: {
-    flex: 1,
-    alignItems: 'center',
-    padding: theme.spacing.sm,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.md,
-    ...theme.shadows.xs,
-  },
-  statNumber: {
-    color: theme.colors.primary,
-    fontWeight: theme.typography.fontWeight.bold,
-    marginBottom: theme.spacing.xs,
-  },
-  statLabel: {
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
   },
   
   statusCard: {
@@ -651,6 +743,55 @@ const styles = StyleSheet.create({
   categoryBarFill: {
     height: '100%',
     borderRadius: theme.borderRadius.sm,
+  },
+  
+  // Recent Activity Styles
+  activityItem: {
+    padding: theme.spacing.md,
+  },
+  activityItemBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.borderLight,
+  },
+  activityContent: {
+    gap: theme.spacing.xs,
+  },
+  activityHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  activityTitle: {
+    flex: 1,
+    marginRight: theme.spacing.sm,
+  },
+  activityDate: {
+    color: theme.colors.textSecondary,
+  },
+  activityDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  activityVehicle: {
+    color: theme.colors.primary,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  activityCategory: {
+    color: theme.colors.textSecondary,
+  },
+  activityMileage: {
+    color: theme.colors.textSecondary,
+  },
+  viewAllButton: {
+    padding: theme.spacing.md,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.borderLight,
+  },
+  viewAllText: {
+    color: theme.colors.primary,
+    fontWeight: theme.typography.fontWeight.medium,
   },
 });
 
