@@ -91,7 +91,46 @@ export type MaintenanceCategory = {
   nameTranslations: Record<string, string>;
 };
 
-// ===== MAINTENANCE PROGRAM TYPES (User-Only Architecture) =====
+// ===== PHASE 2: PROGRAMS FEATURE TYPES =====
+
+export interface MaintenanceProgram {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string;
+  tasks: ProgramTask[];
+  assignedVehicleIds: string[];
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ProgramTask {
+  id: string;
+  name: string;
+  description?: string;
+  category: string; // Maintenance category key
+  intervalType: 'mileage' | 'time' | 'either'; // Whichever occurs first
+  intervalValue: number; // Miles or time value
+  timeIntervalUnit?: 'days' | 'weeks' | 'months' | 'years'; // For when intervalType is 'time' or 'either'
+  timeIntervalValue?: number; // For 'either' type to store time component
+  estimatedCost?: number;
+  reminderOffset?: number; // Days before due to remind
+  isActive: boolean;
+}
+
+export interface ProgramAssignment {
+  id: string;
+  programId: string;
+  vehicleId: string;
+  assignedAt: Date;
+  isActive: boolean;
+  lastCompletedAt?: Date;
+  nextDueDate?: Date;
+  nextDueMileage?: number;
+}
+
+// ===== LEGACY MAINTENANCE PROGRAM TYPES (User-Only Architecture) =====
 
 export type MaintenanceType = 'PREVENTIVE' | 'MODIFICATION' | 'REPAIR';
 

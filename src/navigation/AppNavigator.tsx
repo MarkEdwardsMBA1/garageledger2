@@ -12,13 +12,16 @@ import { theme } from '../utils/theme';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { Loading } from '../components/common/Loading';
-import { SpeedometerIcon, CarIcon, SpannerIcon, GearIcon } from '../components/icons';
+import { SpeedometerIcon, CarIcon, SpannerIcon, GearIcon, ClipboardIcon } from '../components/icons';
 
 // Import screens  
 import VehiclesScreen from '../screens/VehiclesScreen';
 import VehicleHomeScreen from '../screens/VehicleHomeScreen';
 import MaintenanceScreen from '../screens/MaintenanceScreen';
 import AddMaintenanceLogScreen from '../screens/AddMaintenanceLogScreen';
+import ProgramsScreen from '../screens/ProgramsScreen';
+import CreateProgramVehicleSelectionScreen from '../screens/CreateProgramVehicleSelectionScreen';
+import CreateProgramDetailsScreen from '../screens/CreateProgramDetailsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import AddVehicleScreen from '../screens/AddVehicleScreen';
 import EditVehicleScreen from '../screens/EditVehicleScreen';
@@ -207,6 +210,55 @@ const LegalComplianceStack: React.FC = () => {
 };
 
 /**
+ * Programs stack navigator for Program management functionality
+ */
+const ProgramsStackNavigator: React.FC = () => {
+  const { t } = useTranslation();
+
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: theme.colors.primary, // Engine Blue header
+          borderBottomWidth: 0, // Remove border for cleaner look
+        },
+        headerTitleStyle: {
+          fontSize: theme.typography.fontSize.lg,
+          fontWeight: theme.typography.fontWeight.semibold,
+          color: theme.colors.surface, // White text on Engine Blue
+        },
+        headerTintColor: theme.colors.surface, // White back button and icons
+      }}
+    >
+      <Stack.Screen
+        name="ProgramsList"
+        component={ProgramsScreen}
+        options={{
+          title: t('navigation.programs', 'Programs'),
+          headerBackTitle: ' ', // Prevent long titles from showing in back button
+        }}
+      />
+      <Stack.Screen
+        name="CreateProgramVehicleSelection"
+        component={CreateProgramVehicleSelectionScreen}
+        options={{
+          title: t('programs.createProgram', 'Create Program'),
+          headerBackTitle: t('navigation.programs', 'Programs'), // Clean back button text
+        }}
+      />
+      <Stack.Screen
+        name="CreateProgramDetails"
+        component={CreateProgramDetailsScreen}
+        options={{
+          title: t('programs.createProgram', 'Create Program'),
+          headerBackTitle: t('navigation.programs', 'Programs'), // Clean back button text
+        }}
+      />
+    </Stack.Navigator>
+  );
+};
+
+/**
  * Protected main app navigation with bottom tabs
  * Supports internationalization and consistent theming
  */
@@ -264,6 +316,17 @@ const MainAppNavigator: React.FC = () => {
             title: t('navigation.insights', 'Insights'),
             tabBarIcon: ({ color, size }) => (
               <TabIcon name="insights" color={color} size={size} />
+            ),
+            headerShown: false, // Let the stack handle the header
+          }}
+        />
+        <Tab.Screen
+          name="Programs"
+          component={ProgramsStackNavigator}
+          options={{
+            title: t('navigation.programs', 'Programs'),
+            tabBarIcon: ({ color, size }) => (
+              <TabIcon name="programs" color={color} size={size} />
             ),
             headerShown: false, // Let the stack handle the header
           }}
@@ -413,7 +476,7 @@ export const AppNavigator: React.FC = () => {
 
 // Custom SVG icon component for unique GarageLedger branding
 interface TabIconProps {
-  name: 'dashboard' | 'vehicles' | 'maintenance' | 'insights' | 'settings';
+  name: 'dashboard' | 'vehicles' | 'maintenance' | 'insights' | 'programs' | 'settings';
   color: string;
   size: number;
 }
@@ -446,6 +509,12 @@ const TabIcon: React.FC<TabIconProps> = ({ name, color, size }) => {
       return (
         <View style={iconStyle}>
           <SpeedometerIcon size={size} color={color} />
+        </View>
+      );
+    case 'programs':
+      return (
+        <View style={iconStyle}>
+          <ClipboardIcon size={size} color={color} />
         </View>
       );
     case 'settings':

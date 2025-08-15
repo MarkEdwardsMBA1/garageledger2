@@ -25,5 +25,7 @@ export {
   CameraIcon,
   MailIcon,
   ChevronRightIcon,
+  ClipboardIcon,
+  TrashIcon,
   CarSilhouetteIcon,
 } from './AutomotiveIcons';

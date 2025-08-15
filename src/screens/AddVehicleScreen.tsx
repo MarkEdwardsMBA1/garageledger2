@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   Alert,
@@ -10,6 +9,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '../utils/theme';
+import { Typography } from '../components/common/Typography';
 import { Card } from '../components/common/Card';
 import { Input } from '../components/common/Input';
 import { Button } from '../components/common/Button';
@@ -234,19 +234,19 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-      <Card style={styles.formCard}>
-        <Text style={styles.title}>
+      <Card variant="elevated" style={styles.formCard}>
+        <Typography variant="title" style={styles.screenTitle}>
           {t('vehicles.addNew', 'Add Vehicle')}
-        </Text>
-        <Text style={styles.subtitle}>
+        </Typography>
+        <Typography variant="body" style={styles.screenSubtitle}>
           {t('vehicles.addDescription', 'Enter your vehicle information to start tracking maintenance.')}
-        </Text>
+        </Typography>
 
         {/* Basic Information */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
+          <Typography variant="heading" style={styles.sectionTitle}>
             {t('vehicles.basicInfo', 'Basic Information')}
-          </Text>
+          </Typography>
           
           <Input
             label={t('vehicles.make', 'Make')}
@@ -280,9 +280,9 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
 
         {/* Vehicle Details */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
+          <Typography variant="heading" style={styles.sectionTitle}>
             {t('vehicles.details', 'Vehicle Details')}
-          </Text>
+          </Typography>
 
           <Input
             label={t('vehicles.vin', 'VIN')}
@@ -326,7 +326,7 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
       </ScrollView>
 
       {/* Action Buttons */}
-      <View style={styles.buttonContainer}>
+      <View style={styles.actionBar}>
         <Button
           title={t('common.cancel', 'Cancel')}
           variant="outline"
@@ -335,7 +335,7 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
           disabled={loading}
         />
         <Button
-          title={t('common.save', 'Save')}
+          title={t('vehicles.saveVehicle', 'Save Vehicle')}
           variant="primary"
           onPress={handleSave}
           style={styles.button}
@@ -363,14 +363,10 @@ const styles = StyleSheet.create({
   formCard: {
     marginBottom: theme.spacing.xl,
   },
-  title: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text,
+  screenTitle: {
     marginBottom: theme.spacing.sm,
   },
-  subtitle: {
-    fontSize: theme.typography.fontSize.base,
+  screenSubtitle: {
     color: theme.colors.textSecondary,
     marginBottom: theme.spacing.xl,
     lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.base,
@@ -379,12 +375,9 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xl,
   },
   sectionTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text,
     marginBottom: theme.spacing.md,
   },
-  buttonContainer: {
+  actionBar: {
     flexDirection: 'row',
     gap: theme.spacing.md,
     padding: theme.spacing.lg,

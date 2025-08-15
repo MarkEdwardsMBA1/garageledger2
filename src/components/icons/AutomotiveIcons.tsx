@@ -464,6 +464,84 @@ export const ChevronRightIcon: React.FC<IconProps> = ({
   </Svg>
 );
 
+// Clipboard/Programs Icon - For maintenance programs and schedules
+export const ClipboardIcon: React.FC<IconProps> = ({ 
+  size = 24, 
+  color = '#666', 
+  strokeWidth = 2 
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path 
+      d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Rect 
+      x="8" y="2" width="8" height="4" rx="1" ry="1"
+      stroke={color}
+      strokeWidth={strokeWidth}
+    />
+    <Path 
+      d="M9 12h6"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+    />
+    <Path 
+      d="M9 16h6"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+    />
+    <Path 
+      d="M9 8h6"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+    />
+  </Svg>
+);
+
+// Trash/Delete Icon
+export const TrashIcon: React.FC<IconProps> = ({ 
+  size = 24, 
+  color = '#666', 
+  strokeWidth = 2 
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path 
+      d="M3 6h18"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path 
+      d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path 
+      d="M10 11v6"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path 
+      d="M14 11v6"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
 // Car Silhouette Icon - Default placeholder for vehicle photos
 export const CarSilhouetteIcon: React.FC<IconProps> = ({ 
   size = 24, 
@@ -509,5 +587,6 @@ export default {
   ActivityIcon,
   CameraIcon,
   MailIcon,
+  ClipboardIcon,
   CarSilhouetteIcon,
 };
