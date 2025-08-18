@@ -1,5 +1,5 @@
 // Program Repository Interface and Base Implementation
-import { MaintenanceProgram, ProgramAssignment, IBaseRepository } from '../types';
+import { MaintenanceProgram, ProgramAssignment, IBaseRepository, ConflictDetectionResult } from '../types';
 
 export interface IProgramRepository extends IBaseRepository<MaintenanceProgram> {
   // Program-specific methods
@@ -16,6 +16,11 @@ export interface IProgramRepository extends IBaseRepository<MaintenanceProgram> 
   // Program status methods
   activateProgram(programId: string): Promise<void>;
   deactivateProgram(programId: string): Promise<void>;
+  
+  // Conflict management methods (Phase 1)
+  checkVehicleConflicts(vehicleIds: string[]): Promise<ConflictDetectionResult>;
+  removeVehicleFromProgram(programId: string, vehicleId: string): Promise<void>;
+  deleteProgram(programId: string): Promise<void>;
 }
 
 export interface IProgramAssignmentRepository extends IBaseRepository<ProgramAssignment> {

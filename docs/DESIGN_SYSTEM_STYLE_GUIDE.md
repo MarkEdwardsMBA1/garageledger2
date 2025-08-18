@@ -30,6 +30,157 @@ This style guide ensures consistent, professional design across all screens in G
 5. **Helper Text**: `Typography variant="caption"` (14px, normal, wide letter spacing)
 6. **Labels**: `Typography variant="label"` (14px, medium, wide letter spacing)
 
+#### Selection Components
+
+##### Radio Button List Pattern ✨
+**Use for**: Single-choice selection from 2-5 options (vehicle selection, conflict resolution, settings)
+
+**Visual Behavior:**
+- Clean, minimal design with subtle selection states
+- Only the radio circle and text color change when selected
+- NO background color change (avoids "selection card" pattern)
+- Professional, familiar user experience
+
+```typescript
+// ✅ CORRECT - Radio button pattern
+<TouchableOpacity
+  style={[
+    styles.radioOption,
+    isSelected && styles.radioOptionSelected // Only border changes
+  ]}
+  onPress={() => setSelection(option)}
+>
+  <View style={styles.radioContent}>
+    <Typography 
+      variant="body" 
+      style={[
+        styles.radioText,
+        isSelected && styles.radioTextSelected // Text becomes primary color
+      ]}
+    >
+      {optionText}
+    </Typography>
+    <View style={[
+      styles.radioCircle,
+      isSelected && styles.radioCircleSelected // Circle fills with primary color
+    ]} />
+  </View>
+</TouchableOpacity>
+
+// Styles for radio button pattern
+const styles = StyleSheet.create({
+  radioOption: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    marginBottom: theme.spacing.sm,
+    backgroundColor: theme.colors.surface, // Always stays neutral
+  },
+  radioOptionSelected: {
+    borderColor: theme.colors.primary, // Only border changes
+  },
+  radioContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: theme.spacing.md,
+  },
+  radioText: {
+    color: theme.colors.text,
+    flex: 1,
+  },
+  radioTextSelected: {
+    color: theme.colors.primary, // Selected text becomes primary color
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  radioCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: theme.colors.border,
+    backgroundColor: 'transparent',
+  },
+  radioCircleSelected: {
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primary, // Circle fills when selected
+  },
+});
+```
+
+##### Checkbox List Pattern
+**Use for**: Multi-choice selection (multiple vehicle selection, feature toggles)
+- Similar to radio buttons but allows multiple selections
+- Square checkboxes instead of circles
+- Can select 0, 1, or many options
+
+```typescript
+// ✅ CORRECT - Checkbox pattern (multiple selection)
+<TouchableOpacity
+  style={[
+    styles.checkboxOption,
+    isSelected && styles.checkboxOptionSelected // Only border changes
+  ]}
+  onPress={() => toggleSelection(option)}
+>
+  <View style={styles.checkboxContent}>
+    <Typography 
+      variant="body" 
+      style={[
+        styles.checkboxText,
+        isSelected && styles.checkboxTextSelected // Text becomes primary color
+      ]}
+    >
+      {optionText}
+    </Typography>
+    <View style={[
+      styles.checkboxSquare,
+      isSelected && styles.checkboxSquareSelected // Square fills with primary color
+    ]} />
+  </View>
+</TouchableOpacity>
+
+// Styles for checkbox pattern (similar to radio but square)
+const styles = StyleSheet.create({
+  checkboxOption: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    marginBottom: theme.spacing.sm,
+    backgroundColor: theme.colors.surface, // Always stays neutral
+  },
+  checkboxOptionSelected: {
+    borderColor: theme.colors.primary, // Only border changes
+  },
+  checkboxContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: theme.spacing.md,
+  },
+  checkboxText: {
+    color: theme.colors.text,
+    flex: 1,
+  },
+  checkboxTextSelected: {
+    color: theme.colors.primary, // Selected text becomes primary color
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  checkboxSquare: {
+    width: 20,
+    height: 20,
+    borderRadius: 4, // Square corners (vs 10 for radio circles)
+    borderWidth: 2,
+    borderColor: theme.colors.border,
+    backgroundColor: 'transparent',
+  },
+  checkboxSquareSelected: {
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primary, // Square fills when selected
+  },
+});
+```
+
 ## Screen Layout Patterns
 
 ### Form Screens Pattern
@@ -276,11 +427,170 @@ Before considering a form screen complete, verify:
 - [ ] Keyboard handling (dismiss, proper input types)
 - [ ] Accessibility features (labels, touch targets)
 
+## Navigation & CTA Standards
+
+### Header Patterns
+Ensure consistent navigation experience across all screens.
+
+#### Standard Header Configuration
+```typescript
+// All stacks should use consistent header styling
+screenOptions={{
+  headerStyle: {
+    backgroundColor: theme.colors.primary, // Engine Blue header
+    borderBottomWidth: 0,
+  },
+  headerTitleStyle: {
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.surface, // White text on Engine Blue
+  },
+  headerTintColor: theme.colors.surface, // White back button and icons
+}}
+```
+
+#### Header Title Patterns
+- **List Screens**: Use plural noun (`"My Vehicles"`, `"Programs"`)
+- **Detail Screens**: Use descriptive title (`"Vehicle Details"`, `"Program Details"`)
+- **Form Screens**: Use action + noun (`"Add Vehicle"`, `"Create Program"`, `"Edit Vehicle"`)
+
+#### Back Button Standards
+Always show the back arrow with clear parent screen context.
+
+```typescript
+// ✅ CORRECT - Robust back arrow that persists across navigation flows
+{
+  title: 'Add Vehicle',
+  headerBackTitle: 'Vehicles',
+  headerLeft: undefined, // Use default back button (ensures arrow shows)
+}
+
+// ✅ CORRECT - Essential for cross-tab navigation apps
+{
+  title: 'Create Program',
+  headerBackTitle: 'Programs',
+  headerLeft: undefined, // Prevents React Navigation from hiding arrows
+}
+
+// ❌ INCORRECT - Hides back arrow completely
+headerBackTitle: ' ', // Empty string removes arrow
+headerBackTitle: '', // Empty string removes arrow
+
+// ❌ INCORRECT - Missing headerLeft in complex navigation
+{
+  headerBackTitle: 'Programs',
+  // Missing headerLeft: undefined - arrow may disappear in cross-tab navigation!
+}
+```
+
+**Back Arrow Visibility Rules:**
+- Always include `headerBackTitle` with meaningful parent screen name
+- **Always add `headerLeft: undefined`** to force default back button behavior
+- Keep back titles concise (max 12 characters) to ensure arrow visibility
+- Use singular form for consistency (`"Vehicle"` not `"Vehicles"` when possible)
+- The left arrow provides crucial visual navigation feedback
+- Essential for apps with cross-tab navigation patterns
+
+#### Header Actions Standards
+```typescript
+// Right-side actions - consistent styling
+headerRight: () => (
+  <TouchableOpacity
+    onPress={handleAction}
+    style={{
+      marginRight: theme.spacing.md,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+    }}
+  >
+    <Typography variant="label" style={{ color: theme.colors.surface }}>
+      {t('common.edit', 'EDIT')}
+    </Typography>
+  </TouchableOpacity>
+),
+```
+
+### Call-to-Action (CTA) Standards
+Consistent primary actions across different screen types.
+
+#### Primary CTA Button Patterns
+
+**List Screens** - Add new item:
+```typescript
+// ✅ PREFERRED - Text button for primary actions
+<Button
+  title={t('vehicles.addVehicle', 'Add Vehicle')}
+  variant="primary"
+  onPress={handleAdd}
+  style={styles.primaryCTA}
+/>
+
+// ❌ AVOID - Floating action buttons inconsistent with design
+<TouchableOpacity style={styles.fab}>
+  <PlusIcon />
+</TouchableOpacity>
+```
+
+**Detail Screens** - Quick actions:
+```typescript
+// ✅ CORRECT - Primary action prominence
+<Button
+  title={t('maintenance.logMaintenance', 'Log Maintenance')}
+  variant="primary"
+  style={styles.primaryAction}
+/>
+
+<Button
+  title={t('reminders.addNew', 'Add Reminder')} 
+  variant="outline"
+  style={styles.secondaryAction}
+/>
+```
+
+#### CTA Placement Standards
+- **List Screens**: Bottom of list + empty state
+- **Detail Screens**: Quick actions section near top
+- **Form Screens**: Bottom action bar with Cancel + Save
+
+#### CTA Priority Hierarchy
+1. **Primary CTA**: One per screen, `variant="primary"`, Engine Blue
+2. **Secondary CTA**: Supporting actions, `variant="outline"`
+3. **Tertiary CTA**: Minor actions, text/icon buttons
+
+### Header Action Text Standards
+```typescript
+// ✅ CORRECT - Consistent casing and terminology
+"EDIT"     // All caps for header actions
+"ADD"      // All caps for header actions
+"SAVE"     // All caps for header actions
+
+// ❌ INCORRECT - Inconsistent casing
+"Edit"     // Title case in headers
+"add"      // Lowercase in headers
+```
+
+### Navigation Consistency Checklist
+
+Before finalizing any screen with navigation, verify:
+
+- [ ] Header uses Engine Blue background with white text
+- [ ] Back button shows **visible left arrow** + clean parent screen name
+- [ ] `headerBackTitle` is never empty string or space (hides arrow)
+- [ ] `headerLeft: undefined` is set on all child screens (prevents disappearing arrows)
+- [ ] Back button text is concise (max 12 characters)
+- [ ] Header actions use all-caps with proper spacing
+- [ ] Primary CTA uses `variant="primary"` (Engine Blue)
+- [ ] Secondary CTAs use `variant="outline"`
+- [ ] CTA text is clear and action-oriented
+- [ ] Loading and disabled states handled
+- [ ] Touch targets minimum 44px height
+
 ## Implementation Priority
 
 1. **Phase 1**: Standardize all form screens (AddVehicle, CreateProgram, etc.)
-2. **Phase 2**: Standardize list screens (VehiclesList, ProgramsList)
+2. **Phase 2**: Standardize list screens (VehiclesList, ProgramsList) 
 3. **Phase 3**: Standardize detail screens (VehicleDetail, ProgramDetail)
-4. **Phase 4**: Apply standards to utility screens (Settings, Profile)
+4. **Phase 4**: Apply navigation standards to all stacks
+5. **Phase 5**: Apply standards to utility screens (Settings, Profile)
 
 This style guide ensures every screen feels cohesive and professional, matching the premium automotive experience we're creating.

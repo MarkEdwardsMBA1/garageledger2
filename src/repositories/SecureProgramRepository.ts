@@ -1,7 +1,7 @@
 // Secure Program Repository with authentication enforcement
 import { FirebaseProgramRepository } from './FirebaseProgramRepository';
 import { IProgramRepository } from './ProgramRepository';
-import { MaintenanceProgram, ProgramAssignment } from '../types';
+import { MaintenanceProgram, ProgramAssignment, ConflictDetectionResult } from '../types';
 import { auth } from '../services/firebase/config';
 
 /**
@@ -181,6 +181,45 @@ export class SecureProgramRepository implements IProgramRepository {
     
     // Verify ownership through update (which checks ownership)
     await this.update(programId, { isActive: false });
+  }
+
+  // ===== CONFLICT MANAGEMENT METHODS (Phase 1A) =====
+
+  async checkVehicleConflicts(vehicleIds: string[]): Promise<ConflictDetectionResult> {
+    // Import at method level to avoid circular dependencies
+    const { programConflictService } = await import('../services/ProgramConflictService');
+    return programConflictService.checkVehicleConflicts(vehicleIds);
+  }
+
+  async removeVehicleFromProgram(programId: string, vehicleId: string): Promise<void> {
+    const user = this.requireAuth();
+    
+    // Get program and verify ownership
+    const program = await this.getById(programId);
+    if (!program) {
+      throw new Error('Program not found');
+    }
+
+    // Remove vehicle from assignedVehicleIds array
+    const updatedVehicleIds = program.assignedVehicleIds.filter(id => id !== vehicleId);
+    
+    if (updatedVehicleIds.length === 0) {
+      // If no vehicles left, delete the program
+      await this.delete(programId);
+      console.log(`Deleted empty program: ${programId}`);
+    } else {
+      // Update program with remaining vehicles
+      await this.update(programId, { 
+        assignedVehicleIds: updatedVehicleIds,
+        updatedAt: new Date() 
+      });
+      console.log(`Removed vehicle ${vehicleId} from program: ${programId}`);
+    }
+  }
+
+  async deleteProgram(programId: string): Promise<void> {
+    // Use existing delete method which already has ownership verification
+    await this.delete(programId);
   }
 }
 

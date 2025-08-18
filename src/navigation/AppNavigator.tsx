@@ -1,6 +1,6 @@
 // Main app navigation setup with bottom tabs
 import React, { useState } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -13,6 +13,7 @@ import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { Loading } from '../components/common/Loading';
 import { SpeedometerIcon, CarIcon, SpannerIcon, GearIcon, ClipboardIcon } from '../components/icons';
+import { Typography } from '../components/common/Typography';
 
 // Import screens  
 import VehiclesScreen from '../screens/VehiclesScreen';
@@ -22,6 +23,7 @@ import AddMaintenanceLogScreen from '../screens/AddMaintenanceLogScreen';
 import ProgramsScreen from '../screens/ProgramsScreen';
 import CreateProgramVehicleSelectionScreen from '../screens/CreateProgramVehicleSelectionScreen';
 import CreateProgramDetailsScreen from '../screens/CreateProgramDetailsScreen';
+import CreateProgramServicesScreen from '../screens/CreateProgramServicesScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import AddVehicleScreen from '../screens/AddVehicleScreen';
 import EditVehicleScreen from '../screens/EditVehicleScreen';
@@ -66,7 +68,7 @@ const VehiclesStack: React.FC = () => {
         component={VehiclesScreen}
         options={{
           title: t('vehicles.title', 'My Vehicles'),
-          headerBackTitle: ' ', // Prevent long titles from showing in back button
+          // No headerBackTitle needed for root tab screen
         }}
       />
       <Stack.Screen
@@ -74,7 +76,8 @@ const VehiclesStack: React.FC = () => {
         component={AddVehicleScreen}
         options={{
           title: t('vehicles.addNew', 'Add Vehicle'),
-          headerBackTitle: t('vehicles.title', 'Vehicles'), // Clean back button text
+          headerBackTitle: 'Vehicles', // Shows arrow + parent name
+          headerLeft: undefined, // Use default back button (ensures arrow shows)
         }}
       />
       <Stack.Screen
@@ -85,7 +88,8 @@ const VehiclesStack: React.FC = () => {
           const params = route.params as any;
           return {
             title: 'Vehicle Details', // Will be updated with actual vehicle name when loaded
-            headerBackTitle: t('vehicles.title', 'Vehicles'), // Clean back button text
+            headerBackTitle: 'Vehicles', // Shows arrow + parent name
+            headerLeft: undefined, // Use default back button (ensures arrow shows)
             headerRight: () => (
               <TouchableOpacity
                 onPress={() => navigation.navigate('EditVehicle', { vehicleId: params?.vehicleId })}
@@ -95,13 +99,9 @@ const VehiclesStack: React.FC = () => {
                   paddingVertical: theme.spacing.xs,
                 }}
               >
-                <Text style={{
-                  color: theme.colors.surface, // White text on Engine Blue header
-                  fontSize: theme.typography.fontSize.sm,
-                  fontWeight: theme.typography.fontWeight.semibold,
-                }}>
+                <Typography variant="label" style={{ color: theme.colors.surface }}>
                   {t('common.edit', 'EDIT')}
-                </Text>
+                </Typography>
               </TouchableOpacity>
             ),
           };
@@ -112,7 +112,8 @@ const VehiclesStack: React.FC = () => {
         component={EditVehicleScreen}
         options={{
           title: t('vehicles.editVehicle', 'Edit Vehicle'),
-          headerBackTitle: t('vehicles.title', 'Vehicles'), // Clean back button text
+          headerBackTitle: 'Vehicles', // Shows arrow + parent name
+          headerLeft: undefined, // Use default back button (ensures arrow shows)
         }}
       />
     </Stack.Navigator>
@@ -153,7 +154,8 @@ const MaintenanceStackNavigator: React.FC = () => {
         component={AddMaintenanceLogScreen}
         options={{
           title: t('maintenance.logMaintenance', 'Log Maintenance'),
-          headerBackTitle: t('navigation.insights', 'Insights'),
+          headerBackTitle: 'Insights', // Shows arrow + parent name
+          headerLeft: undefined, // Use default back button (ensures arrow shows)
         }}
       />
     </Stack.Navigator>
@@ -235,7 +237,7 @@ const ProgramsStackNavigator: React.FC = () => {
         component={ProgramsScreen}
         options={{
           title: t('navigation.programs', 'Programs'),
-          headerBackTitle: ' ', // Prevent long titles from showing in back button
+          // No headerBackTitle needed for root tab screen
         }}
       />
       <Stack.Screen
@@ -243,15 +245,26 @@ const ProgramsStackNavigator: React.FC = () => {
         component={CreateProgramVehicleSelectionScreen}
         options={{
           title: t('programs.createProgram', 'Create Program'),
-          headerBackTitle: t('navigation.programs', 'Programs'), // Clean back button text
+          headerBackTitle: 'Programs', // Shows arrow + parent name
+          headerLeft: undefined, // Use default back button (ensures arrow shows)
         }}
       />
       <Stack.Screen
         name="CreateProgramDetails"
         component={CreateProgramDetailsScreen}
         options={{
-          title: t('programs.createProgram', 'Create Program'),
-          headerBackTitle: t('navigation.programs', 'Programs'), // Clean back button text
+          title: t('programs.createProgram', 'Create Program'), 
+          headerBackTitle: 'Programs', // Shows arrow + parent name
+          headerLeft: undefined, // Use default back button (ensures arrow shows)
+        }}
+      />
+      <Stack.Screen
+        name="CreateProgramServices"
+        component={CreateProgramServicesScreen}
+        options={{
+          title: t('programs.createProgram', 'Create Program'), 
+          headerBackTitle: 'Programs', // Shows arrow + parent name
+          headerLeft: undefined, // Use default back button (ensures arrow shows)
         }}
       />
     </Stack.Navigator>

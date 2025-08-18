@@ -28,4 +28,5 @@ export {
   ClipboardIcon,
   TrashIcon,
   CarSilhouetteIcon,
+  AlertTriangleIcon,
 } from './AutomotiveIcons';

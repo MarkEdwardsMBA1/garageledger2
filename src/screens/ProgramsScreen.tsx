@@ -204,19 +204,22 @@ const ProgramsScreen: React.FC = () => {
           {filteredPrograms.length === 0 ? (
             searchQuery ? renderNoResults() : renderEmptyState()
           ) : (
-            filteredPrograms.map(renderProgramCard)
+            <>
+              {filteredPrograms.map(renderProgramCard)}
+              
+              {/* Add Program button at bottom of list */}
+              <View style={styles.addProgramButtonContainer}>
+                <Button
+                  title={t('programs.createProgram', 'Create Program')}
+                  onPress={handleCreateProgram}
+                  variant="primary"
+                  style={styles.addProgramButton}
+                />
+              </View>
+            </>
           )}
         </ScrollView>
       )}
-
-      {/* Floating Action Button */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={handleCreateProgram}
-        activeOpacity={0.8}
-      >
-        <Typography variant="title" style={styles.fabText}>+</Typography>
-      </TouchableOpacity>
     </View>
   );
 };
@@ -309,23 +312,13 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   
-  // Floating Action Button
-  fab: {
-    position: 'absolute',
-    bottom: theme.spacing.xl,
-    right: theme.spacing.xl,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...theme.shadows.floating,
+  // Add Program Button
+  addProgramButtonContainer: {
+    marginTop: theme.spacing.xl,
+    marginBottom: theme.spacing.lg,
   },
-  fabText: {
-    color: theme.colors.surface,
-    fontSize: 24,
-    fontWeight: theme.typography.fontWeight.bold,
+  addProgramButton: {
+    minHeight: 48,
   },
 });
 

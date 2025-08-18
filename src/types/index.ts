@@ -130,6 +130,27 @@ export interface ProgramAssignment {
   nextDueMileage?: number;
 }
 
+// ===== PROGRAM CONFLICT MANAGEMENT TYPES =====
+
+export interface VehicleConflict {
+  vehicleId: string;
+  conflictType: 'none' | 'single-vehicle-program' | 'multi-vehicle-program';
+  existingPrograms: MaintenanceProgram[];
+  affectedVehicleCount: number; // For multi-vehicle programs
+}
+
+export interface ConflictDetectionResult {
+  hasConflicts: boolean;
+  conflicts: VehicleConflict[];
+  canProceedDirectly: boolean;
+}
+
+export type ConflictResolutionAction = 
+  | { type: 'edit-existing'; programId: string }
+  | { type: 'replace-program'; programId: string }
+  | { type: 'remove-vehicles'; programIds: string[]; vehicleIds: string[] }
+  | { type: 'proceed'; };
+
 // ===== LEGACY MAINTENANCE PROGRAM TYPES (User-Only Architecture) =====
 
 export type MaintenanceType = 'PREVENTIVE' | 'MODIFICATION' | 'REPAIR';

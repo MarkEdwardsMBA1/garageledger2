@@ -15,7 +15,7 @@ import {
 } from 'firebase/firestore';
 import { firestore } from '../services/firebase/config';
 import { IProgramRepository, IProgramAssignmentRepository } from './ProgramRepository';
-import { MaintenanceProgram, ProgramAssignment } from '../types';
+import { MaintenanceProgram, ProgramAssignment, ConflictDetectionResult } from '../types';
 
 export class FirebaseProgramRepository implements IProgramRepository {
   private collectionName = 'programs';
@@ -132,14 +132,17 @@ export class FirebaseProgramRepository implements IProgramRepository {
 
   async getProgramsByVehicle(vehicleId: string): Promise<MaintenanceProgram[]> {
     try {
+      // Query without orderBy to avoid composite index requirement
       const q = query(
         collection(firestore, this.collectionName),
-        where('assignedVehicleIds', 'array-contains', vehicleId),
-        orderBy('createdAt', 'desc')
+        where('assignedVehicleIds', 'array-contains', vehicleId)
       );
       
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => this.convertFirestoreToProgram(doc));
+      const programs = querySnapshot.docs.map(doc => this.convertFirestoreToProgram(doc));
+      
+      // Sort in memory by createdAt descending
+      return programs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     } catch (error) {
       console.error('Error getting programs by vehicle:', error);
       throw new Error('Failed to get programs by vehicle');
@@ -329,6 +332,48 @@ export class FirebaseProgramRepository implements IProgramRepository {
       throw new Error('Failed to update assignment');
     }
   }
+
+  // ===== CONFLICT MANAGEMENT METHODS (Phase 1A) =====
+
+  async checkVehicleConflicts(vehicleIds: string[]): Promise<ConflictDetectionResult> {
+    // Import at method level to avoid circular dependencies
+    const { programConflictService } = await import('../services/ProgramConflictService');
+    return programConflictService.checkVehicleConflicts(vehicleIds);
+  }
+
+  async removeVehicleFromProgram(programId: string, vehicleId: string): Promise<void> {
+    try {
+      // Get the program
+      const program = await this.getById(programId);
+      if (!program) {
+        throw new Error('Program not found');
+      }
+
+      // Remove vehicle from assignedVehicleIds array
+      const updatedVehicleIds = program.assignedVehicleIds.filter((id: string) => id !== vehicleId);
+      
+      if (updatedVehicleIds.length === 0) {
+        // If no vehicles left, delete the program
+        await this.delete(programId);
+        console.log(`Deleted empty program: ${programId}`);
+      } else {
+        // Update program with remaining vehicles
+        await this.update(programId, { 
+          assignedVehicleIds: updatedVehicleIds,
+          updatedAt: new Date() 
+        });
+        console.log(`Removed vehicle ${vehicleId} from program: ${programId}`);
+      }
+    } catch (error) {
+      console.error('Error removing vehicle from program:', error);
+      throw error;
+    }
+  }
+
+  async deleteProgram(programId: string): Promise<void> {
+    // Use existing delete method
+    await this.delete(programId);
+  }
 }
 
 export class FirebaseProgramAssignmentRepository implements IProgramAssignmentRepository {
@@ -481,4 +526,5 @@ export class FirebaseProgramAssignmentRepository implements IProgramAssignmentRe
       return null;
     }
   }
+
 }
