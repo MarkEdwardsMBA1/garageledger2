@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
@@ -18,8 +19,9 @@ import { Typography } from '../components/common/Typography';
 import { ActivityIcon } from '../components/icons';
 import { maintenanceLogRepository } from '../repositories/FirebaseMaintenanceLogRepository';
 import { vehicleRepository } from '../repositories/VehicleRepository';
+import { programRepository } from '../repositories/SecureProgramRepository';
 import { getCategoryName, getSubcategoryName } from '../types/MaintenanceCategories';
-import { Vehicle, MaintenanceLog } from '../types';
+import { Vehicle, MaintenanceLog, MaintenanceProgram } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 
 interface VehicleHomeParams {
@@ -39,8 +41,10 @@ const VehicleHomeScreen: React.FC = () => {
 
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [maintenanceLogs, setMaintenanceLogs] = useState<MaintenanceLog[]>([]);
+  const [programs, setPrograms] = useState<MaintenanceProgram[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [programActionLoading, setProgramActionLoading] = useState<string | null>(null);
 
   // Load vehicle data
   const loadVehicleData = async () => {
@@ -50,9 +54,10 @@ const VehicleHomeScreen: React.FC = () => {
     setError(null);
     
     try {
-      const [vehicleData, logs] = await Promise.all([
+      const [vehicleData, logs, vehiclePrograms] = await Promise.all([
         vehicleRepository.getById(params.vehicleId),
-        maintenanceLogRepository.getByVehicleId(params.vehicleId)
+        maintenanceLogRepository.getByVehicleId(params.vehicleId),
+        programRepository.getProgramsByVehicle(params.vehicleId)
       ]);
       
       if (!vehicleData) {
@@ -62,6 +67,7 @@ const VehicleHomeScreen: React.FC = () => {
       
       setVehicle(vehicleData);
       setMaintenanceLogs(logs);
+      setPrograms(vehiclePrograms);
     } catch (err: any) {
       console.error('Error loading vehicle data:', err);
       setError(err.message || 'Failed to load vehicle data');
@@ -80,6 +86,63 @@ const VehicleHomeScreen: React.FC = () => {
       loadVehicleData();
     }, [isAuthenticated, params?.vehicleId])
   );
+
+  // Handle unassigning a program from this vehicle
+  const handleUnassignProgram = async (programId: string, programName: string) => {
+    if (!params?.vehicleId) return;
+    
+    // Show confirmation alert
+    Alert.alert(
+      t('programs.unassignConfirm', 'Unassign Program'),
+      t('programs.unassignMessage', `Remove "${programName}" from this vehicle?`),
+      [
+        {
+          text: t('common.cancel', 'Cancel'),
+          style: 'cancel'
+        },
+        {
+          text: t('common.remove', 'Remove'),
+          style: 'destructive',
+          onPress: async () => {
+            setProgramActionLoading(programId);
+            try {
+              await programRepository.unassignFromVehicle(programId, params.vehicleId);
+              
+              // Refresh programs list
+              const updatedPrograms = await programRepository.getProgramsByVehicle(params.vehicleId);
+              setPrograms(updatedPrograms);
+              
+              Alert.alert(
+                t('common.success', 'Success'),
+                t('programs.unassignSuccess', 'Program removed from vehicle')
+              );
+            } catch (err: any) {
+              console.error('Error unassigning program:', err);
+              Alert.alert(
+                t('common.error', 'Error'),
+                err.message || t('programs.unassignError', 'Failed to remove program')
+              );
+            } finally {
+              setProgramActionLoading(null);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  // Navigate to program assignment screen
+  const handleAssignPrograms = () => {
+    if (!vehicle) return;
+    
+    navigation.navigate('Programs', {
+      screen: 'AssignPrograms',
+      params: { 
+        vehicleId: vehicle.id,
+        vehicleName: `${vehicle.year} ${vehicle.make} ${vehicle.model}`
+      }
+    });
+  };
 
   const renderVehicleHeader = () => {
     if (!vehicle) return null;
@@ -161,6 +224,110 @@ const VehicleHomeScreen: React.FC = () => {
       </Typography>
     </Card>
   );
+
+  const renderActivePrograms = () => {
+    if (programs.length === 0) {
+      return (
+        <Card variant="filled" style={styles.sectionCard}>
+          <Typography variant="heading" style={styles.sectionTitle}>
+            📋 Maintenance Programs
+          </Typography>
+          
+          <EmptyState
+            title="No Programs Assigned"
+            message="Create and assign maintenance programs to automate service reminders for this vehicle"
+            icon="📋"
+            primaryAction={{
+              title: "Assign Programs",
+              onPress: handleAssignPrograms,
+            }}
+          />
+        </Card>
+      );
+    }
+
+    return (
+      <Card variant="elevated" style={styles.sectionCard}>
+        <View style={styles.programsHeader}>
+          <Typography variant="heading" style={styles.sectionTitle}>
+            📋 Active Programs ({programs.length})
+          </Typography>
+          
+          <View style={styles.programsHeaderActions}>
+            <TouchableOpacity
+              onPress={handleAssignPrograms}
+              style={styles.assignButton}
+            >
+              <Typography variant="caption" style={styles.assignButtonText}>
+                + Assign
+              </Typography>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Programs')}
+            >
+              <Typography variant="bodySmall" style={styles.viewAllLink}>
+                Manage
+              </Typography>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.programsList}>
+          {programs.map((program) => (
+            <View key={program.id} style={styles.programItem}>
+              <View style={styles.programContent}>
+                <Typography variant="bodyLarge" style={styles.programName}>
+                  {program.name}
+                </Typography>
+                
+                {program.description && (
+                  <Typography variant="bodySmall" style={styles.programDescription}>
+                    {program.description}
+                  </Typography>
+                )}
+                
+                <View style={styles.programDetails}>
+                  <Typography variant="caption" style={styles.programTaskCount}>
+                    {program.tasks.length} service{program.tasks.length !== 1 ? 's' : ''}
+                  </Typography>
+                  
+                  <Typography variant="caption" style={styles.programStatus}>
+                    {program.isActive ? '✅ Active' : '⏸️ Inactive'}
+                  </Typography>
+                </View>
+              </View>
+              
+              <View style={styles.programActions}>
+                <TouchableOpacity
+                  style={styles.programAction}
+                  onPress={() => {
+                    // TODO: Navigate to program details
+                    console.log('View program:', program.id);
+                  }}
+                  disabled={programActionLoading === program.id}
+                >
+                  <Typography variant="caption" style={styles.programActionText}>
+                    View
+                  </Typography>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[styles.programAction, styles.programUnassignAction]}
+                  onPress={() => handleUnassignProgram(program.id, program.name)}
+                  disabled={programActionLoading === program.id}
+                >
+                  <Typography variant="caption" style={styles.programUnassignText}>
+                    {programActionLoading === program.id ? '...' : 'Remove'}
+                  </Typography>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))}
+        </View>
+      </Card>
+    );
+  };
 
   const renderMaintenanceTimeline = () => {
     if (maintenanceLogs.length === 0) {
@@ -322,6 +489,7 @@ const VehicleHomeScreen: React.FC = () => {
       {renderVehicleHeader()}
       {renderQuickActions()}
       {renderStatusSummary()}
+      {renderActivePrograms()}
       {renderMaintenanceTimeline()}
       {renderCostInsights()}
     </ScrollView>
@@ -448,6 +616,85 @@ const styles = StyleSheet.create({
   },
   costDetail: {
     color: theme.colors.textSecondary,
+  },
+  
+  // Programs Section
+  programsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  programsHeaderActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  assignButton: {
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: theme.colors.primary,
+  },
+  assignButtonText: {
+    color: theme.colors.surface,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  programsList: {
+    gap: theme.spacing.sm,
+  },
+  programItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.borderLight,
+  },
+  programContent: {
+    flex: 1,
+    gap: theme.spacing.xs,
+  },
+  programName: {
+    color: theme.colors.text,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  programDescription: {
+    color: theme.colors.textSecondary,
+  },
+  programDetails: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+  },
+  programTaskCount: {
+    color: theme.colors.textSecondary,
+  },
+  programStatus: {
+    color: theme.colors.primary,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  programActions: {
+    flexDirection: 'row',
+    gap: theme.spacing.xs,
+  },
+  programAction: {
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: theme.colors.primaryLight || `${theme.colors.primary}20`,
+  },
+  programActionText: {
+    color: theme.colors.primary,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  programUnassignAction: {
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  programUnassignText: {
+    color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.medium,
   },
 });
 

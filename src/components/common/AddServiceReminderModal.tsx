@@ -22,7 +22,7 @@ interface ServiceReminderFormData {
   name: string;
   description: string;
   category: string;
-  intervalType: 'mileage' | 'time' | 'either';
+  intervalType: 'mileage' | 'time' | 'dual';
   intervalValue?: number;
   timeIntervalUnit: 'days' | 'weeks' | 'months' | 'years';
   timeIntervalValue?: number;
@@ -66,7 +66,7 @@ export const AddServiceReminderModal: React.FC<AddServiceReminderModalProps> = (
   });
   
   // UI state
-  const [selectedIntervalType, setSelectedIntervalType] = useState<'mileage' | 'time' | 'either'>('mileage');
+  const [selectedIntervalType, setSelectedIntervalType] = useState<'mileage' | 'time' | 'dual'>('mileage');
 
   // Reset form when modal opens
   useEffect(() => {
@@ -100,7 +100,7 @@ export const AddServiceReminderModal: React.FC<AddServiceReminderModalProps> = (
   };
 
   // Handle interval type selection
-  const handleIntervalTypeChange = (type: 'mileage' | 'time' | 'either') => {
+  const handleIntervalTypeChange = (type: 'mileage' | 'time' | 'dual') => {
     setSelectedIntervalType(type);
     
     setFormData(prev => ({
@@ -109,7 +109,7 @@ export const AddServiceReminderModal: React.FC<AddServiceReminderModalProps> = (
       // Reset values when changing types
       intervalValue: undefined,
       timeIntervalValue: undefined,
-      timeIntervalUnit: type === 'time' || type === 'either' ? 'months' : prev.timeIntervalUnit,
+      timeIntervalUnit: type === 'time' || type === 'dual' ? 'months' : prev.timeIntervalUnit,
     }));
   };
 
@@ -131,7 +131,7 @@ export const AddServiceReminderModal: React.FC<AddServiceReminderModalProps> = (
         Alert.alert(t('validation.required', 'Required'), t('programs.taskIntervalRequired', 'Service reminder interval is required'));
         return;
       }
-    } else if (selectedIntervalType === 'either') {
+    } else if (selectedIntervalType === 'dual') {
       if (!formData.intervalValue || formData.intervalValue <= 0 || !formData.timeIntervalValue || formData.timeIntervalValue <= 0) {
         Alert.alert(t('validation.required', 'Required'), t('programs.taskDualIntervalRequired', 'Service reminders with "Mileage and Time" must have both valid intervals'));
         return;
@@ -273,15 +273,15 @@ export const AddServiceReminderModal: React.FC<AddServiceReminderModalProps> = (
               <TouchableOpacity
                 style={[
                   styles.intervalTypeSelectorButton,
-                  selectedIntervalType === 'either' && styles.intervalTypeSelectorButtonActive
+                  selectedIntervalType === 'dual' && styles.intervalTypeSelectorButtonActive
                 ]}
-                onPress={() => handleIntervalTypeChange('either')}
+                onPress={() => handleIntervalTypeChange('dual')}
               >
                 <Typography
                   variant="body"
                   style={[
                     styles.intervalTypeSelectorText,
-                    selectedIntervalType === 'either' && styles.intervalTypeSelectorTextActive
+                    selectedIntervalType === 'dual' && styles.intervalTypeSelectorTextActive
                   ]}
                 >
                   {t('programs.intervalEither', 'Mileage and Time')}
@@ -351,13 +351,13 @@ export const AddServiceReminderModal: React.FC<AddServiceReminderModalProps> = (
               </View>
             )}
             
-            {selectedIntervalType === 'either' && (
+            {selectedIntervalType === 'dual' && (
               <View style={styles.dualInputSection}>
                 <Typography variant="subheading" style={styles.dualInputTitle}>
                   {t('programs.dualIntervalTitle', 'Whichever Occurs First')}
                 </Typography>
                 <Typography variant="caption" style={styles.dualInputSubtitle}>
-                  {t('programs.dualIntervalSubtitle', 'Maintenance due when either condition is met')}
+                  {t('programs.dualIntervalSubtitle', 'Maintenance due when dual condition is met')}
                 </Typography>
                 
                 {/* Mileage Input */}

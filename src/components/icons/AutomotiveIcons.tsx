@@ -601,6 +601,77 @@ export const AlertTriangleIcon: React.FC<IconProps> = ({
   </Svg>
 );
 
+// Edit Icon (pencil)
+export const EditIcon: React.FC<IconProps> = ({ 
+  size = 24, 
+  color = '#1e40af',
+  strokeWidth = 1.5 
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path 
+      d="M12 20h9"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path 
+      d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+// Calendar Icon
+export const CalendarIcon: React.FC<IconProps> = ({ 
+  size = 24, 
+  color = '#1e40af',
+  strokeWidth = 1.5 
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Rect 
+      x="3" 
+      y="4" 
+      width="18" 
+      height="18" 
+      rx="2" 
+      ry="2"
+      stroke={color}
+      strokeWidth={strokeWidth}
+    />
+    <Line 
+      x1="16" 
+      y1="2" 
+      x2="16" 
+      y2="6"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+    />
+    <Line 
+      x1="8" 
+      y1="2" 
+      x2="8" 
+      y2="6"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+    />
+    <Line 
+      x1="3" 
+      y1="10" 
+      x2="21" 
+      y2="10"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+    />
+  </Svg>
+);
+
 
 export default {
   MaintenanceIcon,

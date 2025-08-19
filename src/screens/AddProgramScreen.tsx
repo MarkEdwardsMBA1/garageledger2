@@ -45,7 +45,7 @@ const AddProgramScreen: React.FC = () => {
   
   // Service reminder form state
   const [isAddingReminder, setIsAddingReminder] = useState(false);
-  const [selectedIntervalType, setSelectedIntervalType] = useState<'mileage' | 'time' | 'either'>('mileage');
+  const [selectedIntervalType, setSelectedIntervalType] = useState<'mileage' | 'time' | 'dual'>('mileage');
   const [newReminder, setNewReminder] = useState<Partial<ProgramTask>>({
     name: '',
     description: '',
@@ -139,7 +139,7 @@ const AddProgramScreen: React.FC = () => {
   };
 
   // Handle interval type selection (progressive disclosure)
-  const handleIntervalTypeChange = (type: 'mileage' | 'time' | 'either') => {
+  const handleIntervalTypeChange = (type: 'mileage' | 'time' | 'dual') => {
     setSelectedIntervalType(type);
     
     // Update newReminder state based on selected interval type
@@ -149,7 +149,7 @@ const AddProgramScreen: React.FC = () => {
       // Reset values when changing types to avoid confusion
       intervalValue: undefined,
       timeIntervalValue: undefined,
-      timeIntervalUnit: type === 'time' || type === 'either' ? 'months' : prev.timeIntervalUnit,
+      timeIntervalUnit: type === 'time' || type === 'dual' ? 'months' : prev.timeIntervalUnit,
     }));
   };
 
@@ -191,7 +191,7 @@ const AddProgramScreen: React.FC = () => {
           Alert.alert(t('validation.required', 'Required'), t('programs.taskIntervalRequired', 'All service reminders must have a valid interval'));
           return false;
         }
-      } else if (reminder.intervalType === 'either') {
+      } else if (reminder.intervalType === 'dual') {
         if (!reminder.intervalValue || reminder.intervalValue <= 0 || !reminder.timeIntervalValue || reminder.timeIntervalValue <= 0) {
           Alert.alert(t('validation.required', 'Required'), t('programs.taskDualIntervalRequired', 'Service reminders with "Mileage and Time" must have both valid intervals'));
           return false;
@@ -225,7 +225,7 @@ const AddProgramScreen: React.FC = () => {
         Alert.alert(t('validation.required', 'Required'), t('programs.taskIntervalRequired', 'Service reminder interval is required'));
         return;
       }
-    } else if (selectedIntervalType === 'either') {
+    } else if (selectedIntervalType === 'dual') {
       if (!newReminder.intervalValue || newReminder.intervalValue <= 0 || !newReminder.timeIntervalValue || newReminder.timeIntervalValue <= 0) {
         Alert.alert(t('validation.required', 'Required'), t('programs.taskDualIntervalRequired', 'Service reminders with "Mileage and Time" must have both valid intervals'));
         return;
@@ -628,15 +628,15 @@ const AddProgramScreen: React.FC = () => {
                 <TouchableOpacity
                   style={[
                     styles.intervalTypeSelectorButton,
-                    selectedIntervalType === 'either' && styles.intervalTypeSelectorButtonActive
+                    selectedIntervalType === 'dual' && styles.intervalTypeSelectorButtonActive
                   ]}
-                  onPress={() => handleIntervalTypeChange('either')}
+                  onPress={() => handleIntervalTypeChange('dual')}
                 >
                   <Typography
                     variant="body"
                     style={[
                       styles.intervalTypeSelectorText,
-                      selectedIntervalType === 'either' && styles.intervalTypeSelectorTextActive
+                      selectedIntervalType === 'dual' && styles.intervalTypeSelectorTextActive
                     ]}
                   >
                     {t('programs.intervalEither', 'Mileage and Time')}
@@ -757,13 +757,13 @@ const AddProgramScreen: React.FC = () => {
                 </View>
               )}
               
-              {selectedIntervalType === 'either' && (
+              {selectedIntervalType === 'dual' && (
                 <View style={styles.dualInputSection}>
                   <Typography variant="subheading" style={styles.dualInputTitle}>
                     {t('programs.dualIntervalTitle', 'Whichever Occurs First')}
                   </Typography>
                   <Typography variant="caption" style={styles.dualInputSubtitle}>
-                    {t('programs.dualIntervalSubtitle', 'Maintenance due when either condition is met')}
+                    {t('programs.dualIntervalSubtitle', 'Maintenance due when dual condition is met')}
                   </Typography>
                   
                   {/* Mileage Input */}

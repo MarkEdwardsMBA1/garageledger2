@@ -12,7 +12,7 @@ import { theme } from '../utils/theme';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { Loading } from '../components/common/Loading';
-import { SpeedometerIcon, CarIcon, SpannerIcon, GearIcon, ClipboardIcon } from '../components/icons';
+import { SpeedometerIcon, CarIcon, SpannerIcon, GearIcon, ClipboardIcon, RemindersIcon } from '../components/icons';
 import { Typography } from '../components/common/Typography';
 
 // Import screens  
@@ -24,6 +24,11 @@ import ProgramsScreen from '../screens/ProgramsScreen';
 import CreateProgramVehicleSelectionScreen from '../screens/CreateProgramVehicleSelectionScreen';
 import CreateProgramDetailsScreen from '../screens/CreateProgramDetailsScreen';
 import CreateProgramServicesScreen from '../screens/CreateProgramServicesScreen';
+import AssignProgramsScreen from '../screens/AssignProgramsScreen';
+import AssignProgramToVehiclesScreen from '../screens/AssignProgramToVehiclesScreen';
+import ProgramDetailScreen from '../screens/ProgramDetailScreen';
+import EditProgramScreen from '../screens/EditProgramScreen';
+import RemindersScreen from '../screens/RemindersScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import AddVehicleScreen from '../screens/AddVehicleScreen';
 import EditVehicleScreen from '../screens/EditVehicleScreen';
@@ -267,6 +272,42 @@ const ProgramsStackNavigator: React.FC = () => {
           headerLeft: undefined, // Use default back button (ensures arrow shows)
         }}
       />
+      <Stack.Screen
+        name="AssignPrograms"
+        component={AssignProgramsScreen}
+        options={{
+          title: t('programs.assignPrograms', 'Assign Programs'),
+          headerBackTitle: 'Vehicle', // Shows arrow + parent name
+          headerLeft: undefined, // Use default back button (ensures arrow shows)
+        }}
+      />
+      <Stack.Screen
+        name="AssignProgramToVehicles"
+        component={AssignProgramToVehiclesScreen}
+        options={{
+          title: t('programs.assignToVehicles', 'Assign to Vehicles'),
+          headerBackTitle: 'Programs', // Shows arrow + parent name
+          headerLeft: undefined, // Use default back button (ensures arrow shows)
+        }}
+      />
+      <Stack.Screen
+        name="ProgramDetail"
+        component={ProgramDetailScreen}
+        options={{
+          title: t('programs.programDetails', 'Program Details'),
+          headerBackTitle: 'Programs', // Shows arrow + parent name
+          headerLeft: undefined, // Use default back button (ensures arrow shows)
+        }}
+      />
+      <Stack.Screen
+        name="EditProgram"
+        component={EditProgramScreen}
+        options={{
+          title: t('programs.editProgram', 'Edit Program'),
+          headerBackTitle: 'Details', // Shows arrow + parent name
+          headerLeft: undefined, // Use default back button (ensures arrow shows)
+        }}
+      />
     </Stack.Navigator>
   );
 };
@@ -342,6 +383,16 @@ const MainAppNavigator: React.FC = () => {
               <TabIcon name="programs" color={color} size={size} />
             ),
             headerShown: false, // Let the stack handle the header
+          }}
+        />
+        <Tab.Screen
+          name="Reminders"
+          component={RemindersScreen}
+          options={{
+            title: t('navigation.reminders', 'Reminders'),
+            tabBarIcon: ({ color, size }) => (
+              <TabIcon name="reminders" color={color} size={size} />
+            ),
           }}
         />
         <Tab.Screen
@@ -489,7 +540,7 @@ export const AppNavigator: React.FC = () => {
 
 // Custom SVG icon component for unique GarageLedger branding
 interface TabIconProps {
-  name: 'dashboard' | 'vehicles' | 'maintenance' | 'insights' | 'programs' | 'settings';
+  name: 'dashboard' | 'vehicles' | 'maintenance' | 'insights' | 'programs' | 'reminders' | 'settings';
   color: string;
   size: number;
 }
@@ -528,6 +579,12 @@ const TabIcon: React.FC<TabIconProps> = ({ name, color, size }) => {
       return (
         <View style={iconStyle}>
           <ClipboardIcon size={size} color={color} />
+        </View>
+      );
+    case 'reminders':
+      return (
+        <View style={iconStyle}>
+          <RemindersIcon size={size} color={color} />
         </View>
       );
     case 'settings':

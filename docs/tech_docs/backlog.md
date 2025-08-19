@@ -4,7 +4,9 @@
 
 This backlog contains all epics and user stories for GarageLedger development, organized by priority and development phases. Stories follow the format: "As a [user type], I want [goal] so that [benefit]."
 
-**🎉 MAJOR UPDATE - January 8, 2025**: Epic 3 Maintenance Logging completed with significant UX enhancements! Vehicle Home Pages and Fleet Command Center now live. See `session-2025-01-08-accomplishments.md` for full details.
+**🎉 LATEST UPDATE - January 18, 2025**: Epic 4 Maintenance Programs Step 3 completed with progressive UX! Bottom sheet service configuration and curated service library now production-ready. See `session-2025-01-18-accomplishments.md` for full details.
+
+**Previous Major Update - January 8, 2025**: Epic 3 Maintenance Logging completed with significant UX enhancements! Vehicle Home Pages and Fleet Command Center delivered.
 
 ---
 
@@ -418,6 +420,56 @@ Users receive a polished, performant app with complete Spanish support and smoot
   - **Story Points**: 3-5
   - **Status**: 📋 Backlog - Future UX enhancement
 
+- **BACKLOG-UI004**: As a user, I want keyboard dismissal functionality in bottom sheet forms so that I can easily hide the keyboard when tapping outside input fields
+  - **Context**: When users enter data in bottom sheet forms (like service configuration), they should be able to dismiss the keyboard by tapping outside the input fields while keeping the sheet open
+  - **Technical Challenge**: TouchableWithoutFeedback wrapper causes transparent gray overlay issues in modal bottom sheets
+  - **Alternative Solutions**: Explore keyboard dismissal via scroll events, input blur handling, or safe area tap detection without interfering with modal touch handling
+  - **Priority**: Low
+  - **Story Points**: 3-5
+  - **Status**: 📋 Backlog - Needs alternative implementation approach
+
+- **BACKLOG-UI006**: As a user, I want the bottom sheet to rise above the keyboard when typing so that I can see input fields while entering data
+  - **Context**: When users tap mileage/time input fields in Create Program bottom sheet, keyboard obscures the input fields making it difficult to see what they're typing
+  - **Technical Challenge**: KeyboardAvoidingView and ScrollView wrappers in Modal cause transparent gray overlay issues
+  - **Failed Approaches**: 
+    - KeyboardAvoidingView wrapper around modal overlay (gray overlay issue)
+    - ScrollView with keyboardShouldPersistTaps inside bottom sheet (gray overlay issue)
+  - **Alternative Solutions**: 
+    - Custom keyboard height detection with animated positioning
+    - Different modal implementation (react-native-modal library)
+    - Native bottom sheet component that handles keyboard automatically
+    - Adjust maxHeight dynamically based on keyboard presence
+  - **Priority**: Medium (UX issue affecting data entry)
+  - **Story Points**: 8-13 (requires research and alternative approach)
+  - **Status**: 📋 Backlog - Needs careful research to avoid gray overlay issues
+
+- **BACKLOG-UI005**: As a casual/consumer user, I want programs features to be hidden until I need them so that the app feels simple and not overwhelming when I only have one vehicle
+  - **Context**: Current programs and "Assign Programs" features are always visible, creating complexity for single-vehicle users who think vehicle-first, not program-first
+  - **User Segments**: 
+    - Consumer/Casual: Single vehicle, basic maintenance logging → programs are premature complexity
+    - Power User/SMB: Multi-vehicle fleet management → programs provide core value for standardization and scaling
+  - **Simple Implementation Options**:
+    - **Explicit Intent Capture**: "Do you manage multiple vehicles?" during onboarding/vehicle setup
+    - **Vehicle Count Trigger**: Show programs features when user adds vehicle #2
+    - **Combination**: Both approaches with user profile flag `managesMultipleVehicles`
+  - **Discovery Mechanics**: Navigation badge, feature unlock notifications, Programs tab visibility
+  - **Commercial Strategy**: Foundation for freemium model (advanced multi-vehicle features in paid tier)
+  - **Priority**: Medium (UX simplification + commercial foundation)
+  - **Story Points**: 5-8
+  - **Status**: 📋 Backlog - Strategic UX enhancement for user segmentation
+
+- **BACKLOG-UI003**: As a user, I want polished time entry UX in the Create Program bottom sheet so that configuring service intervals feels intuitive and professional
+  - **Context**: The time unit selection and "Whichever Comes First" layouts in the service configuration bottom sheet need UX improvements
+  - **Current Issues**: 
+    - Time unit buttons layout could be more elegant and balanced
+    - "Whichever Comes First" horizontal layout needs spacing optimization
+    - Overall vertical rhythm and spacing throughout the bottom portion needs refinement
+  - **Implementation approach**: Design mockups first, then implement refined layouts
+  - **Components affected**: ServiceConfigBottomSheet time unit selector and compact input layouts
+  - **Priority**: Medium (UX polish)
+  - **Story Points**: 5-8
+  - **Status**: 📋 Backlog - Awaiting design mockups
+
 - **BACKLOG-UI002**: As a user, I want consistent and polished empty states throughout the app so that I understand what to do in each section and feel the app is professional
   - **Context**: Epic placeholder to revisit empty states across all screens (Vehicles, Maintenance, Programs, Insights, etc.)
   - **Objectives**: 
@@ -430,6 +482,27 @@ Users receive a polished, performant app with complete Spanish support and smoot
   - **Priority**: Medium (UX polish)
   - **Story Points**: 8-13 (Epic level effort)
   - **Status**: 📋 Epic Backlog - Empty States UX Polish
+
+- **BACKLOG-UI007**: As a user, I want progressive disclosure via tabs for advanced features so that I can access power user capabilities without overwhelming casual users
+  - **Context**: Strategic UX pattern for Basic | Advanced feature segmentation across multiple screens
+  - **Target Screens**:
+    - **Vehicle Details**: Quick Wins (cards for casual users) | Control Center (analytics & management for power users)
+    - **Create Program**: Basic (curated services) | Advanced (full maintenance categories)
+    - **Future screens**: Overview | Pro features pattern
+  - **Design Strategy**:
+    - **Tab Design**: Segmented control style `[ Basic | Advanced ]` consistent with service configuration UX
+    - **Default State**: Basic tab active for new users (feels complete, not like a teaser)
+    - **Commercial Integration**: Advanced tab perfect for freemium model (paid tier feature)
+    - **User Intent-Based**: Self-selecting experience level based on user sophistication
+  - **Implementation Benefits**:
+    - **Commercial Strategy**: Clear upgrade motivation and value proposition for SMBs
+    - **User Segmentation**: Casual users unintimidated, power users find full capabilities immediately
+    - **Consistent UX**: Same pattern across complex screens creates learnable interface
+    - **Mobile Best Practices**: Follows industry standards (banking, fitness, business tools)
+  - **Progressive Unlock Options**: Advanced tab can be gated by vehicle count triggers or paid tier
+  - **Priority**: High (strategic UX foundation)
+  - **Story Points**: 8-13 (affects multiple screens and commercial strategy)
+  - **Status**: 📋 Backlog - Strategic UX pattern for future implementation
 
 ### Maintenance Logging Enhancements
 - **BACKLOG-ML001**: As a casual user, I want the app to remember the last shop I entered so I can quickly reuse it for future services
@@ -478,16 +551,17 @@ Users receive a polished, performant app with complete Spanish support and smoot
   - **Story Points**: 18 completed
   - **Status**: ✅ COMPLETE - Ready for user testing and production deployment
 
-### Programs Feature Development - IN PROGRESS
+### Programs Feature Development - STEP 3 COMPLETE ✅
 - **PROGRAMS-FEATURE-001**: As a user, I want to create maintenance programs so that I can proactively manage vehicle maintenance schedules
   - **Context**: Major new feature to add comprehensive maintenance program management with vehicle assignment and status tracking
-  - **Project Status**: Phase 2 Programs Development - 3 of 8 increments completed (38% complete)
+  - **Project Status**: Phase 2 Programs Development - Step 3 COMPLETE, 5 of 8 increments completed (63% complete)
   - **Completed Increments**:
     - ✅ Increment 1: Programs data model & repository (2-3 hours)
     - ✅ Increment 2: Programs navigation integration (1-2 hours) 
     - ✅ Increment 3: Programs list screen (2-3 hours)
+    - ✅ Increment 4: Create program flow (Steps 1-2) (3-4 hours)
+    - ✅ Increment 4.5: Create program Step 3 service selection - PRODUCTION READY (4+ hours)
   - **Remaining Increments**:
-    - 🔄 Increment 4: Create program flow (3-4 hours) - IN PROGRESS
     - 📋 Increment 5: Vehicle assignment (2-3 hours)
     - 📋 Increment 6: Program management (2-3 hours)
     - 📋 Increment 7: Program status tracking (3-4 hours)

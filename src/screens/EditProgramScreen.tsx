@@ -1,5 +1,5 @@
-// Create Program - Step 3: Service Selection
-import React, { useState } from 'react';
+// Edit Program Screen - Modify existing program details and services
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -11,26 +11,23 @@ import {
   Animated,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { theme } from '../utils/theme';
 import { Typography } from '../components/common/Typography';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { Loading } from '../components/common/Loading';
-import { ProgressBar } from '../components/common/ProgressBar';
+import { EmptyState } from '../components/common/ErrorState';
 import { SegmentedControl } from '../components/common/SegmentedControl';
 import { ChipsGroup } from '../components/common/ChipsGroup';
 import { QuickPicks } from '../components/common/QuickPicks';
 import { programRepository } from '../repositories/SecureProgramRepository';
-import { MaintenanceProgram, ProgramTask, Vehicle } from '../types';
+import { MaintenanceProgram, ProgramTask } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 
-interface RouteParams {
-  selectedVehicleIds: string[];
-  selectedVehicles: Vehicle[];
-  programName: string;
-  programDescription: string;
+interface EditProgramParams {
+  programId: string;
 }
 
 interface CuratedService {
@@ -53,7 +50,7 @@ interface ServiceConfiguration {
   dualCondition?: 'first' | 'last';
 }
 
-// Basic Mode: Curated common maintenance services with sensible defaults
+// Curated services - same as in CreateProgramServicesScreen
 const CURATED_SERVICES: CuratedService[] = [
   {
     id: 'oil_change',
@@ -138,7 +135,7 @@ const CURATED_SERVICES: CuratedService[] = [
 ];
 
 /**
- * Bottom Sheet for Service Configuration
+ * Service Configuration Bottom Sheet (same as CreateProgramServicesScreen)
  */
 interface ServiceConfigBottomSheetProps {
   visible: boolean;
@@ -159,7 +156,6 @@ const ServiceConfigBottomSheet: React.FC<ServiceConfigBottomSheetProps> = ({
 }) => {
   const { t } = useTranslation();
   
-  // Form state - updated for polished UX
   const [intervalType, setIntervalType] = useState<'mileage' | 'time' | 'dual'>(
     existingConfig?.intervalType || 'mileage'
   );
@@ -173,10 +169,8 @@ const ServiceConfigBottomSheet: React.FC<ServiceConfigBottomSheetProps> = ({
     existingConfig?.timeUnit || service.defaultTimeUnit
   );
 
-  // Animation for keyboard avoidance
   const bottomSheetTranslateY = React.useRef(new Animated.Value(0)).current;
 
-  // Reset form when service changes
   React.useEffect(() => {
     if (visible) {
       setIntervalType(existingConfig?.intervalType || 'mileage');
@@ -186,21 +180,18 @@ const ServiceConfigBottomSheet: React.FC<ServiceConfigBottomSheetProps> = ({
     }
   }, [visible, service, existingConfig]);
 
-  // Keyboard animation listeners
   React.useEffect(() => {
     if (!visible) return;
 
     const keyboardWillShow = Keyboard.addListener('keyboardWillShow', (e) => {
-      // Animate bottom sheet up by a portion of keyboard height
       Animated.timing(bottomSheetTranslateY, {
-        toValue: -e.endCoordinates.height * 0.4, // Move up 40% of keyboard height
+        toValue: -e.endCoordinates.height * 0.4,
         duration: e.duration || 250,
         useNativeDriver: true,
       }).start();
     });
 
     const keyboardWillHide = Keyboard.addListener('keyboardWillHide', (e) => {
-      // Animate back to original position
       Animated.timing(bottomSheetTranslateY, {
         toValue: 0,
         duration: e.duration || 250,
@@ -226,31 +217,24 @@ const ServiceConfigBottomSheet: React.FC<ServiceConfigBottomSheetProps> = ({
     onSave(config);
   };
 
-  // Quick pick values for common intervals
   const mileageQuickPicks = [5000, 7500, 10000, 15000];
   const timeQuickPicks = intervalType === 'time' || intervalType === 'dual' ? 
     (timeUnit === 'months' ? [3, 6, 12, 18] : 
      timeUnit === 'weeks' ? [2, 4, 8, 12] : 
      timeUnit === 'days' ? [30, 60, 90, 180] : [1, 2, 3, 5]) : [];
 
-  // Options for segmented control
   const intervalModeOptions = [
     { key: 'mileage', label: 'Mileage' },
     { key: 'time', label: 'Time' },
     { key: 'dual', label: 'Miles + Time' },
   ];
 
-  // Options for time unit chips
   const timeUnitOptions = [
     { key: 'days', label: 'Days' },
     { key: 'weeks', label: 'Weeks' },
     { key: 'months', label: 'Months' },
     { key: 'years', label: 'Years' },
   ];
-
-  const formatNumber = (num: number): string => {
-    return num.toLocaleString();
-  };
 
   if (!visible) return null;
 
@@ -276,11 +260,8 @@ const ServiceConfigBottomSheet: React.FC<ServiceConfigBottomSheetProps> = ({
           onStartShouldSetResponder={() => true}
           onResponderGrant={() => Keyboard.dismiss()}
         >
-          {/* Handle */}
           <View style={bottomSheetStyles.handle} />
           
-          
-          {/* Header */}
           <View style={bottomSheetStyles.header}>
             <Typography variant="title" style={bottomSheetStyles.title}>
               {service.name}
@@ -290,7 +271,6 @@ const ServiceConfigBottomSheet: React.FC<ServiceConfigBottomSheetProps> = ({
             </Typography>
           </View>
 
-          {/* Segmented Control for Mode Selection */}
           <View style={bottomSheetStyles.section}>
             <SegmentedControl
               options={intervalModeOptions}
@@ -299,14 +279,12 @@ const ServiceConfigBottomSheet: React.FC<ServiceConfigBottomSheetProps> = ({
             />
           </View>
 
-          {/* Contextual Input Sections */}
           <View style={bottomSheetStyles.section}>
             <Typography variant="body" style={bottomSheetStyles.sentenceIntro}>
               Configure service reminder:
             </Typography>
             
             <View style={bottomSheetStyles.sentenceContainer}>
-              {/* Mileage Section */}
               {(intervalType === 'mileage' || intervalType === 'dual') && (
                 <View>
                   <View style={bottomSheetStyles.sentenceRow}>
@@ -333,14 +311,12 @@ const ServiceConfigBottomSheet: React.FC<ServiceConfigBottomSheetProps> = ({
                 </View>
               )}
 
-              {/* Or Text for Dual Mode */}
               {intervalType === 'dual' && (
                 <Typography variant="body" style={bottomSheetStyles.orText}>
                   or
                 </Typography>
               )}
 
-              {/* Time Section */}
               {(intervalType === 'time' || intervalType === 'dual') && (
                 <View>
                   <View style={bottomSheetStyles.sentenceRow}>
@@ -371,7 +347,6 @@ const ServiceConfigBottomSheet: React.FC<ServiceConfigBottomSheetProps> = ({
                 </View>
               )}
 
-              {/* Dual Mode Explanation */}
               {intervalType === 'dual' && (
                 <Typography variant="bodySmall" style={bottomSheetStyles.dualExplanation}>
                   Whichever comes first
@@ -380,7 +355,6 @@ const ServiceConfigBottomSheet: React.FC<ServiceConfigBottomSheetProps> = ({
             </View>
           </View>
 
-          {/* Actions */}
           <View style={bottomSheetStyles.actions}>
             {existingConfig && onRemove && (
               <Button
@@ -416,25 +390,88 @@ const ServiceConfigBottomSheet: React.FC<ServiceConfigBottomSheetProps> = ({
 };
 
 /**
- * Create Program - Step 3: Service Selection Screen
- * Final step for selecting maintenance services and intervals
+ * Edit Program Screen
  */
-const CreateProgramServicesScreen: React.FC = () => {
+const EditProgramScreen: React.FC = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const route = useRoute();
-  const { user } = useAuth();
-  const { selectedVehicleIds, selectedVehicles, programName, programDescription } = route.params as RouteParams;
-  
-  // Service configuration state (Basic Mode)
+  const { isAuthenticated, user } = useAuth();
+  const params = route.params as EditProgramParams;
+
+  const [program, setProgram] = useState<MaintenanceProgram | null>(null);
+  const [programName, setProgramName] = useState('');
+  const [programDescription, setProgramDescription] = useState('');
   const [serviceConfigurations, setServiceConfigurations] = useState<Map<string, ServiceConfiguration>>(new Map());
-  const [loading, setLoading] = useState(false);
-  
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   // Bottom sheet state
   const [selectedServiceForConfig, setSelectedServiceForConfig] = useState<CuratedService | null>(null);
   const [showConfigSheet, setShowConfigSheet] = useState(false);
 
-  // Handle service card tap (opens bottom sheet for configuration)
+  // Load program data
+  const loadProgramData = async () => {
+    if (!isAuthenticated || !params?.programId) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const programData = await programRepository.getById(params.programId);
+
+      if (!programData) {
+        setError(t('programs.programNotFound', 'Program not found'));
+        return;
+      }
+
+      setProgram(programData);
+      setProgramName(programData.name);
+      setProgramDescription(programData.description || '');
+
+      // Convert existing tasks to service configurations
+      const configs = new Map<string, ServiceConfiguration>();
+      programData.tasks.forEach((task) => {
+        // Map task back to curated service if possible
+        const curatedService = CURATED_SERVICES.find(service => 
+          service.name === task.name || service.id === task.name.toLowerCase().replace(/\s+/g, '_')
+        );
+        
+        if (curatedService) {
+          const config: ServiceConfiguration = {
+            serviceId: curatedService.id,
+            intervalType: task.intervalType,
+            mileageValue: task.intervalValue || undefined,
+            timeValue: task.timeIntervalValue || undefined,
+            timeUnit: task.timeIntervalUnit || 'months',
+            dualCondition: task.intervalType === 'dual' ? 'first' : undefined,
+          };
+          configs.set(curatedService.id, config);
+        }
+      });
+      
+      setServiceConfigurations(configs);
+
+    } catch (err: any) {
+      console.error('Error loading program data:', err);
+      setError(err.message || 'Failed to load program data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProgramData();
+  }, [isAuthenticated, params?.programId]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadProgramData();
+    }, [isAuthenticated, params?.programId])
+  );
+
+  // Handle service card tap
   const handleServiceCardTap = (service: CuratedService) => {
     setSelectedServiceForConfig(service);
     setShowConfigSheet(true);
@@ -461,21 +498,24 @@ const CreateProgramServicesScreen: React.FC = () => {
   };
 
   // Form validation
-  const validateServices = (): boolean => {
+  const validateForm = (): boolean => {
+    if (!programName.trim()) {
+      Alert.alert(
+        t('validation.required', 'Required'),
+        t('programs.nameRequired', 'Program name is required')
+      );
+      return false;
+    }
+
     if (serviceConfigurations.size === 0) {
       Alert.alert(
         t('validation.required', 'Required'), 
-        t('programs.servicesRequired', 'Please configure at least one service for this program')
+        t('programs.tasksRequired', 'At least one service reminder is required')
       );
       return false;
     }
 
     return true;
-  };
-
-  // Format number with commas (e.g., 10,000)
-  const formatNumber = (num: number): string => {
-    return num.toLocaleString();
   };
 
   // Create program tasks from configured services
@@ -493,7 +533,7 @@ const CreateProgramServicesScreen: React.FC = () => {
         intervalValue: config.mileageValue || 0,
         timeIntervalValue: config.timeValue || 0,
         timeIntervalUnit: config.timeUnit || 'months',
-        reminderOffset: 7, // Remind 7 days before due
+        reminderOffset: 7,
         isActive: true,
       };
 
@@ -501,93 +541,106 @@ const CreateProgramServicesScreen: React.FC = () => {
     });
   };
 
-  // Handle program creation
-  const handleCreateProgram = async () => {
-    if (!validateServices() || !user) return;
+  // Handle save program
+  const handleSaveProgram = async () => {
+    if (!validateForm() || !program || !user) return;
     
-    setLoading(true);
+    setSaving(true);
     
     try {
       const programTasks = createProgramTasks();
       
-      const programData: Omit<MaintenanceProgram, 'id'> = {
-        userId: user.uid,
-        name: programName,
-        description: programDescription,
+      const updateData: Partial<MaintenanceProgram> = {
+        name: programName.trim(),
+        description: programDescription.trim(),
         tasks: programTasks,
-        assignedVehicleIds: selectedVehicleIds,
-        isActive: true,
-        createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      const createdProgram = await programRepository.create(programData);
+      await programRepository.update(program.id, updateData);
       
       Alert.alert(
         t('common.success', 'Success'),
-        t('programs.programCreated', 'Maintenance program created successfully!'),
+        t('programs.programUpdated', 'Program updated successfully!'),
         [
           {
-            text: t('programs.assignToVehicles', 'Assign to Vehicles'),
-            onPress: () => navigation.navigate('Programs', {
-              screen: 'AssignProgramToVehicles',
-              params: { 
-                programId: createdProgram.id,
-                programName: createdProgram.name 
-              }
-            })
-          },
-          {
-            text: t('common.done', 'Done'),
-            onPress: () => navigation.navigate('Programs'),
-            style: 'cancel'
+            text: t('common.ok', 'OK'),
+            onPress: () => navigation.goBack()
           }
         ]
       );
     } catch (error) {
-      console.error('Error creating program:', error);
+      console.error('Error updating program:', error);
       Alert.alert(
         t('common.error', 'Error'),
-        t('programs.createError', 'Failed to create program. Please try again.')
+        t('programs.updateError', 'Failed to update program. Please try again.')
       );
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
-  // Get display name for vehicle
-  const getVehicleDisplayName = (vehicle: Vehicle): string => {
-    return vehicle.notes?.trim() || `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+  // Format number with commas
+  const formatNumber = (num: number): string => {
+    return num.toLocaleString();
   };
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Loading message={t('programs.creating', 'Creating program...')} />
+        <Loading message={t('programs.loadingProgram', 'Loading program...')} />
+      </View>
+    );
+  }
+
+  if (error || !program) {
+    return (
+      <View style={styles.container}>
+        <EmptyState
+          title={t('common.error', 'Error')}
+          message={error || t('programs.programNotFound', 'Program not found')}
+          icon="⚠️"
+          primaryAction={{
+            title: t('common.back', 'Back'),
+            onPress: () => navigation.goBack(),
+          }}
+        />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      {/* Progress Bar */}
-      <ProgressBar currentStep={3} totalSteps={3} />
-      
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Program Summary Card */}
-        <Card variant="outlined" style={styles.summaryCard}>
-          <Typography variant="subheading" style={styles.summaryTitle}>
-            {programName}
+        {/* Program Info Section */}
+        <Card variant="outlined" style={styles.infoCard}>
+          <Typography variant="heading" style={styles.sectionTitle}>
+            {t('programs.programInfo', 'Program Information')}
           </Typography>
-          <Typography variant="caption" style={styles.summarySubtitle}>
-            {selectedVehicles.map(getVehicleDisplayName).join(', ')}
-          </Typography>
+          
+          <Input
+            label={t('programs.programName', 'Program Name')}
+            value={programName}
+            onChangeText={setProgramName}
+            placeholder={t('programs.programNamePlaceholder', 'e.g., Basic Maintenance, Performance Package')}
+            style={styles.input}
+          />
+          
+          <Input
+            label={t('programs.programDescription', 'Description (Optional)')}
+            value={programDescription}
+            onChangeText={setProgramDescription}
+            placeholder={t('programs.programDescriptionPlaceholder', 'Describe this maintenance program...')}
+            multiline
+            numberOfLines={3}
+            style={styles.input}
+          />
         </Card>
 
-        {/* Basic Mode: Curated Service Cards */}
-        <View style={styles.servicesContainer}>
+        {/* Services Section */}
+        <Card variant="outlined" style={styles.servicesCard}>
           <Typography variant="heading" style={styles.sectionTitle}>
-            {t('programs.selectServices', 'Select Services')}
+            {t('programs.services', 'Services')} ({serviceConfigurations.size})
           </Typography>
           <Typography variant="caption" style={styles.sectionSubtitle}>
             {t('programs.tapToConfigureService', 'Tap a service card to configure reminders')}
@@ -641,16 +694,24 @@ const CreateProgramServicesScreen: React.FC = () => {
               );
             })}
           </View>
-        </View>
+        </Card>
       </ScrollView>
 
-      {/* Create Program Button */}
+      {/* Actions */}
       <View style={styles.footer}>
         <Button
-          title={t('programs.createProgram', 'Create Program')}
-          onPress={handleCreateProgram}
+          title={t('common.cancel', 'Cancel')}
+          variant="outline"
+          onPress={() => navigation.goBack()}
+          style={styles.cancelButton}
+        />
+        <Button
+          title={t('programs.saveChanges', 'Save Changes')}
+          variant="primary"
+          onPress={handleSaveProgram}
+          loading={saving}
           disabled={serviceConfigurations.size === 0}
-          style={styles.createButton}
+          style={styles.saveButton}
         />
       </View>
 
@@ -674,60 +735,45 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: theme.colors.background,
   },
-  
   content: {
     padding: theme.spacing.lg,
     paddingBottom: 100, // Space for footer
   },
   
-  // Summary Card
-  summaryCard: {
-    padding: theme.spacing.md,
+  // Info Card
+  infoCard: {
     marginBottom: theme.spacing.lg,
   },
-  
-  summaryTitle: {
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-  },
-  
-  summarySubtitle: {
-    color: theme.colors.textSecondary,
-  },
-  
-  // Services Container
-  servicesContainer: {
-    marginBottom: theme.spacing.lg,
-  },
-  
   sectionTitle: {
     color: theme.colors.text,
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
   },
-  
   sectionSubtitle: {
     color: theme.colors.textSecondary,
     marginBottom: theme.spacing.lg,
   },
+  input: {
+    marginBottom: theme.spacing.md,
+  },
   
-  // Service Grid
+  // Services Card
+  servicesCard: {
+    marginBottom: theme.spacing.lg,
+  },
   serviceGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: theme.spacing.md,
     justifyContent: 'space-between',
   },
-  
-  // Service Cards
   serviceCard: {
-    width: '48%', // 2 cards per row with gap
+    width: '48%',
     backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.lg,
     borderWidth: 1,
@@ -736,51 +782,41 @@ const styles = StyleSheet.create({
     minHeight: 120,
     position: 'relative',
   },
-  
   serviceCardConfigured: {
     borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primaryLight || `${theme.colors.primary}10`,
+    backgroundColor: `${theme.colors.primary}10`,
   },
-  
   serviceCardContent: {
     flex: 1,
   },
-  
   serviceCardTitle: {
     color: theme.colors.text,
     marginBottom: theme.spacing.xs,
     fontWeight: theme.typography.fontWeight.medium,
   },
-  
   serviceCardCategory: {
     color: theme.colors.textSecondary,
     marginBottom: theme.spacing.sm,
   },
-  
   serviceCardSummary: {
     marginTop: 'auto',
   },
-  
   serviceCardConfigText: {
     color: theme.colors.primary,
     fontWeight: theme.typography.fontWeight.medium,
   },
-  
   serviceCardDefault: {
     marginTop: 'auto',
   },
-  
   serviceCardDefaultText: {
     color: theme.colors.textSecondary,
     fontStyle: 'italic',
   },
-  
   serviceCardCheck: {
     position: 'absolute',
     top: theme.spacing.sm,
     right: theme.spacing.sm,
   },
-  
   checkMark: {
     width: 16,
     height: 16,
@@ -788,44 +824,44 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
   },
   
-  
   // Footer
   footer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
+    flexDirection: 'row',
+    gap: theme.spacing.md,
     padding: theme.spacing.lg,
     backgroundColor: theme.colors.surface,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
   },
-  
-  createButton: {
-    width: '100%',
+  cancelButton: {
+    flex: 1,
+  },
+  saveButton: {
+    flex: 2,
   },
 });
 
-// Bottom Sheet Styles
+// Bottom Sheet Styles (same as CreateProgramServicesScreen)
 const bottomSheetStyles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
-  
   backdrop: {
     flex: 1,
   },
-  
   bottomSheet: {
     backgroundColor: theme.colors.surface,
     borderTopLeftRadius: theme.borderRadius.xl,
     borderTopRightRadius: theme.borderRadius.xl,
-    paddingBottom: 20, // Extra padding for safe area
+    paddingBottom: 20,
     maxHeight: '80%',
   },
-  
   handle: {
     width: 36,
     height: 4,
@@ -835,201 +871,75 @@ const bottomSheetStyles = StyleSheet.create({
     marginTop: theme.spacing.sm,
     marginBottom: theme.spacing.lg,
   },
-  
   header: {
     paddingHorizontal: theme.spacing.lg,
     marginBottom: theme.spacing.lg,
   },
-  
   title: {
     color: theme.colors.text,
     marginBottom: theme.spacing.xs,
   },
-  
   category: {
     color: theme.colors.textSecondary,
   },
-  
   section: {
     paddingHorizontal: theme.spacing.lg,
     marginBottom: theme.spacing.lg,
   },
-  
-  sectionTitle: {
-    color: theme.colors.text,
-    marginBottom: theme.spacing.md,
-  },
-  
-  // Radio Button Group
-  radioGroup: {
-    gap: theme.spacing.sm,
-  },
-  
-  radioOption: {
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.md,
-    backgroundColor: theme.colors.surface,
-  },
-  
-  radioOptionSelected: {
-    borderColor: theme.colors.primary,
-  },
-  
-  radioContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: theme.spacing.md,
-  },
-  
-  radioText: {
-    color: theme.colors.text,
-    flex: 1,
-  },
-  
-  radioTextSelected: {
-    color: theme.colors.primary,
-    fontWeight: theme.typography.fontWeight.medium,
-  },
-  
-  radioCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: theme.colors.border,
-    backgroundColor: 'transparent',
-  },
-  
-  radioCircleSelected: {
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary,
-  },
-  
-  // Input Fields
-  input: {
-    marginTop: theme.spacing.sm,
-  },
-  
-  timeInputRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-    alignItems: 'flex-end',
-  },
-  
-  timeValueInput: {
-    flex: 1,
-    marginTop: theme.spacing.sm,
-  },
-  
-  timeUnitContainer: {
-    flex: 1,
-  },
-  
-  timeUnitLabel: {
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.sm,
-  },
-  
-  timeUnitSelector: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.xs,
-  },
-  
-  timeUnitOption: {
-    paddingVertical: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.sm,
-    borderRadius: theme.borderRadius.sm,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-  },
-  
-  timeUnitOptionSelected: {
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary,
-  },
-  
-  timeUnitText: {
-    color: theme.colors.textSecondary,
-    fontSize: theme.typography.fontSize.xs,
-  },
-  
-  timeUnitTextSelected: {
-    color: theme.colors.surface,
-    fontWeight: theme.typography.fontWeight.medium,
-  },
-  
-  // Actions
-  actions: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.md,
-  },
-  
-  removeButton: {
-    marginBottom: theme.spacing.md,
-  },
-  
-  mainActions: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-  },
-  
-  cancelButton: {
-    flex: 1,
-  },
-  
-  saveButton: {
-    flex: 2,
-  },
-
-  // New contextual sentence-style inputs
   sentenceIntro: {
     color: theme.colors.text,
     marginBottom: theme.spacing.md,
     fontWeight: theme.typography.fontWeight.medium,
   },
-  
   sentenceContainer: {
     gap: theme.spacing.md,
   },
-  
   sentenceRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.sm,
     flexWrap: 'wrap',
   },
-  
   sentenceText: {
     color: theme.colors.text,
   },
-  
   inlineInput: {
     minWidth: 80,
     maxWidth: 120,
     textAlign: 'center',
   },
-  
   chipsContainer: {
     marginTop: theme.spacing.xs,
   },
-  
   orText: {
     color: theme.colors.textSecondary,
     textAlign: 'center',
     fontWeight: theme.typography.fontWeight.semibold,
     marginVertical: theme.spacing.sm,
   },
-  
   dualExplanation: {
     color: theme.colors.textSecondary,
     textAlign: 'center',
     fontStyle: 'italic',
     marginTop: theme.spacing.xs,
   },
+  actions: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.md,
+  },
+  removeButton: {
+    marginBottom: theme.spacing.md,
+  },
+  mainActions: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+  },
+  cancelButton: {
+    flex: 1,
+  },
+  saveButton: {
+    flex: 2,
+  },
 });
 
-export default CreateProgramServicesScreen;
+export default EditProgramScreen;

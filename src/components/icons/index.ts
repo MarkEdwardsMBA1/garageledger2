@@ -29,4 +29,6 @@ export {
   TrashIcon,
   CarSilhouetteIcon,
   AlertTriangleIcon,
+  EditIcon,
+  CalendarIcon,
 } from './AutomotiveIcons';

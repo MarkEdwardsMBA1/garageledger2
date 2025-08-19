@@ -110,10 +110,10 @@ export interface ProgramTask {
   name: string;
   description?: string;
   category: string; // Maintenance category key
-  intervalType: 'mileage' | 'time' | 'either'; // Whichever occurs first
+  intervalType: 'mileage' | 'time' | 'dual'; // Whichever occurs first
   intervalValue: number; // Miles or time value
-  timeIntervalUnit?: 'days' | 'weeks' | 'months' | 'years'; // For when intervalType is 'time' or 'either'
-  timeIntervalValue?: number; // For 'either' type to store time component
+  timeIntervalUnit?: 'days' | 'weeks' | 'months' | 'years'; // For when intervalType is 'time' or 'dual'
+  timeIntervalValue?: number; // For 'dual' type to store time component
   estimatedCost?: number;
   reminderOffset?: number; // Days before due to remind
   isActive: boolean;

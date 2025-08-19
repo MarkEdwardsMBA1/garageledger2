@@ -91,9 +91,7 @@ const ProgramsScreen: React.FC = () => {
 
   // Handle program selection
   const handleProgramPress = (program: MaintenanceProgram) => {
-    // TODO: Navigate to ProgramDetailScreen in Increment 6
-    console.log('View program details:', program.id);
-    alert(t('programs.comingSoon', 'Program details coming soon!'));
+    navigation.navigate('ProgramDetail', { programId: program.id });
   };
 
   // Render program card
