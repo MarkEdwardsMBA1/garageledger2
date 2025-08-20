@@ -12,13 +12,13 @@ import { theme } from '../utils/theme';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { Loading } from '../components/common/Loading';
-import { SpeedometerIcon, CarIcon, SpannerIcon, GearIcon, ClipboardIcon, RemindersIcon } from '../components/icons';
+import { SpeedometerIcon, CarIcon, SpannerIcon, GearIcon, ClipboardIcon } from '../components/icons';
 import { Typography } from '../components/common/Typography';
 
 // Import screens  
 import VehiclesScreen from '../screens/VehiclesScreen';
 import VehicleHomeScreen from '../screens/VehicleHomeScreen';
-import MaintenanceScreen from '../screens/MaintenanceScreen';
+import TabbedInsightsScreen from '../screens/TabbedInsightsScreen';
 import AddMaintenanceLogScreen from '../screens/AddMaintenanceLogScreen';
 import ProgramsScreen from '../screens/ProgramsScreen';
 import CreateProgramVehicleSelectionScreen from '../screens/CreateProgramVehicleSelectionScreen';
@@ -28,7 +28,6 @@ import AssignProgramsScreen from '../screens/AssignProgramsScreen';
 import AssignProgramToVehiclesScreen from '../screens/AssignProgramToVehiclesScreen';
 import ProgramDetailScreen from '../screens/ProgramDetailScreen';
 import EditProgramScreen from '../screens/EditProgramScreen';
-import RemindersScreen from '../screens/RemindersScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import AddVehicleScreen from '../screens/AddVehicleScreen';
 import EditVehicleScreen from '../screens/EditVehicleScreen';
@@ -149,7 +148,7 @@ const MaintenanceStackNavigator: React.FC = () => {
     >
       <Stack.Screen
         name="MaintenanceList"
-        component={MaintenanceScreen}
+        component={TabbedInsightsScreen}
         options={{
           title: t('navigation.insights', 'Insights'),
         }}
@@ -386,16 +385,6 @@ const MainAppNavigator: React.FC = () => {
           }}
         />
         <Tab.Screen
-          name="Reminders"
-          component={RemindersScreen}
-          options={{
-            title: t('navigation.reminders', 'Reminders'),
-            tabBarIcon: ({ color, size }) => (
-              <TabIcon name="reminders" color={color} size={size} />
-            ),
-          }}
-        />
-        <Tab.Screen
           name="Settings"
           component={SettingsScreen}
           options={{
@@ -540,7 +529,7 @@ export const AppNavigator: React.FC = () => {
 
 // Custom SVG icon component for unique GarageLedger branding
 interface TabIconProps {
-  name: 'dashboard' | 'vehicles' | 'maintenance' | 'insights' | 'programs' | 'reminders' | 'settings';
+  name: 'dashboard' | 'vehicles' | 'maintenance' | 'insights' | 'programs' | 'settings';
   color: string;
   size: number;
 }
@@ -579,12 +568,6 @@ const TabIcon: React.FC<TabIconProps> = ({ name, color, size }) => {
       return (
         <View style={iconStyle}>
           <ClipboardIcon size={size} color={color} />
-        </View>
-      );
-    case 'reminders':
-      return (
-        <View style={iconStyle}>
-          <RemindersIcon size={size} color={color} />
         </View>
       );
     case 'settings':

@@ -31,4 +31,10 @@ export {
   AlertTriangleIcon,
   EditIcon,
   CalendarIcon,
+  LockIcon,
+  DollarIcon,
+  PieChartIcon,
+  TrendingUpIcon,
+  TrendingDownIcon,
+  BarChartIcon,
 } from './AutomotiveIcons';

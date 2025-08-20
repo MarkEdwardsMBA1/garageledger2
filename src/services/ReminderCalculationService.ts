@@ -96,6 +96,7 @@ export class ReminderCalculationService {
               maintenanceHistory
             );
             
+            
             if (reminder) {
               reminders.push(reminder);
             }

@@ -672,6 +672,175 @@ export const CalendarIcon: React.FC<IconProps> = ({
   </Svg>
 );
 
+// Lock Icon for premium features
+export const LockIcon: React.FC<IconProps> = ({ 
+  size = 24, 
+  color = '#666', 
+  strokeWidth = 2 
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Rect 
+      x="3" 
+      y="11" 
+      width="18" 
+      height="11" 
+      rx="2" 
+      ry="2"
+      stroke={color}
+      strokeWidth={strokeWidth}
+    />
+    <Circle 
+      cx="12" 
+      cy="16" 
+      r="1"
+      stroke={color}
+      strokeWidth={strokeWidth}
+    />
+    <Path 
+      d="M7 11V7a5 5 0 0 1 10 0v4"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+// Dollar Icon for costs and pricing
+export const DollarIcon: React.FC<IconProps> = ({ 
+  size = 24, 
+  color = '#666', 
+  strokeWidth = 2 
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Line 
+      x1="12" 
+      y1="1" 
+      x2="12" 
+      y2="23"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+    />
+    <Path 
+      d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+// Pie Chart Icon for cost breakdowns
+export const PieChartIcon: React.FC<IconProps> = ({ 
+  size = 24, 
+  color = '#666', 
+  strokeWidth = 2 
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path 
+      d="M21.21 15.89A10 10 0 1 1 8 2.83"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path 
+      d="M22 12A10 10 0 0 0 12 2v10z"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+// Trending Up Icon for positive trends
+export const TrendingUpIcon: React.FC<IconProps> = ({ 
+  size = 24, 
+  color = '#666', 
+  strokeWidth = 2 
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path 
+      d="M3 17l6-6 4 4 8-8"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path 
+      d="M17 7h4v4"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+// Trending Down Icon for negative trends
+export const TrendingDownIcon: React.FC<IconProps> = ({ 
+  size = 24, 
+  color = '#666', 
+  strokeWidth = 2 
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path 
+      d="M3 7l6 6 4-4 8 8"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path 
+      d="M17 17h4v-4"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+// Bar Chart Icon for statistics
+export const BarChartIcon: React.FC<IconProps> = ({ 
+  size = 24, 
+  color = '#666', 
+  strokeWidth = 2 
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Line 
+      x1="12" 
+      y1="20" 
+      x2="12" 
+      y2="10"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+    />
+    <Line 
+      x1="18" 
+      y1="20" 
+      x2="18" 
+      y2="4"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+    />
+    <Line 
+      x1="6" 
+      y1="20" 
+      x2="6" 
+      y2="16"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+    />
+  </Svg>
+);
+
 
 export default {
   MaintenanceIcon,
@@ -695,4 +864,12 @@ export default {
   ClipboardIcon,
   CarSilhouetteIcon,
   AlertTriangleIcon,
+  EditIcon,
+  CalendarIcon,
+  LockIcon,
+  DollarIcon,
+  PieChartIcon,
+  TrendingUpIcon,
+  TrendingDownIcon,
+  BarChartIcon,
 };

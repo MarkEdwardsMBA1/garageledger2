@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../utils/theme';
 import { Typography } from '../components/common/Typography';
 import { Card } from '../components/common/Card';
@@ -155,6 +156,7 @@ const ServiceConfigBottomSheet: React.FC<ServiceConfigBottomSheetProps> = ({
   onRemove,
 }) => {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   
   const [intervalType, setIntervalType] = useState<'mileage' | 'time' | 'dual'>(
     existingConfig?.intervalType || 'mileage'
@@ -271,91 +273,97 @@ const ServiceConfigBottomSheet: React.FC<ServiceConfigBottomSheetProps> = ({
             </Typography>
           </View>
 
-          <View style={bottomSheetStyles.section}>
-            <SegmentedControl
-              options={intervalModeOptions}
-              selectedKey={intervalType}
-              onSelect={(key) => setIntervalType(key as 'mileage' | 'time' | 'dual')}
-            />
-          </View>
+          <ScrollView 
+            style={bottomSheetStyles.scrollContent}
+            contentContainerStyle={bottomSheetStyles.scrollContentContainer}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={bottomSheetStyles.section}>
+              <SegmentedControl
+                options={intervalModeOptions}
+                selectedKey={intervalType}
+                onSelect={(key) => setIntervalType(key as 'mileage' | 'time' | 'dual')}
+              />
+            </View>
 
-          <View style={bottomSheetStyles.section}>
-            <Typography variant="body" style={bottomSheetStyles.sentenceIntro}>
-              Configure service reminder:
-            </Typography>
-            
-            <View style={bottomSheetStyles.sentenceContainer}>
-              {(intervalType === 'mileage' || intervalType === 'dual') && (
-                <View>
-                  <View style={bottomSheetStyles.sentenceRow}>
-                    <Typography variant="body" style={bottomSheetStyles.sentenceText}>
-                      Every
-                    </Typography>
-                    <Input
-                      value={mileageValue}
-                      onChangeText={setMileageValue}
-                      keyboardType="numeric"
-                      style={bottomSheetStyles.inlineInput}
-                      placeholder="5,000"
-                    />
-                    <Typography variant="body" style={bottomSheetStyles.sentenceText}>
-                      miles
-                    </Typography>
-                  </View>
-                  
-                  <QuickPicks
-                    values={mileageQuickPicks}
-                    onSelect={(value) => setMileageValue(value.toString())}
-                    style={bottomSheetStyles.chipsContainer}
-                  />
-                </View>
-              )}
-
-              {intervalType === 'dual' && (
-                <Typography variant="body" style={bottomSheetStyles.orText}>
-                  or
-                </Typography>
-              )}
-
-              {(intervalType === 'time' || intervalType === 'dual') && (
-                <View>
-                  <View style={bottomSheetStyles.sentenceRow}>
-                    <Typography variant="body" style={bottomSheetStyles.sentenceText}>
-                      Every
-                    </Typography>
-                    <Input
-                      value={timeValue}
-                      onChangeText={setTimeValue}
-                      keyboardType="numeric"
-                      style={bottomSheetStyles.inlineInput}
-                      placeholder="6"
-                    />
-                    <ChipsGroup
-                      options={timeUnitOptions}
-                      selectedKey={timeUnit}
-                      onSelect={(key) => setTimeUnit(key as 'days' | 'weeks' | 'months' | 'years')}
+            <View style={bottomSheetStyles.section}>
+              <Typography variant="body" style={bottomSheetStyles.sentenceIntro}>
+                Configure service reminder:
+              </Typography>
+              
+              <View style={bottomSheetStyles.sentenceContainer}>
+                {(intervalType === 'mileage' || intervalType === 'dual') && (
+                  <View>
+                    <View style={bottomSheetStyles.sentenceRow}>
+                      <Typography variant="body" style={bottomSheetStyles.sentenceText}>
+                        Every
+                      </Typography>
+                      <Input
+                        value={mileageValue}
+                        onChangeText={setMileageValue}
+                        keyboardType="numeric"
+                        style={bottomSheetStyles.inlineInput}
+                        placeholder="5,000"
+                      />
+                      <Typography variant="body" style={bottomSheetStyles.sentenceText}>
+                        miles
+                      </Typography>
+                    </View>
+                    
+                    <QuickPicks
+                      values={mileageQuickPicks}
+                      onSelect={(value) => setMileageValue(value.toString())}
                       style={bottomSheetStyles.chipsContainer}
                     />
                   </View>
-                  
-                  <QuickPicks
-                    values={timeQuickPicks}
-                    onSelect={(value) => setTimeValue(value.toString())}
-                    style={bottomSheetStyles.chipsContainer}
-                    label={`Quick picks (${timeUnit}):`}
-                  />
-                </View>
-              )}
+                )}
 
-              {intervalType === 'dual' && (
-                <Typography variant="bodySmall" style={bottomSheetStyles.dualExplanation}>
-                  Whichever comes first
-                </Typography>
-              )}
+                {intervalType === 'dual' && (
+                  <Typography variant="body" style={bottomSheetStyles.orText}>
+                    or
+                  </Typography>
+                )}
+
+                {(intervalType === 'time' || intervalType === 'dual') && (
+                  <View>
+                    <View style={bottomSheetStyles.sentenceRow}>
+                      <Typography variant="body" style={bottomSheetStyles.sentenceText}>
+                        Every
+                      </Typography>
+                      <Input
+                        value={timeValue}
+                        onChangeText={setTimeValue}
+                        keyboardType="numeric"
+                        style={bottomSheetStyles.inlineInput}
+                        placeholder="6"
+                      />
+                      <ChipsGroup
+                        options={timeUnitOptions}
+                        selectedKey={timeUnit}
+                        onSelect={(key) => setTimeUnit(key as 'days' | 'weeks' | 'months' | 'years')}
+                        style={bottomSheetStyles.chipsContainer}
+                      />
+                    </View>
+                    
+                    <QuickPicks
+                      values={timeQuickPicks}
+                      onSelect={(value) => setTimeValue(value.toString())}
+                      style={bottomSheetStyles.chipsContainer}
+                      label={`Quick picks (${timeUnit}):`}
+                    />
+                  </View>
+                )}
+
+                {intervalType === 'dual' && (
+                  <Typography variant="bodySmall" style={bottomSheetStyles.dualExplanation}>
+                    Whichever comes first
+                  </Typography>
+                )}
+              </View>
             </View>
-          </View>
+          </ScrollView>
 
-          <View style={bottomSheetStyles.actions}>
+          <View style={[bottomSheetStyles.actions, { paddingBottom: Math.max(theme.spacing.xl, insets.bottom + theme.spacing.md) }]}>
             {existingConfig && onRemove && (
               <Button
                 title={t('common.remove', 'Remove')}
@@ -859,8 +867,8 @@ const bottomSheetStyles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderTopLeftRadius: theme.borderRadius.xl,
     borderTopRightRadius: theme.borderRadius.xl,
-    paddingBottom: 20,
-    maxHeight: '80%',
+    maxHeight: '85%',
+    paddingBottom: 0, // Remove fixed padding, let actions handle it
   },
   handle: {
     width: 36,
@@ -923,9 +931,20 @@ const bottomSheetStyles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: theme.spacing.xs,
   },
+  scrollContent: {
+    flex: 1,
+    maxHeight: 400, // Maximum scroll area height
+  },
+  scrollContentContainer: {
+    paddingBottom: theme.spacing.md,
+  },
   actions: {
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.md,
+    paddingBottom: theme.spacing.xl, // Add proper bottom padding for safe area
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.borderLight,
+    backgroundColor: theme.colors.surface,
   },
   removeButton: {
     marginBottom: theme.spacing.md,
