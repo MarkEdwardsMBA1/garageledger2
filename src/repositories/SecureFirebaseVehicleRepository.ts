@@ -242,6 +242,7 @@ export class SecureFirebaseVehicleRepository extends BaseRepository<Vehicle> imp
       vin: data.vin || undefined,
       licensePlate: data.licensePlate || undefined,
       color: data.color || undefined,
+      nickname: data.nickname || undefined,
       mileage: data.mileage || 0,
       notes: data.notes || undefined,
       photoUri: data.photoUri || undefined,

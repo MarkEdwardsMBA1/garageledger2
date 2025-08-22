@@ -157,18 +157,21 @@ const VehicleHomeScreen: React.FC = () => {
         <Card variant="elevated" style={styles.headerCard}>
           <View style={styles.vehicleInfo}>
             <Typography variant="title" style={styles.vehicleName}>
-              {vehicle.year} {vehicle.make} {vehicle.model}
+              {(vehicle.nickname?.trim() && vehicle.nickname.trim().length > 0) ? vehicle.nickname.trim() : `${vehicle.year} ${vehicle.make} ${vehicle.model}`}
             </Typography>
             
+            {/* Show vehicle info if nickname is present */}
+            {(vehicle.nickname?.trim() && vehicle.nickname.trim().length > 0) && (
+              <Typography variant="bodySmall" style={styles.vehicleInfoSubtitle}>
+                {vehicle.year} {vehicle.make} {vehicle.model}
+              </Typography>
+            )}
+            
+            {/* Show mileage under vehicle info when nickname is present, or normally when no nickname */}
             {vehicle.mileage > 0 && (
-              <View style={styles.mileageContainer}>
-                <Typography variant="bodyLarge" style={styles.mileageLabel}>
-                  Current:
-                </Typography>
-                <Typography variant="bodyLarge" style={styles.mileageValue}>
-                  {vehicle.mileage.toLocaleString()} {t('vehicles.miles', 'miles')}
-                </Typography>
-              </View>
+              <Typography variant="bodySmall" style={styles.mileageSubtitle}>
+                Current: {vehicle.mileage.toLocaleString()} {t('vehicles.miles', 'miles')}
+              </Typography>
             )}
             
             {vehicle.vin && (
@@ -733,6 +736,16 @@ const styles = StyleSheet.create({
   programUnassignText: {
     color: theme.colors.textSecondary,
     fontWeight: theme.typography.fontWeight.medium,
+  },
+  vehicleInfoSubtitle: {
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    marginTop: theme.spacing.xs,
+  },
+  mileageSubtitle: {
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    marginTop: theme.spacing.xs,
   },
 });
 

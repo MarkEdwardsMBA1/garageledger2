@@ -45,6 +45,7 @@ const EditVehicleScreen: React.FC<any> = ({ navigation, route }) => {
     model: '',
     year: '',
     vin: '',
+    nickname: '',
     mileage: '',
     notes: '',
     photoUri: '',
@@ -98,6 +99,7 @@ const EditVehicleScreen: React.FC<any> = ({ navigation, route }) => {
         model: vehicleData.model,
         year: vehicleData.year.toString(),
         vin: vehicleData.vin || '',
+        nickname: vehicleData.nickname || '',
         mileage: vehicleData.mileage ? vehicleData.mileage.toString() : '',
         notes: vehicleData.notes || '',
         photoUri: vehicleData.photoUri || '',
@@ -211,9 +213,10 @@ const EditVehicleScreen: React.FC<any> = ({ navigation, route }) => {
         year: parseInt(formData.year),
         mileage: formData.mileage.trim() ? parseInt(formData.mileage.replace(/,/g, '')) : 0,
         updatedAt: new Date(),
-        // Only include fields if they have values (no undefined values)
-        ...(formData.vin.trim() && { vin: formData.vin.trim() }),
-        ...(formData.notes.trim() && { notes: formData.notes.trim() }),
+        // Always include optional fields (empty strings instead of undefined)
+        vin: formData.vin.trim() || '',
+        nickname: formData.nickname.trim() || '',
+        notes: formData.notes.trim() || '',
         ...(formData.photoUri && { photoUri: formData.photoUri }),
         ...(vehicle.licensePlate && { licensePlate: vehicle.licensePlate }),
         ...(vehicle.color && { color: vehicle.color }),
@@ -373,26 +376,25 @@ const EditVehicleScreen: React.FC<any> = ({ navigation, route }) => {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Card style={styles.formCard}>
-        <Text style={styles.title}>
-          {t('vehicles.editVehicle', 'Edit Vehicle')}
-        </Text>
-        <Text style={styles.subtitle}>
-          {t('vehicles.editDescription', 'Update your vehicle information.')}
-        </Text>
-
-        {/* Basic Information */}
+        {/* Vehicle Information */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
-            {t('vehicles.basicInfo', 'Basic Information')}
+            {t('vehicles.vehicleInfo', 'Vehicle Information')}
           </Text>
           
+          <Input
+            label={t('vehicles.nickname', 'Nickname (Optional)')}
+            value={formData.nickname}
+            onChangeText={(value) => handleInputChange('nickname', value)}
+            placeholder={t('vehicles.nicknamePlaceholder', 'e.g., Lightning McQueen, Beast, Ruby')}
+          />
+
           <Input
             label={t('vehicles.make', 'Make')}
             value={formData.make}
             onChangeText={(value) => handleInputChange('make', value)}
             placeholder={t('vehicles.makePlaceholder', 'e.g., Toyota, Honda, Ford')}
             error={errors.make}
-            required
           />
 
           <Input
@@ -401,7 +403,6 @@ const EditVehicleScreen: React.FC<any> = ({ navigation, route }) => {
             onChangeText={(value) => handleInputChange('model', value)}
             placeholder={t('vehicles.modelPlaceholder', 'e.g., Camry, Civic, F-150')}
             error={errors.model}
-            required
           />
 
           <Input
@@ -412,54 +413,43 @@ const EditVehicleScreen: React.FC<any> = ({ navigation, route }) => {
             keyboardType="numeric"
             maxLength={4}
             error={errors.year}
-            required
           />
         </View>
 
-        {/* Vehicle Details */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t('vehicles.details', 'Vehicle Details')}
-          </Text>
-
           <Input
-            label={t('vehicles.vin', 'VIN')}
+            label={t('vehicles.vin', 'VIN (Optional)')}
             value={formData.vin}
             onChangeText={(value) => handleInputChange('vin', value.toUpperCase())}
             placeholder={t('vehicles.vinPlaceholder', 'Vehicle Identification Number')}
             maxLength={17}
             error={errors.vin}
-            helperText={t('vehicles.vinHelper', 'Optional - helps with parts and recalls')}
           />
 
           <Input
-            label={t('vehicles.mileage', 'Current Mileage')}
+            label={t('vehicles.mileage', 'Mileage (Optional)')}
             value={formData.mileage}
             onChangeText={(value) => handleInputChange('mileage', value)}
             placeholder={t('vehicles.mileagePlaceholder', 'e.g., 50000')}
             keyboardType="numeric"
             error={errors.mileage}
-            helperText={t('vehicles.mileageHelper', 'Optional - helps with maintenance scheduling')}
           />
 
           <Input
-            label={t('vehicles.notes', 'Notes')}
+            label={t('vehicles.notes', 'Notes (Optional)')}
             value={formData.notes}
             onChangeText={(value) => handleInputChange('notes', value)}
             placeholder={t('vehicles.notesPlaceholder', 'Any additional information...')}
             multiline
             numberOfLines={3}
-            helperText={t('vehicles.notesHelper', 'Optional - color, trim, modifications, etc.')}
           />
 
           <PhotoPicker
             photoUri={formData.photoUri}
             onPhotoSelected={handlePhotoSelected}
             onPhotoRemoved={handlePhotoRemoved}
-            placeholder={t('vehicles.photo', 'Photo')}
+            placeholder={t('vehicles.photo', 'Photo (Optional)')}
             vehicleId={vehicleId}
           />
-        </View>
       </Card>
 
       {/* Action Buttons */}

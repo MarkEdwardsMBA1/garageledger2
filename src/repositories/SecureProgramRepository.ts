@@ -64,23 +64,22 @@ export class SecureProgramRepository implements IProgramRepository {
   async getUserPrograms(): Promise<MaintenanceProgram[]> {
     const user = this.requireAuth();
     
-    // Get all programs and filter by current user
-    const allPrograms = await this.firebaseRepo.getAll();
-    return allPrograms.filter(program => program.userId === user.uid);
+    // Use database-level filtering instead of in-memory filtering
+    return this.firebaseRepo.getUserPrograms(user.uid);
   }
 
   async getActivePrograms(): Promise<MaintenanceProgram[]> {
     const user = this.requireAuth();
     
-    // Get active programs and filter by current user
-    const activePrograms = await this.firebaseRepo.getActivePrograms();
-    return activePrograms.filter(program => program.userId === user.uid);
+    // Use database-level filtering instead of in-memory filtering
+    return this.firebaseRepo.getActivePrograms(user.uid);
   }
 
   async getProgramsByVehicle(vehicleId: string): Promise<MaintenanceProgram[]> {
     const user = this.requireAuth();
     
-    // Get programs by vehicle and filter by current user
+    // TODO: Verify user owns this vehicle first for security
+    // For now, get programs by vehicle and filter by current user
     const programs = await this.firebaseRepo.getProgramsByVehicle(vehicleId);
     return programs.filter(program => program.userId === user.uid);
   }

@@ -89,41 +89,46 @@ export class FirebaseProgramRepository implements IProgramRepository {
   }
 
   async getAll(): Promise<MaintenanceProgram[]> {
+    // This method should not be used directly - it tries to get ALL programs
+    // Use getUserPrograms(userId) instead for security
+    throw new Error('getAll() not allowed for security - use getUserPrograms(userId) instead');
+  }
+
+  async getUserPrograms(userId: string): Promise<MaintenanceProgram[]> {
     try {
       const q = query(
         collection(firestore, this.collectionName),
-        orderBy('createdAt', 'desc')
+        where('userId', '==', userId)
+        // Temporarily removed orderBy to avoid composite index requirement
+        // TODO: Re-add orderBy('createdAt', 'desc') after creating composite index
       );
       
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => this.convertFirestoreToProgram(doc));
-    } catch (error) {
-      console.error('Error getting all programs:', error);
-      throw new Error('Failed to get programs');
-    }
-  }
-
-  async getUserPrograms(): Promise<MaintenanceProgram[]> {
-    try {
-      // NOTE: This would typically filter by userId from auth context
-      // For now, returning all programs since we'll add authentication in SecureRepository
-      return this.getAll();
+      const programs = querySnapshot.docs.map(doc => this.convertFirestoreToProgram(doc));
+      
+      // Sort in memory temporarily
+      return programs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     } catch (error) {
       console.error('Error getting user programs:', error);
       throw new Error('Failed to get user programs');
     }
   }
 
-  async getActivePrograms(): Promise<MaintenanceProgram[]> {
+  async getActivePrograms(userId: string): Promise<MaintenanceProgram[]> {
     try {
       const q = query(
         collection(firestore, this.collectionName),
-        where('isActive', '==', true),
-        orderBy('createdAt', 'desc')
+        where('userId', '==', userId),
+        where('isActive', '==', true)
+        // Temporarily removed orderBy to avoid composite index requirement
+        // TODO: Re-add orderBy('createdAt', 'desc') after creating composite index
       );
       
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => this.convertFirestoreToProgram(doc));
+      const programs = querySnapshot.docs.map(doc => this.convertFirestoreToProgram(doc));
+      
+      // Sort in memory temporarily
+      return programs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     } catch (error) {
       console.error('Error getting active programs:', error);
       throw new Error('Failed to get active programs');

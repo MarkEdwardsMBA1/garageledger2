@@ -94,19 +94,50 @@ const VehiclesScreen: React.FC<VehiclesScreenProps> = ({ navigation }) => {
     />
   );
 
+  // Get vehicle title and subtitle for display
+  const getVehicleDisplayInfo = (vehicle: Vehicle) => {
+    const nickname = vehicle.nickname?.trim();
+    const vehicleInfo = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+    
+    if (nickname && nickname.length > 0) {
+      return {
+        title: nickname,
+        vehicleInfo: vehicleInfo
+      };
+    } else {
+      return {
+        title: vehicleInfo,
+        vehicleInfo: null
+      };
+    }
+  };
+
   const renderVehiclesList = () => (
     <ScrollView contentContainerStyle={styles.listContainer}>
-      {vehicles.map((vehicle) => (
-        <Card
-          key={vehicle.id}
-          variant="elevated"
-          title={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-          subtitle={vehicle.mileage ? `${vehicle.mileage.toLocaleString()} ${t('vehicles.miles', 'miles')}` : t('vehicles.mileageNotSet', 'Mileage not set')}
-          pressable
-          onPress={() => {
-            navigation.navigate('VehicleHome', { vehicleId: vehicle.id });
-          }}
-        >
+      {vehicles.map((vehicle) => {
+        const displayInfo = getVehicleDisplayInfo(vehicle);
+        return (
+          <Card
+            key={vehicle.id}
+            variant="elevated"
+            title={displayInfo.title}
+            subtitle={
+              <View style={styles.subtitleContainer}>
+                {displayInfo.vehicleInfo && (
+                  <Text style={styles.vehicleInfoText}>
+                    {displayInfo.vehicleInfo}
+                  </Text>
+                )}
+                <Text style={styles.mileageText}>
+                  {vehicle.mileage ? `${vehicle.mileage.toLocaleString()} ${t('vehicles.miles', 'miles')}` : t('vehicles.mileageNotSet', 'Mileage not set')}
+                </Text>
+              </View>
+            }
+            pressable
+            onPress={() => {
+              navigation.navigate('VehicleHome', { vehicleId: vehicle.id });
+            }}
+          >
           {vehicle.photoUri ? (
             <Image 
               source={{ uri: vehicle.photoUri }} 
@@ -124,7 +155,8 @@ const VehiclesScreen: React.FC<VehiclesScreenProps> = ({ navigation }) => {
             </View>
           )}
         </Card>
-      ))}
+        );
+      })}
       
       {/* Add Vehicle button at bottom of list */}
       <View style={styles.addVehicleButtonContainer}>
@@ -234,6 +266,18 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.full,
     padding: theme.spacing.xs,
     ...theme.shadows.sm,
+  },
+  subtitleContainer: {
+    gap: theme.spacing.xs,
+  },
+  vehicleInfoText: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.normal,
+  },
+  mileageText: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.fontSize.sm,
   },
 });
 

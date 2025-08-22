@@ -98,9 +98,39 @@ const CreateProgramVehicleSelectionScreen: React.FC = () => {
     });
   };
 
-  // Get display name for vehicle
+  // Handle vehicle selection for vehicles with existing programs (edit mode)
+  const handleVehicleEdit = async (vehicle: Vehicle) => {
+    try {
+      // Get the program for this vehicle
+      const programs = await programRepository.getProgramsByVehicle(vehicle.id);
+      const activePrograms = programs.filter(p => p.isActive);
+      
+      if (activePrograms.length > 0) {
+        // Navigate to edit the first active program
+        const programToEdit = activePrograms[0];
+        navigation.navigate('EditProgram', {
+          programId: programToEdit.id,
+          vehicleId: vehicle.id,
+        });
+      } else {
+        Alert.alert(
+          t('common.error', 'Error'),
+          t('programs.noProgramFound', 'No active program found for this vehicle')
+        );
+      }
+    } catch (error) {
+      console.error('Error getting vehicle program:', error);
+      Alert.alert(
+        t('common.error', 'Error'),
+        t('programs.loadProgramError', 'Failed to load vehicle program')
+      );
+    }
+  };
+
+  // Get display name for vehicle (nickname takes priority)
   const getVehicleDisplayName = (vehicle: Vehicle): string => {
-    return vehicle.notes?.trim() || `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+    const nickname = vehicle.nickname?.trim();
+    return (nickname && nickname.length > 0) ? nickname : `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
   };
 
   // Handle continue to next step with conflict detection
@@ -199,23 +229,17 @@ const CreateProgramVehicleSelectionScreen: React.FC = () => {
       <ProgressBar currentStep={1} totalSteps={3} />
       
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Vehicle Selection */}
-        <Card variant="elevated" style={styles.section}>
-          <Typography variant="title" style={styles.sectionTitle}>
-            {t('programs.selectVehicles', 'Select Vehicles')}
-          </Typography>
-          <Typography variant="body" style={styles.sectionSubtitle}>
-            {t('programs.selectVehiclesMessage', 'Choose which vehicles this maintenance program applies to')}
-          </Typography>
-          
-          {vehiclesLoading ? (
+        {vehiclesLoading ? (
+          <Card variant="elevated" style={styles.section}>
             <View style={styles.vehicleLoadingContainer}>
               <ActivityIndicator size="small" color={theme.colors.primary} />
               <Typography variant="body" style={styles.vehicleLoadingText}>
                 {t('vehicles.loading', 'Loading vehicles...')}
               </Typography>
             </View>
-          ) : vehiclesError ? (
+          </Card>
+        ) : vehiclesError ? (
+          <Card variant="elevated" style={styles.section}>
             <View style={styles.vehicleErrorContainer}>
               <Typography variant="body" style={styles.vehicleErrorText}>
                 {vehiclesError}
@@ -228,7 +252,9 @@ const CreateProgramVehicleSelectionScreen: React.FC = () => {
                 style={styles.retryButton}
               />
             </View>
-          ) : vehicles.length === 0 ? (
+          </Card>
+        ) : vehicles.length === 0 ? (
+          <Card variant="elevated" style={styles.section}>
             <View style={styles.noVehiclesContainer}>
               <Typography variant="body" style={styles.noVehiclesText}>
                 {t('programs.noVehiclesAvailable', 'No vehicles available. Add a vehicle first.')}
@@ -241,46 +267,102 @@ const CreateProgramVehicleSelectionScreen: React.FC = () => {
                 style={styles.addVehicleButton}
               />
             </View>
-          ) : (
-            <View style={styles.vehicleSelector}>
-              {vehicles.map((vehicle) => (
-                <TouchableOpacity
-                  key={vehicle.id}
-                  style={[
-                    styles.checkboxOption,
-                    selectedVehicleIds.includes(vehicle.id) && styles.checkboxOptionSelected
-                  ]}
-                  onPress={() => handleVehicleSelection(vehicle.id)}
-                >
-                  <View style={styles.checkboxContent}>
-                    <View style={styles.vehicleInfo}>
-                      <Typography
-                        variant="body"
-                        style={[
-                          styles.checkboxText,
-                          selectedVehicleIds.includes(vehicle.id) && styles.checkboxTextSelected
-                        ]}
-                      >
-                        {getVehicleDisplayName(vehicle)}
-                      </Typography>
-                      {vehicleProgramCounts[vehicle.id] > 0 && (
-                        <View style={styles.programBadge}>
-                          <Typography variant="caption" style={styles.programBadgeText}>
-                            {vehicleProgramCounts[vehicle.id]} {vehicleProgramCounts[vehicle.id] === 1 ? 'program' : 'programs'}
-                          </Typography>
-                        </View>
-                      )}
+          </Card>
+        ) : (
+          <>
+            {/* Vehicles without programs - for creating new programs */}
+            {(() => {
+              const vehiclesWithoutPrograms = vehicles.filter(vehicle => vehicleProgramCounts[vehicle.id] === 0);
+              
+              if (vehiclesWithoutPrograms.length > 0) {
+                return (
+                  <Card variant="elevated" style={styles.section}>
+                    <Typography variant="title" style={styles.sectionTitle}>
+                      {t('programs.selectVehicles', 'Select Vehicles')}
+                    </Typography>
+                    <Typography variant="body" style={styles.sectionSubtitle}>
+                      {t('programs.selectVehiclesMessage', 'Choose which vehicles this maintenance program applies to')}
+                    </Typography>
+                    
+                    <View style={styles.vehicleSelector}>
+                      {vehiclesWithoutPrograms.map((vehicle) => (
+                        <TouchableOpacity
+                          key={vehicle.id}
+                          style={[
+                            styles.checkboxOption,
+                            selectedVehicleIds.includes(vehicle.id) && styles.checkboxOptionSelected
+                          ]}
+                          onPress={() => handleVehicleSelection(vehicle.id)}
+                        >
+                          <View style={styles.checkboxContent}>
+                            <View style={styles.vehicleInfo}>
+                              <Typography
+                                variant="body"
+                                style={[
+                                  styles.checkboxText,
+                                  selectedVehicleIds.includes(vehicle.id) && styles.checkboxTextSelected
+                                ]}
+                              >
+                                {getVehicleDisplayName(vehicle)}
+                              </Typography>
+                            </View>
+                            <View style={[
+                              styles.checkboxSquare,
+                              selectedVehicleIds.includes(vehicle.id) && styles.checkboxSquareSelected
+                            ]} />
+                          </View>
+                        </TouchableOpacity>
+                      ))}
                     </View>
-                    <View style={[
-                      styles.checkboxSquare,
-                      selectedVehicleIds.includes(vehicle.id) && styles.checkboxSquareSelected
-                    ]} />
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </Card>
+                  </Card>
+                );
+              }
+              return null;
+            })()}
+
+            {/* Vehicles with existing programs - for editing */}
+            {(() => {
+              const vehiclesWithPrograms = vehicles.filter(vehicle => vehicleProgramCounts[vehicle.id] > 0);
+              
+              if (vehiclesWithPrograms.length > 0) {
+                return (
+                  <Card variant="elevated" style={styles.section}>
+                    <Typography variant="title" style={styles.sectionTitle}>
+                      Select vehicle to edit or remove its program
+                    </Typography>
+                    
+                    <View style={styles.vehicleSelector}>
+                      {vehiclesWithPrograms.map((vehicle) => (
+                        <TouchableOpacity
+                          key={vehicle.id}
+                          style={styles.editVehicleOption}
+                          onPress={() => handleVehicleEdit(vehicle)}
+                        >
+                          <View style={styles.checkboxContent}>
+                            <View style={styles.vehicleInfo}>
+                              <Typography variant="body" style={styles.editVehicleText}>
+                                {getVehicleDisplayName(vehicle)}
+                              </Typography>
+                              <View style={styles.programBadge}>
+                                <Typography variant="caption" style={styles.programBadgeText}>
+                                  {vehicleProgramCounts[vehicle.id]} {vehicleProgramCounts[vehicle.id] === 1 ? 'program' : 'programs'}
+                                </Typography>
+                              </View>
+                            </View>
+                            <Typography variant="caption" style={styles.editHint}>
+                              Tap to edit
+                            </Typography>
+                          </View>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </Card>
+                );
+              }
+              return null;
+            })()}
+          </>
+        )}
       </ScrollView>
 
       {/* Continue Button */}
@@ -443,6 +525,25 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.medium,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  
+  // Edit Vehicle Styles
+  editVehicleOption: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    marginBottom: theme.spacing.sm,
+    backgroundColor: theme.colors.surface,
+  },
+  
+  editVehicleText: {
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  },
+  
+  editHint: {
+    color: theme.colors.primary,
+    fontWeight: theme.typography.fontWeight.medium,
   },
   
   // Footer
