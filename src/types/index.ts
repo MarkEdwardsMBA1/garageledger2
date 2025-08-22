@@ -12,6 +12,7 @@ export interface Vehicle {
   vin?: string;
   licensePlate?: string;
   color?: string;
+  nickname?: string;
   mileage: number;
   notes?: string;
   photoUri?: string;
@@ -71,6 +72,7 @@ export interface VehicleFormData {
   model: string;
   year: string;
   vin: string;
+  nickname: string;
   mileage: string;
   notes: string;
   photoUri: string;
@@ -117,6 +119,17 @@ export interface ProgramTask {
   estimatedCost?: number;
   reminderOffset?: number; // Days before due to remind
   isActive: boolean;
+  
+  // ===== ADVANCED MODE FIELDS (A2+ Implementation) =====
+  // Optional fields for backward compatibility with Basic mode
+  categoryKey?: string;      // Full category hierarchy key (e.g., 'brake-system')
+  subcategoryKey?: string;   // Specific subcategory key (e.g., 'brake-pads-rotors')
+  criticalityLevel?: 'low' | 'medium' | 'high' | 'critical'; // Advanced priority system
+  components?: {             // Component breakdown for advanced services
+    parts?: string[];
+    fluids?: string[];
+    labor?: string[];
+  };
 }
 
 export interface ProgramAssignment {
@@ -138,6 +151,42 @@ export interface VehicleConflict {
   existingPrograms: MaintenanceProgram[];
   affectedVehicleCount: number; // For multi-vehicle programs
 }
+
+// ===== ADVANCED SERVICES CONFIGURATION TYPES =====
+
+export interface BasicServiceConfiguration {
+  serviceId: string;
+  intervalType: 'mileage' | 'time' | 'dual';
+  mileageValue?: number;
+  timeValue?: number;
+  timeUnit?: 'days' | 'weeks' | 'months' | 'years';
+  dualCondition?: 'first' | 'last';
+}
+
+export interface AdvancedServiceConfiguration extends BasicServiceConfiguration {
+  // Enhanced Advanced Mode fields
+  categoryKey: string;
+  subcategoryKey: string;
+  displayName: string;
+  description?: string;
+  components?: {
+    parts?: string[];
+    fluids?: string[];
+    labor?: string[];
+  };
+  criticalityLevel?: 'low' | 'medium' | 'high' | 'critical';
+  costEstimate?: number;
+  reminderOffset?: number; // Days before due
+  isCustomService?: boolean; // User-created vs curated
+}
+
+// Union type for service configurations
+export type ServiceConfiguration = BasicServiceConfiguration | AdvancedServiceConfiguration;
+
+// Type guard to check if configuration is advanced
+export const isAdvancedConfiguration = (config: ServiceConfiguration): config is AdvancedServiceConfiguration => {
+  return 'categoryKey' in config && 'subcategoryKey' in config;
+};
 
 export interface ConflictDetectionResult {
   hasConflicts: boolean;

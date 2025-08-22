@@ -1,0 +1,25 @@
+import React from 'react';
+import Svg, { Rect, Path } from 'react-native-svg';
+
+interface LightningBoltIconProps {
+  size?: number;
+  color?: string;
+}
+
+export const LightningBoltIcon: React.FC<LightningBoltIconProps> = ({ 
+  size = 24, 
+  color = '#1e40af' 
+}) => {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Rect x="0" y="0" width="24" height="24" fill="none" />
+      <Path
+        d="M6.8618,11.2764 L10.8618,3.27639 C10.9465,3.107 11.1196,3 11.309,3 L17.0397,3 C17.4442,3 17.6813,3.45534 17.4493,3.78673 L15.0507,7.21327 C14.8187,7.54466 15.0558,8 15.4603,8 L16.9129,8 C17.3401,8 17.5705,8.50106 17.2925,8.8254 L7.96557,19.7068 C7.59763,20.1361 6.91173,19.7207 7.1217,19.1957 L9.72572,12.6857 C9.85709,12.3573 9.61522,12 9.26148,12 L7.30902,12 C6.93733,12 6.69558,11.6088 6.8618,11.2764 Z"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        fill="none"
+      />
+    </Svg>
+  );
+};

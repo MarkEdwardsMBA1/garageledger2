@@ -42,6 +42,7 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
     mileage: '',
     notes: '',
     photoUri: '',
+    nickname: '',
   });
 
   const [errors, setErrors] = useState<Partial<VehicleFormData>>({});
@@ -126,6 +127,7 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
         ...(formData.vin.trim() && { vin: formData.vin.trim() }),
         mileage: formData.mileage.trim() ? parseInt(formData.mileage.replace(/,/g, '')) : 0,
         ...(formData.notes.trim() && { notes: formData.notes.trim() }),
+        ...(formData.nickname.trim() && { nickname: formData.nickname.trim() }),
         ...(formData.photoUri && { photoUri: formData.photoUri }),
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -169,6 +171,7 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
         mileage: '',
         notes: '',
         photoUri: '',
+        nickname: '',
       });
 
       // Trigger email verification prompt for next session
@@ -235,26 +238,25 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
       <Card variant="elevated" style={styles.formCard}>
-        <Typography variant="title" style={styles.screenTitle}>
-          {t('vehicles.addNew', 'Add Vehicle')}
-        </Typography>
-        <Typography variant="body" style={styles.screenSubtitle}>
-          {t('vehicles.addDescription', 'Enter your vehicle information to start tracking maintenance.')}
-        </Typography>
-
-        {/* Basic Information */}
+        {/* Vehicle Information */}
         <View style={styles.section}>
           <Typography variant="heading" style={styles.sectionTitle}>
-            {t('vehicles.basicInfo', 'Basic Information')}
+            {t('vehicles.vehicleInfo', 'Vehicle Information')}
           </Typography>
           
+          <Input
+            label={t('vehicles.nickname', 'Nickname (Optional)')}
+            value={formData.nickname}
+            onChangeText={(value) => handleInputChange('nickname', value)}
+            placeholder={t('vehicles.nicknamePlaceholder', 'e.g., Lightning McQueen, Beast, Ruby')}
+          />
+
           <Input
             label={t('vehicles.make', 'Make')}
             value={formData.make}
             onChangeText={(value) => handleInputChange('make', value)}
             placeholder={t('vehicles.makePlaceholder', 'e.g., Toyota, Honda, Ford')}
             error={errors.make}
-            required
           />
 
           <Input
@@ -263,7 +265,6 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
             onChangeText={(value) => handleInputChange('model', value)}
             placeholder={t('vehicles.modelPlaceholder', 'e.g., Camry, Civic, F-150')}
             error={errors.model}
-            required
           />
 
           <Input
@@ -274,53 +275,42 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
             keyboardType="numeric"
             maxLength={4}
             error={errors.year}
-            required
           />
         </View>
 
-        {/* Vehicle Details */}
-        <View style={styles.section}>
-          <Typography variant="heading" style={styles.sectionTitle}>
-            {t('vehicles.details', 'Vehicle Details')}
-          </Typography>
-
           <Input
-            label={t('vehicles.vin', 'VIN')}
+            label={t('vehicles.vin', 'VIN (Optional)')}
             value={formData.vin}
             onChangeText={(value) => handleInputChange('vin', value.toUpperCase())}
             placeholder={t('vehicles.vinPlaceholder', 'Vehicle Identification Number')}
             maxLength={17}
             error={errors.vin}
-            helperText={t('vehicles.vinHelper', 'Optional - helps with parts and recalls')}
           />
 
           <Input
-            label={t('vehicles.mileage', 'Current Mileage')}
+            label={t('vehicles.mileage', 'Mileage (Optional)')}
             value={formData.mileage}
             onChangeText={(value) => handleInputChange('mileage', value)}
             placeholder={t('vehicles.mileagePlaceholder', 'e.g., 50000')}
             keyboardType="numeric"
             error={errors.mileage}
-            helperText={t('vehicles.mileageHelper', 'Optional - helps with maintenance scheduling')}
           />
 
           <Input
-            label={t('vehicles.notes', 'Notes')}
+            label={t('vehicles.notes', 'Notes (Optional)')}
             value={formData.notes}
             onChangeText={(value) => handleInputChange('notes', value)}
             placeholder={t('vehicles.notesPlaceholder', 'Any additional information...')}
             multiline
             numberOfLines={3}
-            helperText={t('vehicles.notesHelper', 'Optional - color, trim, modifications, etc.')}
           />
 
           <PhotoPicker
             photoUri={formData.photoUri}
             onPhotoSelected={handlePhotoSelected}
             onPhotoRemoved={handlePhotoRemoved}
-            placeholder={t('vehicles.photo', 'Photo')}
+            placeholder={t('vehicles.photo', 'Photo (Optional)')}
           />
-        </View>
       </Card>
 
       </ScrollView>

@@ -45,7 +45,7 @@ const CreateProgramDetailsScreen: React.FC = () => {
     if (selectedVehicles.length === 1) {
       const vehicle = selectedVehicles[0];
       const vehicleName = getVehicleDisplayName(vehicle);
-      setProgramName(`${vehicleName} Maintenance`);
+      setProgramName(`${vehicleName} Maintenance Program`);
     } else if (selectedVehicles.length > 1) {
       setProgramName(t('programs.multiVehicleProgram', 'Multi-Vehicle Maintenance Program'));
     }

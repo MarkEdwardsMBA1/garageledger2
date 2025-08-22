@@ -158,7 +158,7 @@ const ProgramDetailScreen: React.FC = () => {
         [
           {
             text: t('common.ok', 'OK'),
-            onPress: () => navigation.navigate('Programs')
+            onPress: () => navigation.navigate('ProgramsList')
           }
         ]
       );

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../utils/theme';
 import { Typography } from '../components/common/Typography';
 import { Card } from '../components/common/Card';
@@ -23,8 +24,11 @@ import { SegmentedControl } from '../components/common/SegmentedControl';
 import { ChipsGroup } from '../components/common/ChipsGroup';
 import { QuickPicks } from '../components/common/QuickPicks';
 import { programRepository } from '../repositories/SecureProgramRepository';
-import { MaintenanceProgram, ProgramTask, Vehicle } from '../types';
+import { MaintenanceProgram, ProgramTask, Vehicle, AdvancedServiceConfiguration } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import { CategorySearch } from '../components/common/CategorySearch';
+import { CategoryGrid } from '../components/common/CategoryGrid';
+import { getOrderedCategoryData, searchCategories, CategoryDisplayData } from '../utils/CategoryIconMapping';
 
 interface RouteParams {
   selectedVehicleIds: string[];
@@ -191,9 +195,11 @@ const ServiceConfigBottomSheet: React.FC<ServiceConfigBottomSheetProps> = ({
     if (!visible) return;
 
     const keyboardWillShow = Keyboard.addListener('keyboardWillShow', (e) => {
-      // Animate bottom sheet up by a portion of keyboard height
+      // More aggressive lift for single modes, moderate for dual mode
+      const liftPercentage = intervalType === 'dual' ? 0.6 : 0.8; // 80% for single modes, 60% for dual
+      
       Animated.timing(bottomSheetTranslateY, {
-        toValue: -e.endCoordinates.height * 0.4, // Move up 40% of keyboard height
+        toValue: -e.endCoordinates.height * liftPercentage,
         duration: e.duration || 250,
         useNativeDriver: true,
       }).start();
@@ -305,7 +311,10 @@ const ServiceConfigBottomSheet: React.FC<ServiceConfigBottomSheetProps> = ({
               Configure service reminder:
             </Typography>
             
-            <View style={bottomSheetStyles.sentenceContainer}>
+            <View style={[
+              bottomSheetStyles.sentenceContainer,
+              intervalType === 'dual' && bottomSheetStyles.sentenceContainerCompact
+            ]}>
               {/* Mileage Section */}
               {(intervalType === 'mileage' || intervalType === 'dual') && (
                 <View>
@@ -321,24 +330,21 @@ const ServiceConfigBottomSheet: React.FC<ServiceConfigBottomSheetProps> = ({
                       placeholder="5,000"
                     />
                     <Typography variant="body" style={bottomSheetStyles.sentenceText}>
-                      miles
+                      miles{intervalType === 'dual' ? ' or' : ''}
                     </Typography>
                   </View>
                   
                   <QuickPicks
                     values={mileageQuickPicks}
                     onSelect={(value) => setMileageValue(value.toString())}
-                    style={bottomSheetStyles.chipsContainer}
+                    style={intervalType === 'dual' 
+                      ? bottomSheetStyles.chipsContainerCompact 
+                      : bottomSheetStyles.chipsContainer
+                    }
                   />
                 </View>
               )}
 
-              {/* Or Text for Dual Mode */}
-              {intervalType === 'dual' && (
-                <Typography variant="body" style={bottomSheetStyles.orText}>
-                  or
-                </Typography>
-              )}
 
               {/* Time Section */}
               {(intervalType === 'time' || intervalType === 'dual') && (
@@ -358,14 +364,20 @@ const ServiceConfigBottomSheet: React.FC<ServiceConfigBottomSheetProps> = ({
                       options={timeUnitOptions}
                       selectedKey={timeUnit}
                       onSelect={(key) => setTimeUnit(key as 'days' | 'weeks' | 'months' | 'years')}
-                      style={bottomSheetStyles.chipsContainer}
+                      style={intervalType === 'dual' 
+                        ? bottomSheetStyles.chipsContainerCompact 
+                        : bottomSheetStyles.chipsContainer
+                      }
                     />
                   </View>
                   
                   <QuickPicks
                     values={timeQuickPicks}
                     onSelect={(value) => setTimeValue(value.toString())}
-                    style={bottomSheetStyles.chipsContainer}
+                    style={intervalType === 'dual' 
+                      ? bottomSheetStyles.chipsContainerCompact 
+                      : bottomSheetStyles.chipsContainer
+                    }
                     label={`Quick picks (${timeUnit}):`}
                   />
                 </View>
@@ -373,7 +385,7 @@ const ServiceConfigBottomSheet: React.FC<ServiceConfigBottomSheetProps> = ({
 
               {/* Dual Mode Explanation */}
               {intervalType === 'dual' && (
-                <Typography variant="bodySmall" style={bottomSheetStyles.dualExplanation}>
+                <Typography variant="bodySmall" style={bottomSheetStyles.dualExplanationCompact}>
                   Whichever comes first
                 </Typography>
               )}
@@ -415,6 +427,8 @@ const ServiceConfigBottomSheet: React.FC<ServiceConfigBottomSheetProps> = ({
   );
 };
 
+type ServiceTab = 'basic' | 'advanced';
+
 /**
  * Create Program - Step 3: Service Selection Screen
  * Final step for selecting maintenance services and intervals
@@ -424,15 +438,33 @@ const CreateProgramServicesScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const route = useRoute();
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
   const { selectedVehicleIds, selectedVehicles, programName, programDescription } = route.params as RouteParams;
+  
+  // Tab state
+  const [activeTab, setActiveTab] = useState<ServiceTab>('basic');
   
   // Service configuration state (Basic Mode)
   const [serviceConfigurations, setServiceConfigurations] = useState<Map<string, ServiceConfiguration>>(new Map());
   const [loading, setLoading] = useState(false);
   
+  // Advanced mode state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [selectedServices, setSelectedServices] = useState<Set<string>>(new Set());
+  const [advancedServiceConfigs, setAdvancedServiceConfigs] = useState<Map<string, AdvancedServiceConfiguration>>(new Map());
+  
   // Bottom sheet state
   const [selectedServiceForConfig, setSelectedServiceForConfig] = useState<CuratedService | null>(null);
   const [showConfigSheet, setShowConfigSheet] = useState(false);
+  
+  // Advanced tab bottom sheet state
+  const [advancedConfigService, setAdvancedConfigService] = useState<{
+    serviceKey: string;
+    serviceName: string;
+    categoryName: string;
+    wasJustSelected: boolean;  // Track if this was just selected or was already selected
+  } | null>(null);
 
   // Handle service card tap (opens bottom sheet for configuration)
   const handleServiceCardTap = (service: CuratedService) => {
@@ -442,27 +474,168 @@ const CreateProgramServicesScreen: React.FC = () => {
 
   // Handle service configuration save
   const handleConfigurationSave = (config: ServiceConfiguration) => {
-    setServiceConfigurations(prev => {
-      const updated = new Map(prev);
-      updated.set(config.serviceId, config);
-      return updated;
-    });
+    if (advancedConfigService) {
+      // This is an advanced service configuration
+      const advancedConfig = convertBasicToAdvancedConfig(
+        config, 
+        advancedConfigService.serviceKey, 
+        advancedConfigService.serviceName, 
+        advancedConfigService.categoryName
+      );
+      setAdvancedServiceConfigs(prev => {
+        const updated = new Map(prev);
+        updated.set(advancedConfig.serviceId, advancedConfig);
+        return updated;
+      });
+      setAdvancedConfigService(null);
+    } else {
+      // This is a basic service configuration
+      setServiceConfigurations(prev => {
+        const updated = new Map(prev);
+        updated.set(config.serviceId, config);
+        return updated;
+      });
+      setSelectedServiceForConfig(null);
+    }
     setShowConfigSheet(false);
-    setSelectedServiceForConfig(null);
   };
 
   // Handle service removal
   const handleServiceRemove = (serviceId: string) => {
-    setServiceConfigurations(prev => {
-      const updated = new Map(prev);
-      updated.delete(serviceId);
+    if (advancedConfigService && serviceId === advancedConfigService.serviceKey) {
+      // This is an advanced service removal
+      setAdvancedServiceConfigs(prev => {
+        const updated = new Map(prev);
+        updated.delete(serviceId);
+        return updated;
+      });
+      setSelectedServices(prev => {
+        const updated = new Set(prev);
+        updated.delete(serviceId);
+        return updated;
+      });
+      setAdvancedConfigService(null);
+    } else {
+      // This is a basic service removal
+      setServiceConfigurations(prev => {
+        const updated = new Map(prev);
+        updated.delete(serviceId);
+        return updated;
+      });
+      setSelectedServiceForConfig(null);
+    }
+    setShowConfigSheet(false);
+  };
+
+  // Advanced mode handlers
+  const handleToggleExpand = (categoryKey: string) => {
+    setExpandedCategories(prev => {
+      const updated = new Set(prev);
+      if (updated.has(categoryKey)) {
+        updated.delete(categoryKey);
+      } else {
+        updated.add(categoryKey);
+      }
       return updated;
     });
   };
 
+  const handleServiceToggle = (serviceKey: string) => {
+    setSelectedServices(prev => {
+      const updated = new Set(prev);
+      if (updated.has(serviceKey)) {
+        updated.delete(serviceKey);
+        // Also remove configuration when service is deselected
+        setAdvancedServiceConfigs(configPrev => {
+          const configUpdated = new Map(configPrev);
+          configUpdated.delete(serviceKey);
+          return configUpdated;
+        });
+      } else {
+        updated.add(serviceKey);
+      }
+      return updated;
+    });
+  };
+
+  // Advanced service configuration handlers
+  const handleAdvancedServiceConfigSave = (config: AdvancedServiceConfiguration) => {
+    setAdvancedServiceConfigs(prev => {
+      const updated = new Map(prev);
+      updated.set(config.serviceId, config);
+      return updated;
+    });
+  };
+
+  const handleAdvancedServiceConfigRemove = (serviceKey: string) => {
+    setAdvancedServiceConfigs(prev => {
+      const updated = new Map(prev);
+      updated.delete(serviceKey);
+      return updated;
+    });
+    // Also remove from selected services
+    setSelectedServices(prev => {
+      const updated = new Set(prev);
+      updated.delete(serviceKey);
+      return updated;
+    });
+  };
+
+  // Handle advanced service configuration (using Basic tab's bottom sheet)
+  const handleAdvancedServiceConfigure = (serviceKey: string, serviceName: string, categoryName: string, wasJustSelected: boolean = false) => {
+    setAdvancedConfigService({ serviceKey, serviceName, categoryName, wasJustSelected });
+    setShowConfigSheet(true);
+  };
+
+  // Create adapter to convert advanced service to Basic tab format
+  const createAdvancedServiceAdapter = (serviceKey: string, serviceName: string, categoryName: string): CuratedService => {
+    return {
+      id: serviceKey,
+      name: serviceName,
+      category: categoryName,
+      description: `${serviceName} maintenance`,
+      defaultMileage: 10000,
+      defaultTimeValue: 12,
+      defaultTimeUnit: 'months',
+      intervalType: 'dual'
+    };
+  };
+
+  // Convert AdvancedServiceConfiguration to Basic ServiceConfiguration
+  const convertAdvancedToBasicConfig = (advancedConfig: AdvancedServiceConfiguration): ServiceConfiguration => {
+    return {
+      serviceId: advancedConfig.serviceId,
+      intervalType: advancedConfig.intervalType,
+      mileageValue: advancedConfig.mileageValue,
+      timeValue: advancedConfig.timeValue,
+      timeUnit: advancedConfig.timeUnit,
+      dualCondition: advancedConfig.intervalType === 'dual' ? 'first' : undefined,
+    };
+  };
+
+  // Convert Basic ServiceConfiguration to AdvancedServiceConfiguration
+  const convertBasicToAdvancedConfig = (basicConfig: ServiceConfiguration, serviceKey: string, serviceName: string, categoryName: string): AdvancedServiceConfiguration => {
+    return {
+      serviceId: basicConfig.serviceId,
+      categoryKey: serviceKey.split('.')[0],
+      subcategoryKey: serviceKey.split('.')[1],
+      displayName: serviceName,
+      intervalType: basicConfig.intervalType,
+      mileageValue: basicConfig.mileageValue,
+      timeValue: basicConfig.timeValue,
+      timeUnit: basicConfig.timeUnit,
+      reminderOffset: 7,
+      criticalityLevel: 'medium',
+      isCustomService: false,
+    };
+  };
+
   // Form validation
   const validateServices = (): boolean => {
-    if (serviceConfigurations.size === 0) {
+    const hasBasicServices = serviceConfigurations.size > 0;
+    const hasAdvancedServices = advancedServiceConfigs.size > 0;
+    
+    if (!hasBasicServices && !hasAdvancedServices) {
       Alert.alert(
         t('validation.required', 'Required'), 
         t('programs.servicesRequired', 'Please configure at least one service for this program')
@@ -480,9 +653,12 @@ const CreateProgramServicesScreen: React.FC = () => {
 
   // Create program tasks from configured services
   const createProgramTasks = (): ProgramTask[] => {
-    return Array.from(serviceConfigurations.values()).map(config => {
+    const tasks: ProgramTask[] = [];
+
+    // Add tasks from Basic tab configurations
+    Array.from(serviceConfigurations.values()).forEach(config => {
       const service = CURATED_SERVICES.find(s => s.id === config.serviceId);
-      if (!service) throw new Error(`Service not found: ${config.serviceId}`);
+      if (!service) throw new Error(`Basic service not found: ${config.serviceId}`);
 
       const task: ProgramTask = {
         id: `task_${Date.now()}_${Math.random().toString(36).substring(7)}`,
@@ -497,8 +673,28 @@ const CreateProgramServicesScreen: React.FC = () => {
         isActive: true,
       };
 
-      return task;
+      tasks.push(task);
     });
+
+    // Add tasks from Advanced tab configurations
+    Array.from(advancedServiceConfigs.values()).forEach(config => {
+      const task: ProgramTask = {
+        id: `task_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+        name: config.displayName,
+        description: config.description || `${config.displayName} maintenance`,
+        category: config.categoryKey,
+        intervalType: config.intervalType,
+        intervalValue: config.mileageValue || 0,
+        timeIntervalValue: config.timeValue || 0,
+        timeIntervalUnit: config.timeUnit || 'months',
+        reminderOffset: config.reminderOffset || 7,
+        isActive: true,
+      };
+
+      tasks.push(task);
+    });
+
+    return tasks;
   };
 
   // Handle program creation
@@ -529,17 +725,14 @@ const CreateProgramServicesScreen: React.FC = () => {
         [
           {
             text: t('programs.assignToVehicles', 'Assign to Vehicles'),
-            onPress: () => navigation.navigate('Programs', {
-              screen: 'AssignProgramToVehicles',
-              params: { 
-                programId: createdProgram.id,
-                programName: createdProgram.name 
-              }
+            onPress: () => navigation.navigate('AssignProgramToVehicles', { 
+              programId: createdProgram.id,
+              programName: createdProgram.name 
             })
           },
           {
             text: t('common.done', 'Done'),
-            onPress: () => navigation.navigate('Programs'),
+            onPress: () => navigation.navigate('ProgramsList'),
             style: 'cancel'
           }
         ]
@@ -554,6 +747,12 @@ const CreateProgramServicesScreen: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Tab options configuration
+  const tabOptions = [
+    { key: 'basic', label: t('programs.basic', 'Basic') },
+    { key: 'advanced', label: t('programs.advanced', 'Advanced') },
+  ];
 
   // Get display name for vehicle
   const getVehicleDisplayName = (vehicle: Vehicle): string => {
@@ -584,64 +783,92 @@ const CreateProgramServicesScreen: React.FC = () => {
           </Typography>
         </Card>
 
-        {/* Basic Mode: Curated Service Cards */}
-        <View style={styles.servicesContainer}>
-          <Typography variant="heading" style={styles.sectionTitle}>
-            {t('programs.selectServices', 'Select Services')}
-          </Typography>
-          <Typography variant="caption" style={styles.sectionSubtitle}>
-            {t('programs.tapToConfigureService', 'Tap a service card to configure reminders')}
-          </Typography>
-          
-          <View style={styles.serviceGrid}>
-            {CURATED_SERVICES.map((service) => {
-              const isConfigured = serviceConfigurations.has(service.id);
-              const config = serviceConfigurations.get(service.id);
-              
-              return (
-                <TouchableOpacity
-                  key={service.id}
-                  style={[
-                    styles.serviceCard,
-                    isConfigured && styles.serviceCardConfigured
-                  ]}
-                  onPress={() => handleServiceCardTap(service)}
-                >
-                  <View style={styles.serviceCardContent}>
-                    <Typography variant="subheading" style={styles.serviceCardTitle}>
-                      {service.name}
-                    </Typography>
-                    <Typography variant="caption" style={styles.serviceCardCategory}>
-                      {service.category}
-                    </Typography>
+        {/* Tab Navigation */}
+        <View style={styles.tabContainer}>
+          <SegmentedControl
+            options={tabOptions}
+            selectedKey={activeTab}
+            onSelect={(key) => setActiveTab(key as ServiceTab)}
+            style={styles.segmentedControl}
+          />
+        </View>
+
+        {/* Tab Content */}
+        {activeTab === 'basic' ? (
+          // Basic Mode: Existing Curated Service Cards
+          <View style={styles.servicesContainer}>
+            <Typography variant="heading" style={styles.sectionTitle}>
+              {t('programs.selectServices', 'Select Services')}
+            </Typography>
+            <Typography variant="caption" style={styles.sectionSubtitle}>
+              {t('programs.tapToConfigureService', 'Tap a service card to configure reminders')}
+            </Typography>
+            
+            <View style={styles.serviceGrid}>
+              {CURATED_SERVICES.map((service) => {
+                const isConfigured = serviceConfigurations.has(service.id);
+                const config = serviceConfigurations.get(service.id);
+                
+                return (
+                  <TouchableOpacity
+                    key={service.id}
+                    style={[
+                      styles.serviceCard,
+                      isConfigured && styles.serviceCardConfigured
+                    ]}
+                    onPress={() => handleServiceCardTap(service)}
+                  >
+                    <View style={styles.serviceCardContent}>
+                      <Typography variant="subheading" style={styles.serviceCardTitle}>
+                        {service.name}
+                      </Typography>
+                      <Typography variant="caption" style={styles.serviceCardCategory}>
+                        {service.category}
+                      </Typography>
+                      
+                      {isConfigured ? (
+                        <View style={styles.serviceCardSummary}>
+                          <Typography variant="caption" style={styles.serviceCardConfigText}>
+                            {config?.intervalType === 'mileage' && `Every ${formatNumber(config.mileageValue || 0)} miles`}
+                            {config?.intervalType === 'time' && `Every ${config.timeValue} ${config.timeUnit}`}
+                            {config?.intervalType === 'dual' && `Every ${formatNumber(config.mileageValue || 0)} miles or ${config.timeValue} ${config.timeUnit}`}
+                          </Typography>
+                        </View>
+                      ) : (
+                        <View style={styles.serviceCardDefault}>
+                          <Typography variant="caption" style={styles.serviceCardDefaultText}>
+                            Tap to configure
+                          </Typography>
+                        </View>
+                      )}
+                    </View>
                     
-                    {isConfigured ? (
-                      <View style={styles.serviceCardSummary}>
-                        <Typography variant="caption" style={styles.serviceCardConfigText}>
-                          {config?.intervalType === 'mileage' && `Every ${formatNumber(config.mileageValue || 0)} miles`}
-                          {config?.intervalType === 'time' && `Every ${config.timeValue} ${config.timeUnit}`}
-                          {config?.intervalType === 'dual' && `Every ${formatNumber(config.mileageValue || 0)} miles or ${config.timeValue} ${config.timeUnit}`}
-                        </Typography>
-                      </View>
-                    ) : (
-                      <View style={styles.serviceCardDefault}>
-                        <Typography variant="caption" style={styles.serviceCardDefaultText}>
-                          Tap to configure
-                        </Typography>
+                    {isConfigured && (
+                      <View style={styles.serviceCardCheck}>
+                        <View style={styles.checkMark} />
                       </View>
                     )}
-                  </View>
-                  
-                  {isConfigured && (
-                    <View style={styles.serviceCardCheck}>
-                      <View style={styles.checkMark} />
-                    </View>
-                  )}
-                </TouchableOpacity>
-              );
-            })}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
-        </View>
+        ) : (
+          // Advanced Mode: Category-Based Service Selection
+          <AdvancedCategoryMode 
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            expandedCategories={expandedCategories}
+            onToggleExpand={handleToggleExpand}
+            selectedServices={selectedServices}
+            onToggleService={handleServiceToggle}
+            serviceConfigs={advancedServiceConfigs}
+            onSaveServiceConfig={handleAdvancedServiceConfigSave}
+            onRemoveServiceConfig={handleAdvancedServiceConfigRemove}
+            onConfigureService={handleAdvancedServiceConfigure}
+          />
+        )}
+
       </ScrollView>
 
       {/* Create Program Button */}
@@ -649,25 +876,173 @@ const CreateProgramServicesScreen: React.FC = () => {
         <Button
           title={t('programs.createProgram', 'Create Program')}
           onPress={handleCreateProgram}
-          disabled={serviceConfigurations.size === 0}
+          disabled={serviceConfigurations.size === 0 && advancedServiceConfigs.size === 0}
           style={styles.createButton}
         />
       </View>
 
       {/* Bottom Sheet for Service Configuration */}
-      {selectedServiceForConfig && (
+      {(selectedServiceForConfig || advancedConfigService) && (
         <ServiceConfigBottomSheet
           visible={showConfigSheet}
-          service={selectedServiceForConfig}
-          existingConfig={serviceConfigurations.get(selectedServiceForConfig.id)}
+          service={
+            selectedServiceForConfig || 
+            createAdvancedServiceAdapter(
+              advancedConfigService!.serviceKey, 
+              advancedConfigService!.serviceName, 
+              advancedConfigService!.categoryName
+            )
+          }
+          existingConfig={
+            selectedServiceForConfig 
+              ? serviceConfigurations.get(selectedServiceForConfig.id)
+              : advancedConfigService && advancedServiceConfigs.get(advancedConfigService.serviceKey)
+                ? convertAdvancedToBasicConfig(advancedServiceConfigs.get(advancedConfigService.serviceKey)!)
+                : undefined
+          }
           onSave={handleConfigurationSave}
-          onCancel={() => setShowConfigSheet(false)}
-          onRemove={() => handleServiceRemove(selectedServiceForConfig.id)}
+          onCancel={() => {
+            // If this was an advanced service that was just selected, deselect it
+            if (advancedConfigService?.wasJustSelected) {
+              setSelectedServices(prev => {
+                const updated = new Set(prev);
+                updated.delete(advancedConfigService.serviceKey);
+                return updated;
+              });
+            }
+            
+            setShowConfigSheet(false);
+            setSelectedServiceForConfig(null);
+            setAdvancedConfigService(null);
+          }}
+          onRemove={() => {
+            const serviceId = selectedServiceForConfig?.id || advancedConfigService?.serviceKey;
+            if (serviceId) handleServiceRemove(serviceId);
+          }}
         />
       )}
     </View>
   );
 };
+
+// Format number with commas (helper function)
+const formatNumber = (num: number): string => {
+  return num.toLocaleString();
+};
+
+/**
+ * Advanced Category Mode Component
+ * Handles category-based service selection using the new UI components
+ */
+interface AdvancedCategoryModeProps {
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  expandedCategories: Set<string>;
+  onToggleExpand: (categoryKey: string) => void;
+  selectedServices: Set<string>;
+  onToggleService: (serviceKey: string) => void;
+  serviceConfigs: Map<string, AdvancedServiceConfiguration>;
+  onSaveServiceConfig: (config: AdvancedServiceConfiguration) => void;
+  onRemoveServiceConfig: (serviceKey: string) => void;
+  onConfigureService: (serviceKey: string, serviceName: string, categoryName: string, wasJustSelected?: boolean) => void;
+}
+
+const AdvancedCategoryMode: React.FC<AdvancedCategoryModeProps> = ({
+  searchQuery,
+  onSearchChange,
+  expandedCategories,
+  onToggleExpand,
+  selectedServices,
+  onToggleService,
+  serviceConfigs,
+  onSaveServiceConfig,
+  onRemoveServiceConfig,
+  onConfigureService,
+}) => {
+  const { t } = useTranslation();
+
+  // Get categories data
+  const allCategories = getOrderedCategoryData();
+  const filteredCategories = searchQuery ? searchCategories(searchQuery) : allCategories;
+
+  const handleCategoryPress = (categoryKey: string) => {
+    // For now, just expand/collapse the category
+    onToggleExpand(categoryKey);
+  };
+
+  return (
+    <View style={advancedModeStyles.container}>
+      <Typography variant="heading" style={advancedModeStyles.sectionTitle}>
+        {t('programs.advancedServices', 'Advanced Services')}
+      </Typography>
+      <Typography variant="caption" style={advancedModeStyles.sectionSubtitle}>
+        {t('programs.selectCategoriesServices', 'Select from comprehensive maintenance categories')}
+      </Typography>
+
+      {/* Search Bar */}
+      <CategorySearch
+        value={searchQuery}
+        onChangeText={onSearchChange}
+        placeholder={t('programs.searchCategoriesServices', 'Search categories and services...')}
+        testID="advanced-category-search"
+      />
+
+      {/* Category Grid */}
+      <CategoryGrid
+        categories={filteredCategories}
+        expandedCategories={expandedCategories}
+        selectedServices={selectedServices}
+        onCategoryPress={handleCategoryPress}
+        onToggleExpand={onToggleExpand}
+        onToggleService={onToggleService}
+        serviceConfigs={serviceConfigs}
+        onSaveServiceConfig={onSaveServiceConfig}
+        onRemoveServiceConfig={onRemoveServiceConfig}
+        onConfigureService={onConfigureService}
+        searchQuery={searchQuery}
+        testID="advanced-category-grid"
+      />
+
+      {/* Selection Summary */}
+      {selectedServices.size > 0 && (
+        <View style={advancedModeStyles.selectionSummary}>
+          <Typography variant="caption" style={advancedModeStyles.selectionText}>
+            {selectedServices.size} {selectedServices.size === 1 ? 'service' : 'services'} selected
+          </Typography>
+        </View>
+      )}
+    </View>
+  );
+};
+
+const advancedModeStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+
+  sectionTitle: {
+    color: theme.colors.text,
+    marginBottom: theme.spacing.sm,
+  },
+
+  sectionSubtitle: {
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.lg,
+  },
+
+  selectionSummary: {
+    backgroundColor: theme.colors.primaryLight || `${theme.colors.primary}08`,
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.sm,
+    marginTop: theme.spacing.md,
+  },
+
+  selectionText: {
+    color: theme.colors.primary,
+    fontWeight: theme.typography.fontWeight.medium,
+    textAlign: 'center',
+  },
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -700,6 +1075,30 @@ const styles = StyleSheet.create({
   
   summarySubtitle: {
     color: theme.colors.textSecondary,
+  },
+  
+  // Tab Container
+  tabContainer: {
+    marginBottom: theme.spacing.lg,
+  },
+  segmentedControl: {
+    // Tab styling handled by SegmentedControl component
+  },
+  
+  // Coming Soon Card for Advanced Tab
+  comingSoonCard: {
+    alignItems: 'center',
+    padding: theme.spacing.xl,
+  },
+  comingSoonTitle: {
+    color: theme.colors.text,
+    marginBottom: theme.spacing.md,
+    textAlign: 'center',
+  },
+  comingSoonDescription: {
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.base,
   },
   
   // Services Container
@@ -1029,6 +1428,23 @@ const bottomSheetStyles = StyleSheet.create({
     textAlign: 'center',
     fontStyle: 'italic',
     marginTop: theme.spacing.xs,
+  },
+
+  // Compact styles for dual mode
+  sentenceContainerCompact: {
+    gap: theme.spacing.sm, // Reduced from md to sm
+  },
+
+  chipsContainerCompact: {
+    marginTop: 4, // Reduced from theme.spacing.xs (8px) to 4px
+  },
+
+
+  dualExplanationCompact: {
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    fontStyle: 'italic',
+    marginTop: 4, // Reduced from theme.spacing.xs (8px) to 4px
   },
 });
 

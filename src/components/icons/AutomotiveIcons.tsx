@@ -841,6 +841,106 @@ export const BarChartIcon: React.FC<IconProps> = ({
   </Svg>
 );
 
+// Search Icon for filtering and search functionality
+export const SearchIcon: React.FC<IconProps> = ({ 
+  size = 24, 
+  color = '#666', 
+  strokeWidth = 2 
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Circle 
+      cx="11" 
+      cy="11" 
+      r="8"
+      stroke={color}
+      strokeWidth={strokeWidth}
+    />
+    <Path 
+      d="M21 21l-4.35-4.35"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+// X Circle Icon for clear/close functionality
+export const XCircleIcon: React.FC<IconProps & { onPress?: () => void }> = ({ 
+  size = 24, 
+  color = '#666', 
+  strokeWidth = 2,
+  onPress
+}) => (
+  <Svg 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none"
+    onPress={onPress}
+  >
+    <Circle 
+      cx="12" 
+      cy="12" 
+      r="10"
+      stroke={color}
+      strokeWidth={strokeWidth}
+    />
+    <Line 
+      x1="15" 
+      y1="9" 
+      x2="9" 
+      y2="15"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+    />
+    <Line 
+      x1="9" 
+      y1="9" 
+      x2="15" 
+      y2="15"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+    />
+  </Svg>
+);
+
+// Chevron Down Icon for dropdowns and expansion
+export const ChevronDownIcon: React.FC<IconProps> = ({ 
+  size = 24, 
+  color = '#666', 
+  strokeWidth = 2 
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path 
+      d="M6 9l6 6 6-6"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+// Check Icon for checkboxes and selected states
+export const CheckIcon: React.FC<IconProps> = ({ 
+  size = 24, 
+  color = '#666', 
+  strokeWidth = 2 
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path 
+      d="M20 6L9 17l-5-5"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
 
 export default {
   MaintenanceIcon,
@@ -872,4 +972,8 @@ export default {
   TrendingUpIcon,
   TrendingDownIcon,
   BarChartIcon,
+  SearchIcon,
+  XCircleIcon,
+  ChevronDownIcon,
+  CheckIcon,
 };

@@ -148,30 +148,53 @@ const VehicleHomeScreen: React.FC = () => {
     if (!vehicle) return null;
 
     return (
-      <Card variant="elevated" style={styles.headerCard}>
-        <View style={styles.vehicleInfo}>
-          <Typography variant="title" style={styles.vehicleName}>
-            {vehicle.year} {vehicle.make} {vehicle.model}
-          </Typography>
-          
-          {vehicle.mileage > 0 && (
-            <View style={styles.mileageContainer}>
-              <Typography variant="bodyLarge" style={styles.mileageLabel}>
-                📍 Current:
-              </Typography>
-              <Typography variant="bodyLarge" style={styles.mileageValue}>
-                {vehicle.mileage.toLocaleString()} {t('vehicles.miles', 'miles')}
-              </Typography>
-            </View>
-          )}
-          
-          {vehicle.notes && (
-            <Typography variant="bodySmall" style={styles.vehicleNotes}>
-              {vehicle.notes}
+      <TouchableOpacity
+        onPress={() => {
+          navigation.navigate('EditVehicle', { vehicleId: vehicle.id });
+        }}
+        activeOpacity={0.7}
+      >
+        <Card variant="elevated" style={styles.headerCard}>
+          <View style={styles.vehicleInfo}>
+            <Typography variant="title" style={styles.vehicleName}>
+              {vehicle.year} {vehicle.make} {vehicle.model}
             </Typography>
-          )}
-        </View>
-      </Card>
+            
+            {vehicle.mileage > 0 && (
+              <View style={styles.mileageContainer}>
+                <Typography variant="bodyLarge" style={styles.mileageLabel}>
+                  Current:
+                </Typography>
+                <Typography variant="bodyLarge" style={styles.mileageValue}>
+                  {vehicle.mileage.toLocaleString()} {t('vehicles.miles', 'miles')}
+                </Typography>
+              </View>
+            )}
+            
+            {vehicle.vin && (
+              <View style={styles.detailContainer}>
+                <Typography variant="bodySmall" style={styles.detailLabel}>
+                  VIN:
+                </Typography>
+                <Typography variant="bodySmall" style={styles.detailValue}>
+                  {vehicle.vin}
+                </Typography>
+              </View>
+            )}
+            
+            {vehicle.notes && (
+              <View style={styles.detailContainer}>
+                <Typography variant="bodySmall" style={styles.detailLabel}>
+                  Notes:
+                </Typography>
+                <Typography variant="bodySmall" style={styles.vehicleNotes}>
+                  {vehicle.notes}
+                </Typography>
+              </View>
+            )}
+          </View>
+        </Card>
+      </TouchableOpacity>
     );
   };
 
@@ -230,7 +253,7 @@ const VehicleHomeScreen: React.FC = () => {
       return (
         <Card variant="filled" style={styles.sectionCard}>
           <Typography variant="heading" style={styles.sectionTitle}>
-            📋 Maintenance Programs
+            📋 Assigned Maintenance Program
           </Typography>
           
           <EmptyState
@@ -250,7 +273,7 @@ const VehicleHomeScreen: React.FC = () => {
       <Card variant="elevated" style={styles.sectionCard}>
         <View style={styles.programsHeader}>
           <Typography variant="heading" style={styles.sectionTitle}>
-            📋 Active Programs ({programs.length})
+            📋 Assigned Maintenance Program ({programs.length})
           </Typography>
           
           <View style={styles.programsHeaderActions}>
@@ -535,8 +558,23 @@ const styles = StyleSheet.create({
   },
   vehicleNotes: {
     color: theme.colors.textSecondary,
-    textAlign: 'center',
     fontStyle: 'italic',
+    flex: 1,
+    textAlign: 'left',
+  },
+  detailContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: theme.spacing.xs,
+  },
+  detailLabel: {
+    color: theme.colors.textSecondary,
+    minWidth: 50,
+  },
+  detailValue: {
+    color: theme.colors.text,
+    flex: 1,
+    fontFamily: 'monospace',
   },
   sectionCard: {
     marginBottom: theme.spacing.lg,

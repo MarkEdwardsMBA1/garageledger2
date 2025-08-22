@@ -94,20 +94,7 @@ const VehiclesStack: React.FC = () => {
             title: 'Vehicle Details', // Will be updated with actual vehicle name when loaded
             headerBackTitle: 'Vehicles', // Shows arrow + parent name
             headerLeft: undefined, // Use default back button (ensures arrow shows)
-            headerRight: () => (
-              <TouchableOpacity
-                onPress={() => navigation.navigate('EditVehicle', { vehicleId: params?.vehicleId })}
-                style={{
-                  marginRight: theme.spacing.md,
-                  paddingHorizontal: theme.spacing.sm,
-                  paddingVertical: theme.spacing.xs,
-                }}
-              >
-                <Typography variant="label" style={{ color: theme.colors.surface }}>
-                  {t('common.edit', 'EDIT')}
-                </Typography>
-              </TouchableOpacity>
-            ),
+            headerRight: undefined,
           };
         }}
       />
