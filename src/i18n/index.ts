@@ -21,19 +21,10 @@ export type SupportedLanguage = keyof typeof AVAILABLE_LANGUAGES;
 // Language detection and persistence functions
 const languageDetector = {
   type: 'languageDetector' as const,
-  async: true,
-  detect: async (callback: (lng: string) => void) => {
+  async: false,
+  detect: () => {
     try {
-      // First try to get stored language preference
-      const storedLanguage = await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY);
-      
-      if (storedLanguage && Object.keys(AVAILABLE_LANGUAGES).includes(storedLanguage)) {
-        console.log('🌍 Using stored language:', storedLanguage);
-        callback(storedLanguage);
-        return;
-      }
-
-      // Fallback to device locale detection
+      // Use synchronous device locale detection for initial load
       const deviceLanguages = Localization.getLocales();
       const deviceLanguage = deviceLanguages[0]?.languageCode || 'en';
       
@@ -43,15 +34,15 @@ const languageDetector = {
         : 'en'; // Default to English
       
       console.log('🌍 Using device language:', supportedLanguage, 'from device:', deviceLanguage);
-      callback(supportedLanguage);
+      return supportedLanguage;
     } catch (error) {
       console.warn('🌍 Language detection failed, defaulting to English:', error);
-      callback('en');
+      return 'en';
     }
   },
   
   init: () => {
-    // No initialization needed for AsyncStorage
+    // No initialization needed
   },
   
   cacheUserLanguage: async (lng: string) => {
@@ -64,9 +55,8 @@ const languageDetector = {
   }
 };
 
-// Initialize i18n
+// Initialize i18n with minimal config for now
 i18n
-  .use(languageDetector)
   .use(initReactI18next)
   .init({
     // Translation resources
@@ -75,11 +65,14 @@ i18n
       es: { translation: es }
     },
     
+    // Set default language directly
+    lng: 'en',
+    
     // Fallback language
     fallbackLng: 'en',
     
-    // Enable debug in development
-    debug: __DEV__,
+    // Disable debug to reduce noise
+    debug: false,
     
     // Interpolation settings
     interpolation: {

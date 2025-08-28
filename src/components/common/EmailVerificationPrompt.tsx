@@ -166,8 +166,8 @@ export const EmailVerificationPrompt: React.FC<EmailVerificationPromptProps> = (
 
 const styles = StyleSheet.create({
   container: {
-    borderColor: theme.colors.warning,
-    backgroundColor: '#fef3c7', // Light amber background
+    borderColor: theme.colors.warning, // Signal Orange
+    backgroundColor: theme.colors.backgroundSecondary, // Light automotive background
   },
   content: {
     padding: theme.spacing.md,

@@ -23,13 +23,13 @@ export const OnboardingFlowScreen: React.FC<OnboardingFlowProps> = ({
   const translateX = useRef(new Animated.Value(0)).current;
 
   const handleComplete = () => {
-    // Navigate to signup success after value proposition
-    navigation.navigate('SignUpSuccess' as never);
+    // Navigate to Welcome Choice screen (Step 1 of 2)
+    navigation.navigate('WelcomeChoice' as never);
   };
 
   const handleSkip = () => {
-    // Skip to signup success
-    navigation.navigate('SignUpSuccess' as never);
+    // Skip to welcome choice (users still need to authenticate)
+    navigation.navigate('WelcomeChoice' as never);
   };
 
   const handleNext = () => {

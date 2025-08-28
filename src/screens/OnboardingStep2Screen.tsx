@@ -7,7 +7,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Typography } from '../components/common/Typography';
 import { Button } from '../components/common/Button';
-import { MaintenanceIcon } from '../components/icons';
+import { OnboardingProgressIndicator } from '../components/common/OnboardingProgressIndicator';
+import { ChecklistIcon, ClipboardIcon } from '../components/icons';
 import { theme } from '../utils/theme';
 
 interface OnboardingStep2Props {
@@ -37,92 +38,28 @@ export const OnboardingStep2Screen: React.FC<OnboardingStep2Props> = ({
         }
       ]}>
         {/* Progress indicator */}
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: '66%' }]} />
-          </View>
-          <Typography variant="caption" style={styles.progressText}>
-            Step 2 of 3
-          </Typography>
-        </View>
+        <OnboardingProgressIndicator currentStep={2} totalSteps={3} />
 
         {/* Hero Visual */}
         <View style={styles.heroContainer}>
-          {/* Dashboard-style visual */}
-          <View style={styles.dashboardContainer}>
-            {/* Central maintenance icon */}
-            <View style={styles.centerIcon}>
-              <MaintenanceIcon size={80} color={theme.colors.primary} />
-            </View>
-            
-            {/* Reminder indicators around the center */}
-            <View style={[styles.reminderIndicator, styles.indicator1]}>
-              <View style={[styles.reminderDot, styles.dueSoon]} />
-              <Typography variant="caption" style={styles.reminderText}>
-                Oil Change
-              </Typography>
-              <Typography variant="caption" style={styles.dueDateText}>
-                Due in 500 mi
-              </Typography>
-            </View>
-            
-            <View style={[styles.reminderIndicator, styles.indicator2]}>
-              <View style={[styles.reminderDot, styles.good]} />
-              <Typography variant="caption" style={styles.reminderText}>
-                Inspection
-              </Typography>
-              <Typography variant="caption" style={styles.dueDateText}>
-                Good until May
-              </Typography>
-            </View>
-            
-            <View style={[styles.reminderIndicator, styles.indicator3]}>
-              <View style={[styles.reminderDot, styles.overdue]} />
-              <Typography variant="caption" style={styles.reminderText}>
-                Tire Rotation
-              </Typography>
-              <Typography variant="caption" style={styles.dueDateText}>
-                Past due
-              </Typography>
-            </View>
-            
-            {/* Clock/Calendar visual element */}
-            <View style={styles.clockElement}>
-              <MaintenanceIcon size={24} color={theme.colors.info} />
-            </View>
+          {/* Maintenance checklist visualization */}
+          <View style={styles.checklistContainer}>
+            <ChecklistIcon 
+              size={180} 
+              color={theme.colors.primary}
+              backgroundColor={theme.colors.surface}
+              checkmarkColor={theme.colors.secondary}
+              penColor={theme.colors.warning}
+              textColor={theme.colors.chrome}
+            />
           </View>
         </View>
 
         {/* Content */}
         <View style={styles.messageContainer}>
-          <Typography variant="title" style={styles.title}>
-            Stay on Top of Maintenance
-          </Typography>
-          
           <Typography variant="body" style={styles.message}>
-            Never wonder "when was my last oil change?" again. Smart reminders keep you ahead of the game and your car running smoothly.
+            Stay ahead of preventive maintenance services and estimated costs with programs and reminders.
           </Typography>
-          
-          <View style={styles.benefitsList}>
-            <View style={styles.benefitItem}>
-              <Typography variant="body" style={styles.benefitIcon}>⏰</Typography>
-              <Typography variant="body" style={styles.benefitText}>
-                Calendar and mileage-based reminders
-              </Typography>
-            </View>
-            <View style={styles.benefitItem}>
-              <Typography variant="body" style={styles.benefitIcon}>🎯</Typography>
-              <Typography variant="body" style={styles.benefitText}>
-                At-a-glance status for all your vehicles
-              </Typography>
-            </View>
-            <View style={styles.benefitItem}>
-              <Typography variant="body" style={styles.benefitIcon}>🛡️</Typography>
-              <Typography variant="body" style={styles.benefitText}>
-                Stay ahead of problems, avoid breakdowns
-              </Typography>
-            </View>
-          </View>
         </View>
 
         {/* Actions */}
@@ -188,7 +125,15 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
     marginVertical: theme.spacing.xl,
+  },
+  checklistContainer: {
+    position: 'relative',
+    width: 240,
+    height: 240,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   dashboardContainer: {
     position: 'relative',

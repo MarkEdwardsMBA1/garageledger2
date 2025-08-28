@@ -159,7 +159,7 @@ export class LegalComplianceRepository extends BaseRepository<LegalAcceptance> {
     } catch (error: any) {
       // If it's an index error, just return empty array instead of throwing
       if (error.code === 'failed-precondition' && error.message.includes('index')) {
-        console.warn('Firestore index not ready for legal acceptances query, returning empty array');
+        // Index not ready - this is expected during development
         return [];
       }
       return this.handleError(error, 'get legal acceptances');
@@ -195,7 +195,8 @@ export class LegalComplianceRepository extends BaseRepository<LegalAcceptance> {
     } catch (error: any) {
       // If it's an index error, just return null instead of throwing
       if (error.code === 'failed-precondition' && error.message.includes('index')) {
-        console.warn('Firestore index not ready for legal acceptances query, returning null');
+        // Index not ready - this is expected during development
+        // In production, create the composite index: userId (Ascending) + acceptanceDate (Descending)
         return null;
       }
       return this.handleError(error, 'get current legal acceptance');

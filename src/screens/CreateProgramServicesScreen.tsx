@@ -28,11 +28,15 @@ import { MaintenanceProgram, ProgramTask, Vehicle, AdvancedServiceConfiguration 
 import { useAuth } from '../contexts/AuthContext';
 import { CategorySearch } from '../components/common/CategorySearch';
 import { CategoryGrid } from '../components/common/CategoryGrid';
+import { CustomServiceBottomSheet } from '../components/programs/CustomServiceBottomSheet';
 import { getOrderedCategoryData, searchCategories, CategoryDisplayData } from '../utils/CategoryIconMapping';
 
 interface RouteParams {
   selectedVehicleIds: string[];
-  selectedVehicles: Vehicle[];
+  selectedVehicles: (Omit<Vehicle, 'createdAt' | 'updatedAt'> & {
+    createdAt: string;
+    updatedAt: string;
+  })[];
   programName: string;
   programDescription: string;
 }
@@ -439,7 +443,15 @@ const CreateProgramServicesScreen: React.FC = () => {
   const route = useRoute();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
-  const { selectedVehicleIds, selectedVehicles, programName, programDescription } = route.params as RouteParams;
+  const params = route.params as RouteParams;
+  const { selectedVehicleIds, programName, programDescription } = params;
+  
+  // Convert date strings back to Date objects for selectedVehicles
+  const selectedVehicles = params.selectedVehicles.map(vehicle => ({
+    ...vehicle,
+    createdAt: new Date(vehicle.createdAt),
+    updatedAt: new Date(vehicle.updatedAt),
+  }));
   
   // Tab state
   const [activeTab, setActiveTab] = useState<ServiceTab>('basic');
@@ -465,6 +477,10 @@ const CreateProgramServicesScreen: React.FC = () => {
     categoryName: string;
     wasJustSelected: boolean;  // Track if this was just selected or was already selected
   } | null>(null);
+  
+  // Custom service bottom sheet state
+  const [showCustomServiceSheet, setShowCustomServiceSheet] = useState(false);
+  const [pendingCustomServiceKey, setPendingCustomServiceKey] = useState<string | null>(null);
 
   // Handle service card tap (opens bottom sheet for configuration)
   const handleServiceCardTap = (service: CuratedService) => {
@@ -583,8 +599,57 @@ const CreateProgramServicesScreen: React.FC = () => {
 
   // Handle advanced service configuration (using Basic tab's bottom sheet)
   const handleAdvancedServiceConfigure = (serviceKey: string, serviceName: string, categoryName: string, wasJustSelected: boolean = false) => {
+    // Check if this is a custom service that needs special handling
+    if (serviceKey === 'custom-service.custom') {
+      setPendingCustomServiceKey(serviceKey);
+      setShowCustomServiceSheet(true);
+      return;
+    }
+    
     setAdvancedConfigService({ serviceKey, serviceName, categoryName, wasJustSelected });
     setShowConfigSheet(true);
+  };
+
+  // Handle custom service name creation
+  const handleCustomServiceSaved = (serviceName: string) => {
+    if (!pendingCustomServiceKey) return;
+    
+    // Create a unique service ID using the custom service name
+    const customServiceKey = `custom-service.${serviceName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+    
+    // Add to selected services
+    setSelectedServices(prev => {
+      const updated = new Set(prev);
+      // Remove the original pending key and add the new custom key
+      updated.delete(pendingCustomServiceKey);
+      updated.add(customServiceKey);
+      return updated;
+    });
+    
+    // Now open the interval configuration for this custom service
+    setAdvancedConfigService({ 
+      serviceKey: customServiceKey, 
+      serviceName: serviceName, 
+      categoryName: 'Custom Service Reminder', 
+      wasJustSelected: true 
+    });
+    setShowConfigSheet(true);
+    
+    // Reset custom service state
+    setPendingCustomServiceKey(null);
+  };
+
+  // Handle custom service cancellation
+  const handleCustomServiceCanceled = () => {
+    if (pendingCustomServiceKey) {
+      // Remove from selected services since user canceled
+      setSelectedServices(prev => {
+        const updated = new Set(prev);
+        updated.delete(pendingCustomServiceKey);
+        return updated;
+      });
+      setPendingCustomServiceKey(null);
+    }
   };
 
   // Create adapter to convert advanced service to Basic tab format
@@ -921,6 +986,16 @@ const CreateProgramServicesScreen: React.FC = () => {
           }}
         />
       )}
+
+      {/* Custom Service Bottom Sheet */}
+      <CustomServiceBottomSheet
+        isVisible={showCustomServiceSheet}
+        onServiceSaved={handleCustomServiceSaved}
+        onClose={() => {
+          setShowCustomServiceSheet(false);
+          handleCustomServiceCanceled();
+        }}
+      />
     </View>
   );
 };

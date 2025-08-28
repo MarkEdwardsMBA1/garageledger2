@@ -118,7 +118,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
 
   const handleGetStarted = async () => {
     await markWelcomeCompleted();
-    navigation.navigate('GoalsSetup' as never);
+    navigation.navigate('OnboardingFlow' as never);
   };
 
   const handleSignIn = () => {

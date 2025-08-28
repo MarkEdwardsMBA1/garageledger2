@@ -16,7 +16,7 @@ import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { Loading } from '../components/common/Loading';
 import { EmptyState } from '../components/common/ErrorState';
-import { ActivityIcon } from '../components/icons';
+import { ActivityIcon, ReportAnalysisIcon, Car91Icon } from '../components/icons';
 import { Typography } from '../components/common/Typography';
 import { maintenanceLogRepository } from '../repositories/FirebaseMaintenanceLogRepository';
 import { vehicleRepository } from '../repositories/VehicleRepository';
@@ -162,7 +162,7 @@ const MaintenanceScreen: React.FC = () => {
         <EmptyState
           title="No Vehicles to Track"
           message="Add your first vehicle to start building your fleet status"
-          icon="🚗"
+          icon={<Car91Icon size={64} color={theme.colors.textSecondary} />}
           primaryAction={{
             title: t('vehicles.addVehicle', 'Add Vehicle'),
             onPress: () => navigation.navigate('Vehicles', { screen: 'AddVehicle' }),
@@ -381,7 +381,7 @@ const MaintenanceScreen: React.FC = () => {
         <EmptyState
           title={t('maintenance.history.empty.title', 'No Maintenance History')}
           message="Visit your individual vehicles to start logging maintenance"
-          icon={<ActivityIcon size={48} color={theme.colors.textSecondary} />}
+          icon={<ReportAnalysisIcon size={64} color={theme.colors.textSecondary} />}
           primaryAction={{
             title: t('vehicles.title', 'View Vehicles'),
             onPress: () => navigation.navigate('Vehicles'),

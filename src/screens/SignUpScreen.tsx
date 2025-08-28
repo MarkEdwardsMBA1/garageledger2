@@ -57,11 +57,13 @@ export const SignUpScreen: React.FC = () => {
       newErrors.email = 'Please enter a valid email address';
     }
 
-    // Password validation - simplified for better UX
+    // Password validation - automotive-themed security
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Please create a password that meets the requirements below';
+    } else if (!/[\d\W]/.test(formData.password)) {
+      newErrors.password = 'Please create a password that meets the requirements below';
     }
 
     setErrors(newErrors);
@@ -91,8 +93,8 @@ export const SignUpScreen: React.FC = () => {
         displayName: formData.displayName.trim(),
       });
 
-      // Navigate to legal agreements screen (integrated, not blocking)
-      navigation.navigate('LegalAgreements' as never);
+      // Navigate to onboarding flow as step 1 of 5
+      navigation.navigate('OnboardingFlow' as never);
     } catch (error) {
       let message = error instanceof AuthError ? error.message : 'An unexpected error occurred';
       
@@ -127,15 +129,7 @@ export const SignUpScreen: React.FC = () => {
         ]}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Progress indicator */}
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: '60%' }]} />
-          </View>
-          <Typography variant="caption" style={styles.progressText}>
-            Step 3 of 5
-          </Typography>
-        </View>
+        {/* No progress indicator - this is now a sub-step of the Welcome Choice */}
 
         <View style={styles.header}>
           <Typography variant="title" style={styles.title}>
@@ -178,15 +172,24 @@ export const SignUpScreen: React.FC = () => {
             secureTextEntry
             autoComplete="password-new"
             textContentType="newPassword"
-            passwordRules="minlength: 6; maxlength: 128;"
+            passwordRules="minlength: 8; required: digit; maxlength: 128;"
             error={errors.password}
             testID="password-input"
           />
 
           <View style={styles.passwordRequirements}>
-            <Typography variant="caption" style={styles.requirementsText}>
-              • Password must be at least 6 characters
-            </Typography>
+            <View style={styles.requirementItem}>
+              <Typography variant="caption" style={styles.bulletText}>•</Typography>
+              <Typography variant="caption" style={styles.requirementsText}>
+                Secure your garage with at least 8 characters
+              </Typography>
+            </View>
+            <View style={styles.requirementItem}>
+              <Typography variant="caption" style={styles.bulletText}>•</Typography>
+              <Typography variant="caption" style={styles.requirementsText}>
+                Add a number or special character to strengthen your key
+              </Typography>
+            </View>
           </View>
 
           {/* Error Message Display */}
@@ -280,9 +283,21 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
     paddingHorizontal: theme.spacing.sm,
   },
-  requirementsText: {
+  requirementItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: theme.spacing.xs,
+  },
+  bulletText: {
     color: theme.colors.textSecondary,
-    lineHeight: 16,
+    marginRight: theme.spacing.sm,
+    width: 8, // Minimal width for bullet
+    textAlign: 'left',
+  },
+  requirementsText: {
+    flex: 1,
+    color: theme.colors.textSecondary,
+    lineHeight: 18,
   },
   errorContainer: {
     backgroundColor: theme.colors.error + '10', // 10% opacity

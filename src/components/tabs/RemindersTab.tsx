@@ -27,7 +27,8 @@ import {
   CarIcon, 
   CalendarIcon, 
   AlertTriangleIcon,
-  ChevronRightIcon 
+  ChevronRightIcon,
+  ReportAnalysisIcon 
 } from '../icons';
 import { 
   reminderCalculationService, 
@@ -248,71 +249,105 @@ export const RemindersTab: React.FC<RemindersTabProps> = ({ isActive = true }) =
     );
   };
 
+  // Render card-based empty state (similar to Vehicles screen)
+  const renderCardEmptyState = (iconComponent: React.ReactNode, message: string, actionTitle: string, actionPress: () => void) => {
+    return (
+      <View style={styles.emptyStateContainer}>
+        <Card variant="elevated" style={styles.emptyStateCard}>
+          <View style={styles.emptyStateContent}>
+            {/* Icon at the top */}
+            <View style={styles.emptyStateImageContainer}>
+              {iconComponent}
+            </View>
+            
+            {/* Text below the icon */}
+            <Typography variant="body" style={styles.emptyStateText}>
+              {message}
+            </Typography>
+          </View>
+        </Card>
+        
+        {/* CTA button below the card */}
+        <Button
+          title={actionTitle}
+          onPress={actionPress}
+          variant="primary"
+          style={styles.emptyStateCTAButton}
+        />
+      </View>
+    );
+  };
+
   // Render empty state
   const renderEmptyState = () => {
     const getEmptyStateContent = () => {
       if (vehicles.length === 0) {
-        return {
-          title: t('reminders.noVehicles', 'No Vehicles'),
-          message: t('reminders.noVehiclesMessage', 'Add vehicles to start tracking maintenance reminders'),
-          icon: <CarIcon size={48} color={theme.colors.textSecondary} />,
-          action: {
-            title: t('vehicles.addVehicle', 'Add Vehicle'),
-            onPress: () => navigation.navigate('Vehicles', { screen: 'AddVehicle' })
-          }
-        };
+        return renderCardEmptyState(
+          <ReportAnalysisIcon 
+            size={160} 
+            color={theme.colors.text}
+            screenColor={theme.colors.info} // Electric blue for main screen
+            keyboardColor={theme.colors.warning} // Signal orange for keyboard
+            phoneColor={theme.colors.luxury} // Titanium gray for secondary screen
+          />,
+          'This is where your insights and analytics will appear. Add vehicles and log maintenance to start generating insights.',
+          t('vehicles.addVehicle', 'Add Vehicle'),
+          () => navigation.navigate('Vehicles', { screen: 'AddVehicle' })
+        );
       }
 
       if (programs.length === 0) {
-        return {
-          title: t('reminders.noPrograms', 'No Maintenance Programs'),
-          message: t('reminders.noProgramsMessage', 'Create maintenance programs to get smart reminders'),
-          icon: <MaintenanceIcon size={48} color={theme.colors.textSecondary} />,
-          action: {
-            title: t('programs.createProgram', 'Create Program'),
-            onPress: () => navigation.navigate('Programs', { screen: 'CreateProgramVehicleSelection' })
-          }
-        };
+        return renderCardEmptyState(
+          <ReportAnalysisIcon 
+            size={160} 
+            color={theme.colors.text}
+            screenColor={theme.colors.info} // Electric blue for main screen
+            keyboardColor={theme.colors.warning} // Signal orange for keyboard
+            phoneColor={theme.colors.luxury} // Titanium gray for secondary screen
+          />,
+          'This is where your maintenance insights will appear. Add vehicles and log maintenance to start generating insights.',
+          t('programs.createProgram', 'Create Program'),
+          () => navigation.navigate('Programs', { screen: 'CreateProgramVehicleSelection' })
+        );
       }
 
       switch (filter) {
         case 'overdue':
-          return {
-            title: t('reminders.noOverdue', 'No Overdue Items'),
-            message: t('reminders.noOverdueMessage', 'Great! All your maintenance is up to date.'),
-            icon: '✅'
-          };
+          return (
+            <EmptyState
+              title={t('reminders.noOverdue', 'No Overdue Items')}
+              message={t('reminders.noOverdueMessage', 'Great! All your maintenance is up to date.')}
+              icon="✅"
+            />
+          );
         case 'due':
-          return {
-            title: t('reminders.noDue', 'Nothing Due'),
-            message: t('reminders.noDueMessage', 'No maintenance is due in the immediate future.'),
-            icon: '📅'
-          };
+          return (
+            <EmptyState
+              title={t('reminders.noDue', 'Nothing Due')}
+              message={t('reminders.noDueMessage', 'No maintenance is due in the immediate future.')}
+              icon="📅"
+            />
+          );
         case 'upcoming':
-          return {
-            title: t('reminders.noUpcoming', 'No Upcoming Reminders'),
-            message: t('reminders.noUpcomingMessage', 'All maintenance is up to date for now.'),
-            icon: '⏰'
-          };
+          return (
+            <EmptyState
+              title={t('reminders.noUpcoming', 'No Upcoming Reminders')}
+              message={t('reminders.noUpcomingMessage', 'All maintenance is up to date for now.')}
+              icon="⏰"
+            />
+          );
         default:
-          return {
-            title: t('reminders.noReminders', 'No Reminders'),
-            message: t('reminders.noRemindersMessage', 'All maintenance is up to date! Check back later.'),
-            icon: '🎉'
-          };
+          return (
+            <EmptyState
+              title={t('reminders.noReminders', 'No Reminders')}
+              message={t('reminders.noRemindersMessage', 'All maintenance is up to date! Check back later.')}
+              icon="🎉"
+            />
+          );
       }
     };
 
-    const content = getEmptyStateContent();
-    
-    return (
-      <EmptyState
-        title={content.title}
-        message={content.message}
-        icon={content.icon}
-        primaryAction={content.action}
-      />
-    );
+    return getEmptyStateContent();
   };
 
   if (loading) {
@@ -565,6 +600,41 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
+  },
+
+  // Empty state styles (matching Vehicles screen)
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: theme.spacing.xl,
+    paddingTop: theme.spacing.xl * 2,
+  },
+  emptyStateCard: {
+    width: '100%',
+    maxWidth: 320,
+    marginBottom: theme.spacing.xl,
+  },
+  emptyStateContent: {
+    alignItems: 'center',
+    paddingVertical: theme.spacing['2xl'],
+    paddingHorizontal: theme.spacing.lg,
+    minHeight: 280,
+  },
+  emptyStateImageContainer: {
+    marginBottom: theme.spacing.xl,
+  },
+  emptyStateText: {
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.text,
+    textAlign: 'center',
+    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.base,
+  },
+  emptyStateCTAButton: {
+    width: '100%',
+    maxWidth: 320,
+    minHeight: 48,
+    backgroundColor: theme.colors.primary, // Engine blue
   },
 });
 

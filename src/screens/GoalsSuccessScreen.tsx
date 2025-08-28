@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '../components/common/Button';
 import { Typography } from '../components/common/Typography';
 import { Card } from '../components/common/Card';
+import { SpannerIcon } from '../components/icons';
 import { theme } from '../utils/theme';
 import type { TrackingGoals } from './GoalsSetupScreen';
 
@@ -33,7 +34,7 @@ export const GoalsSuccessScreen: React.FC<any> = ({
     } else if (goalCount === 1) {
       const [goalKey] = selectedGoals[0];
       const goalMessages = {
-        maintenance: "Perfect! You'll never miss another oil change. 🔧",
+        maintenance: "Perfect! You'll never miss another oil change.",
         modifications: "Awesome! Track every upgrade and build progress. ⚡",
         fuel: "Smart! Monitor your fuel costs and efficiency. ⛽",
         reminders: "Great! Stay on top of maintenance schedules. ⏰"
@@ -46,16 +47,36 @@ export const GoalsSuccessScreen: React.FC<any> = ({
 
   // Get selected goals for display
   const getSelectedGoalsList = () => {
+    return Object.entries(goals)
+      .filter(([_, selected]) => selected)
+      .map(([key, _]) => ({ key, selected: true }));
+  };
+
+  // Render goal item with appropriate icon
+  const renderGoalItem = (goalKey: string, index: number) => {
     const goalLabels = {
-      maintenance: "🔧 Maintenance & Repairs",
+      maintenance: "Maintenance & Repairs",
       modifications: "⚡ Modifications & Upgrades", 
       fuel: "⛽ Fuel & Costs",
       reminders: "⏰ Reminders & Schedules"
     };
-    
-    return Object.entries(goals)
-      .filter(([_, selected]) => selected)
-      .map(([key, _]) => goalLabels[key as keyof typeof goalLabels]);
+
+    return (
+      <View key={index} style={styles.goalItem}>
+        {goalKey === 'maintenance' ? (
+          <View style={styles.goalItemWithIcon}>
+            <SpannerIcon size={16} color={theme.colors.text} />
+            <Typography variant="body" style={styles.goalTextWithIcon}>
+              {goalLabels[goalKey as keyof typeof goalLabels]}
+            </Typography>
+          </View>
+        ) : (
+          <Typography variant="body" style={styles.goalText}>
+            {goalLabels[goalKey as keyof typeof goalLabels]}
+          </Typography>
+        )}
+      </View>
+    );
   };
 
   const handleContinue = () => {
@@ -84,20 +105,14 @@ export const GoalsSuccessScreen: React.FC<any> = ({
             <View style={[styles.progressFill, { width: '40%' }]} />
           </View>
           <Typography variant="caption" style={styles.progressText}>
-            Step 1 Complete! 🎉
+            Step 1 Complete!
           </Typography>
         </View>
 
         {/* Success celebration */}
         <View style={styles.celebrationContainer}>
-          <Typography variant="title" style={styles.celebrationEmoji}>
-            🎉
-          </Typography>
           <Typography variant="title" style={styles.successTitle}>
-            Perfect!
-          </Typography>
-          <Typography variant="body" style={styles.successMessage}>
-            {getPersonalizedMessage()}
+            Congratulations, you're all set!
           </Typography>
         </View>
 
@@ -107,13 +122,9 @@ export const GoalsSuccessScreen: React.FC<any> = ({
             <Typography variant="heading" style={styles.goalsTitle}>
               Your tracking goals:
             </Typography>
-            {selectedGoalsList.map((goal, index) => (
-              <View key={index} style={styles.goalItem}>
-                <Typography variant="body" style={styles.goalText}>
-                  {goal}
-                </Typography>
-              </View>
-            ))}
+            {selectedGoalsList.map((goalObj, index) => 
+              renderGoalItem(goalObj.key, index)
+            )}
           </Card>
         )}
 
@@ -228,6 +239,15 @@ const styles = StyleSheet.create({
   goalText: {
     color: theme.colors.text,
     fontSize: theme.typography.fontSize.base,
+  },
+  goalItemWithIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  goalTextWithIcon: {
+    color: theme.colors.text,
+    fontSize: theme.typography.fontSize.base,
+    marginLeft: theme.spacing.sm,
   },
   nextStepsCard: {
     marginBottom: theme.spacing.xl,

@@ -1,5 +1,6 @@
 // Vehicles screen for managing user's vehicles
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -11,9 +12,9 @@ import { useTranslation } from 'react-i18next';
 import { theme } from '../utils/theme';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
-import { EmptyState } from '../components/common/ErrorState';
+import { AutomotiveErrorState } from '../components/common/AutomotiveErrorState';
 import { Loading } from '../components/common/Loading';
-import { CameraIcon, CarSilhouetteIcon } from '../components/icons';
+import { CameraIcon, CarSilhouetteIcon, Car91Icon } from '../components/icons';
 import { Vehicle } from '../types';
 import { vehicleRepository } from '../repositories/VehicleRepository';
 import { useAuth } from '../contexts/AuthContext';
@@ -29,20 +30,43 @@ interface VehiclesScreenProps {
 const VehiclesScreen: React.FC<VehiclesScreenProps> = ({ navigation }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const isFocused = useIsFocused();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Refs to prevent redundant API calls during Firebase Auth events
+  const isLoadingRef = useRef(false);
+  const lastLoadTimeRef = useRef<number>(0);
 
   const handleAddVehicle = () => {
     navigation.navigate('AddVehicle');
   };
 
+  const forceRefresh = () => {
+    // Allow refresh by resetting the deduplication timer
+    lastLoadTimeRef.current = 0;
+    isLoadingRef.current = false;
+    loadVehicles();
+  };
+
   const loadVehicles = async () => {
-    if (!user) {
-      setError(t('auth.required', 'Authentication required'));
+    // Double-check user is still authenticated before making any calls
+    if (!user?.uid) {
+      setVehicles([]);
+      setError(t('auth.required', 'Please sign in to continue'));
       setLoading(false);
       return;
     }
+
+    // Prevent redundant calls within 2 seconds (handles Firebase Auth persistence events)
+    const now = Date.now();
+    if (isLoadingRef.current || (now - lastLoadTimeRef.current < 2000)) {
+      return;
+    }
+
+    isLoadingRef.current = true;
+    lastLoadTimeRef.current = now;
 
     try {
       setLoading(true);
@@ -53,46 +77,80 @@ const VehiclesScreen: React.FC<VehiclesScreenProps> = ({ navigation }) => {
       console.log('Loaded vehicles for user:', user.uid, vehiclesData);
       setVehicles(vehiclesData);
     } catch (err: any) {
-      console.error('Error loading vehicles:', err);
-      
-      // Handle authentication errors specifically
+      // Silently handle auth errors during sign-out to avoid error flood
       if (err.message?.includes('Authentication required') || 
           err.message?.includes('auth') ||
           err.message?.includes('Unauthorized')) {
-        setError(t('auth.required', 'Please sign in to view your vehicles'));
+        // Don't log these during normal sign-out flow
+        setVehicles([]);
+        setError(t('auth.required', 'Please sign in to continue'));
+        // Reset refs on auth errors
+        lastLoadTimeRef.current = 0;
       } else if (err.message?.includes('network') || err.message?.includes('connection')) {
+        console.error('Network error loading vehicles:', err);
         setError(t('common.networkError', 'Network error. Please check your connection.'));
       } else {
+        console.error('Error loading vehicles:', err);
         setError(err.message || t('vehicles.loadError', 'Failed to load vehicles'));
       }
     } finally {
       setLoading(false);
+      isLoadingRef.current = false;
     }
   };
 
+  // Load vehicles only when screen is focused and user is authenticated  
   useEffect(() => {
-    // Load vehicles when screen mounts
-    loadVehicles();
-    
-    // Refresh vehicles when navigating back from Add Vehicle
-    const unsubscribe = navigation.addListener('focus', () => {
-      loadVehicles();
-    });
+    if (isFocused) {
+      if (user?.uid) {
+        loadVehicles();
+      } else {
+        // Clear data and show auth error for unauthenticated users
+        setVehicles([]);
+        setError(t('auth.required', 'Please sign in to continue'));
+        setLoading(false);
+        // Reset refs when user signs out
+        lastLoadTimeRef.current = 0;
+        isLoadingRef.current = false;
+      }
+    }
+  }, [isFocused, user?.uid]); // Run when screen focus or user ID changes
 
-    return unsubscribe;
-  }, [navigation]);
-
-  const renderEmptyState = () => (
-    <EmptyState
-      title={t('vehicles.empty.title', 'No Vehicles Yet')}
-      message={t('vehicles.empty.message', 'Add your first vehicle to get started with tracking maintenance.')}
-      icon="🚗"
-      primaryAction={{
-        title: t('vehicles.addVehicle', 'Add Vehicle'),
-        onPress: handleAddVehicle,
-      }}
-    />
-  );
+  const renderEmptyState = () => {
+    console.log('🚗 VehiclesScreen: Rendering custom empty state with card layout');
+    return (
+      <View style={styles.emptyStateContainer}>
+        <Card variant="elevated" style={styles.emptyStateCard}>
+          <View style={styles.emptyStateContent}>
+            {/* Vehicle image at the top */}
+            <View style={styles.emptyStateImageContainer}>
+              <Car91Icon 
+                size={160} 
+                color={theme.colors.text} // Tires - keep black
+                bodyColor={theme.colors.secondary} // Car body - racing green
+                windowColor={theme.colors.chrome} // Windows - chrome silver
+                outlineColor={theme.colors.text} // Car outline - darker contrast
+              />
+            </View>
+            
+            {/* Text below the image */}
+            <Text style={styles.emptyStateText}>
+              This is where your list of vehicles will appear. Click Add Vehicle to get started.
+            </Text>
+          </View>
+        </Card>
+        
+        {/* CTA button below the card */}
+        <Button
+          title="Add Vehicle"
+          onPress={handleAddVehicle}
+          variant="primary"
+          style={styles.emptyStateCTAButton}
+          testID="add-vehicle-empty-button"
+        />
+      </View>
+    );
+  };
 
   // Get vehicle title and subtitle for display
   const getVehicleDisplayInfo = (vehicle: Vehicle) => {
@@ -171,15 +229,33 @@ const VehiclesScreen: React.FC<VehiclesScreenProps> = ({ navigation }) => {
     </ScrollView>
   );
 
-  const renderError = () => (
-    <EmptyState
-      title={t('common.error', 'Error')}
-      message={error || t('vehicles.loadError', 'Failed to load vehicles')}
-      icon="⚠️"
-      showRetry
-      onRetry={loadVehicles}
-    />
-  );
+  const renderError = () => {
+    // Determine error type based on error message
+    const isAuthError = error?.includes('Authentication') || 
+                       error?.includes('sign in') || 
+                       error?.includes('auth');
+    const isNetworkError = error?.includes('network') || 
+                          error?.includes('connection');
+    
+    const errorType = isAuthError ? 'unauthorized' : 
+                     isNetworkError ? 'network' : 'error';
+    
+    return (
+      <AutomotiveErrorState
+        type={errorType}
+        title={isAuthError ? undefined : t('common.error', 'System Error')}
+        message={error || t('vehicles.loadError', 'Failed to load your vehicle data')}
+        showRetry={!isAuthError} // Don't show retry for auth errors
+        onRetry={isAuthError ? undefined : loadVehicles}
+        primaryAction={isAuthError ? {
+          title: t('auth.signIn', 'Sign In'),
+          onPress: () => navigation.navigate('Login'),
+          variant: 'primary'
+        } : undefined}
+        useCard={true}
+      />
+    );
+  };
 
   if (loading) {
     return (
@@ -278,6 +354,40 @@ const styles = StyleSheet.create({
   mileageText: {
     color: theme.colors.textSecondary,
     fontSize: theme.typography.fontSize.sm,
+  },
+  // Empty state styles
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: theme.spacing.xl,
+    paddingTop: theme.spacing.xl * 2,
+  },
+  emptyStateCard: {
+    width: '100%',
+    maxWidth: 320,
+    marginBottom: theme.spacing.xl,
+  },
+  emptyStateContent: {
+    alignItems: 'center',
+    paddingVertical: theme.spacing['2xl'],
+    paddingHorizontal: theme.spacing.lg,
+    minHeight: 280,
+  },
+  emptyStateImageContainer: {
+    marginBottom: theme.spacing.xl,
+  },
+  emptyStateText: {
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.text,
+    textAlign: 'center',
+    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.base,
+  },
+  emptyStateCTAButton: {
+    width: '100%',
+    maxWidth: 320,
+    minHeight: 48,
+    backgroundColor: theme.colors.primary, // Engine blue
   },
 });
 

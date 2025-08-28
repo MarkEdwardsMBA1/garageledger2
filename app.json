@@ -13,9 +13,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.edwards1m.garageledger2"
     },
     "android": {
+      "package": "com.edwards1m.garageledger2",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -24,6 +26,10 @@
     },
     "web": {
       "favicon": "./assets/icons/favicon.png"
-    }
+    },
+    "scheme": "garageledger",
+    "plugins": [
+      "expo-web-browser"
+    ]
   }
 }

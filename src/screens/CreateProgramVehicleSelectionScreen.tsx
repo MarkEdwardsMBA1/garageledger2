@@ -150,7 +150,11 @@ const CreateProgramVehicleSelectionScreen: React.FC = () => {
         // No conflicts - proceed normally
         navigation.navigate('CreateProgramDetails', {
           selectedVehicleIds,
-          selectedVehicles: vehicles.filter(v => selectedVehicleIds.includes(v.id))
+          selectedVehicles: vehicles.filter(v => selectedVehicleIds.includes(v.id)).map(vehicle => ({
+            ...vehicle,
+            createdAt: vehicle.createdAt.toISOString(),
+            updatedAt: vehicle.updatedAt.toISOString(),
+          }))
         });
       } else {
         // Conflicts found - show rich conflict resolution modal
@@ -199,7 +203,11 @@ const CreateProgramVehicleSelectionScreen: React.FC = () => {
               onPress: () => {
                 navigation.navigate('CreateProgramDetails', {
                   selectedVehicleIds,
-                  selectedVehicles: vehicles.filter(v => selectedVehicleIds.includes(v.id))
+                  selectedVehicles: vehicles.filter(v => selectedVehicleIds.includes(v.id)).map(vehicle => ({
+                    ...vehicle,
+                    createdAt: vehicle.createdAt.toISOString(),
+                    updatedAt: vehicle.updatedAt.toISOString(),
+                  }))
                 });
               }
             }

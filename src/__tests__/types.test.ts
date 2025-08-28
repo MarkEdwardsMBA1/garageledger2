@@ -44,6 +44,7 @@ describe('TypeScript Types', () => {
       model: 'Civic',
       year: '2021',
       vin: '1HGBH41JXMN109186',
+      nickname: 'My Civic',
       mileage: '25000',
       notes: 'Great condition',
       photoUri: '/path/to/photo.jpg',

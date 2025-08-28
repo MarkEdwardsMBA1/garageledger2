@@ -16,7 +16,7 @@ import { Button } from '../components/common/Button';
 import { Loading } from '../components/common/Loading';
 import { EmptyState } from '../components/common/ErrorState';
 import { Typography } from '../components/common/Typography';
-import { ActivityIcon } from '../components/icons';
+import { ActivityIcon, SpannerIcon } from '../components/icons';
 import { maintenanceLogRepository } from '../repositories/FirebaseMaintenanceLogRepository';
 import { vehicleRepository } from '../repositories/VehicleRepository';
 import { programRepository } from '../repositories/SecureProgramRepository';
@@ -203,9 +203,12 @@ const VehicleHomeScreen: React.FC = () => {
 
   const renderQuickActions = () => (
     <Card variant="elevated" style={styles.sectionCard}>
-      <Typography variant="heading" style={styles.sectionTitle}>
-        🔧 {t('dashboard.quickActions', 'Quick Actions')}
-      </Typography>
+      <View style={styles.sectionTitleContainer}>
+        <SpannerIcon size={18} color={theme.colors.primary} />
+        <Typography variant="heading" style={styles.sectionTitleWithIcon}>
+          {t('dashboard.quickActions', 'Quick Actions')}
+        </Typography>
+      </View>
       
       <View style={styles.actionButtons}>
         <Button
@@ -585,6 +588,15 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: theme.colors.text,
     marginBottom: theme.spacing.md,
+  },
+  sectionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  sectionTitleWithIcon: {
+    color: theme.colors.text,
+    marginLeft: theme.spacing.sm,
   },
   actionButtons: {
     gap: theme.spacing.sm,

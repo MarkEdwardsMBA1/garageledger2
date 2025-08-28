@@ -7,6 +7,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Typography } from '../components/common/Typography';
 import { Button } from '../components/common/Button';
+import { OnboardingProgressIndicator } from '../components/common/OnboardingProgressIndicator';
+import { DataStorageIcon } from '../components/icons';
 import { theme } from '../utils/theme';
 
 interface OnboardingStep3Props {
@@ -34,112 +36,33 @@ export const OnboardingStep3Screen: React.FC<OnboardingStep3Props> = ({
         }
       ]}>
         {/* Progress indicator */}
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: '100%' }]} />
-          </View>
-          <Typography variant="caption" style={styles.progressText}>
-            Step 3 of 3
-          </Typography>
-        </View>
+        <OnboardingProgressIndicator currentStep={3} totalSteps={3} />
 
         {/* Hero Visual */}
         <View style={styles.heroContainer}>
           {/* Data ownership visualization */}
           <View style={styles.dataContainer}>
-            {/* Central shield */}
-            <View style={styles.shieldContainer}>
-              <Typography variant="title" style={styles.shieldIcon}>
-                🔐
-              </Typography>
-            </View>
-            
-            {/* Data flow elements */}
-            <View style={styles.dataFlowContainer}>
-              {/* User data box */}
-              <View style={[styles.dataBox, styles.dataBoxLeft]}>
-                <Typography variant="caption" style={styles.dataBoxLabel}>
-                  Your Records
-                </Typography>
-                <View style={styles.dataItems}>
-                  <View style={styles.dataItem} />
-                  <View style={styles.dataItem} />
-                  <View style={styles.dataItem} />
-                </View>
-              </View>
-              
-              {/* Export arrows */}
-              <View style={styles.arrowContainer}>
-                <Typography variant="heading" style={styles.arrow}>
-                  →
-                </Typography>
-                <Typography variant="caption" style={styles.exportLabel}>
-                  Export Anytime
-                </Typography>
-              </View>
-              
-              {/* Export formats */}
-              <View style={[styles.dataBox, styles.dataBoxRight]}>
-                <Typography variant="caption" style={styles.dataBoxLabel}>
-                  Your Formats
-                </Typography>
-                <View style={styles.formatTags}>
-                  <View style={styles.formatTag}>
-                    <Typography variant="caption" style={styles.formatText}>CSV</Typography>
-                  </View>
-                  <View style={styles.formatTag}>
-                    <Typography variant="caption" style={styles.formatText}>PDF</Typography>
-                  </View>
-                </View>
-              </View>
-            </View>
-            
-            {/* No tracking indicators */}
-            <View style={styles.noTrackingContainer}>
-              <Typography variant="body" style={styles.noTrackingIcon}>🚫</Typography>
-              <Typography variant="caption" style={styles.noTrackingText}>
-                No ads • No tracking • No data mining
-              </Typography>
-            </View>
+            <DataStorageIcon 
+              size={180}
+              color={theme.colors.primary}
+              cloudColor={theme.colors.surface}
+              serverColor={theme.colors.secondary}
+              iconColor={theme.colors.chrome}
+            />
           </View>
         </View>
 
         {/* Content */}
         <View style={styles.messageContainer}>
-          <Typography variant="title" style={styles.title}>
-            Your Data, Your Rules
-          </Typography>
-          
           <Typography variant="body" style={styles.message}>
-            Your maintenance history belongs to you. Export anytime, no vendor lock-in, complete privacy. We're here to serve your needs, not sell your data.
+            Discover patterns and trends through insightful analytics.
           </Typography>
-          
-          <View style={styles.benefitsList}>
-            <View style={styles.benefitItem}>
-              <Typography variant="body" style={styles.benefitIcon}>📤</Typography>
-              <Typography variant="body" style={styles.benefitText}>
-                Export all data in standard formats (CSV, PDF)
-              </Typography>
-            </View>
-            <View style={styles.benefitItem}>
-              <Typography variant="body" style={styles.benefitIcon}>🔒</Typography>
-              <Typography variant="body" style={styles.benefitText}>
-                Complete privacy - no ads, tracking, or data mining
-              </Typography>
-            </View>
-            <View style={styles.benefitItem}>
-              <Typography variant="body" style={styles.benefitIcon}>🗑️</Typography>
-              <Typography variant="body" style={styles.benefitText}>
-                Delete your account and data anytime
-              </Typography>
-            </View>
-          </View>
         </View>
 
         {/* Actions */}
         <View style={styles.actions}>
           <Button
-            title="Get Started"
+            title="Continue"
             variant="primary"
             onPress={onComplete}
             style={styles.getStartedButton}
@@ -192,6 +115,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
     marginVertical: theme.spacing.xl,
   },
   dataContainer: {

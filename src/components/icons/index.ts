@@ -17,6 +17,14 @@ export { LightningBoltIcon } from './LightningBoltIcon';
 export { MultiGearsIcon } from './MultiGearsIcon';
 export { TransmissionCircleIcon } from './TransmissionCircleIcon';
 
+// New Empty State Icons
+export { Car91Icon } from './Car91Icon';
+export { ReportAnalysisIcon } from './ReportAnalysisIcon';
+export { CalendarIcon } from './CalendarIcon';
+export { ChecklistIcon } from './ChecklistIcon';
+export { DataStorageIcon } from './DataStorageIcon';
+export { PhoneMaintenanceIcon } from './PhoneMaintenanceIcon';
+
 // New Automotive Icons
 export {
   MaintenanceIcon,
@@ -43,7 +51,6 @@ export {
   CarSilhouetteIcon,
   AlertTriangleIcon,
   EditIcon,
-  CalendarIcon,
   LockIcon,
   DollarIcon,
   PieChartIcon,

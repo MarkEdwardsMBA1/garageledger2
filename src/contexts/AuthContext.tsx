@@ -7,6 +7,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName?: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -23,29 +24,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    
-    // Set up auth state listener
+    // Set up auth state listener - this handles both initial state and changes
     const unsubscribe = authService.onAuthStateChanged((authUser) => {
-      setUser(authUser);
+      setUser(prevUser => {
+        // Only update if user actually changed to prevent unnecessary re-renders
+        if (!prevUser && !authUser) return prevUser; // Both null
+        if (prevUser?.uid === authUser?.uid) return prevUser; // Same user
+        return authUser; // Different user or null
+      });
       setIsLoading(false);
     });
 
-    // Initial auth state check - important for app startup
-    const checkInitialAuth = async () => {
-      try {
-        const currentUser = authService.getCurrentUser();
-        
-        if (currentUser) {
-          setUser(currentUser);
-        }
-        setIsLoading(false);
-      } catch (error) {
-        // Silent error handling for auth check
-        setIsLoading(false);
-      }
-    };
-    
-    checkInitialAuth();
+    // Don't do separate initial auth check - let the listener handle it
+    // Firebase Auth with persistence will automatically fire the listener with current state
 
     // Cleanup subscription on unmount
     return unsubscribe;
@@ -76,11 +67,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const signInWithGoogle = async (): Promise<void> => {
+    setIsLoading(true);
+    try {
+      await authService.signInWithGoogle();
+      // User state will be updated by the onAuthStateChanged listener
+      // setIsLoading(false) will be called by the listener
+    } catch (error) {
+      console.log('🔐 AuthContext: Google sign-in failed');
+      setIsLoading(false);
+      throw error;
+    }
+  };
+
   const signOut = async (): Promise<void> => {
     setIsLoading(true);
     try {
+      // Immediately clear user state to prevent components from trying to load data
+      setUser(null);
       await authService.signOut();
-      // User state will be updated by the onAuthStateChanged listener
+      // onAuthStateChanged listener will also update the state, but immediate clear prevents errors
+      setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
       throw error;
@@ -107,6 +114,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated: !!user,
     signIn,
     signUp,
+    signInWithGoogle,
     signOut,
     resetPassword,
     refreshUser,

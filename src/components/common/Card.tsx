@@ -19,7 +19,7 @@ export interface CardProps {
   title?: string;
   
   /** Card subtitle */
-  subtitle?: string;
+  subtitle?: string | React.ReactNode;
   
   /** Card variant */
   variant?: 'default' | 'elevated' | 'floating' | 'outlined' | 'filled';

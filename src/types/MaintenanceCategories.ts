@@ -358,29 +358,6 @@ export const MAINTENANCE_CATEGORIES: MaintenanceCategorySystem = {
     }
   },
 
-  'labor-services': {
-    name: 'Labor & Services',
-    subcategories: {
-      'diagnostic': {
-        name: 'Diagnostic Scanning',
-        components: {
-          labor: ['OBD-II Scanning', 'Computer Diagnostics']
-        }
-      },
-      'fluid-flushes': {
-        name: 'Fluid Flushes',
-        components: {
-          labor: ['Brake Fluid Flush', 'Coolant Flush', 'Transmission Flush']
-        }
-      },
-      'cleaning-services': {
-        name: 'Cleaning Services',
-        components: {
-          labor: ['Engine Bay Cleaning', 'Undercarriage Cleaning', 'Interior Detailing']
-        }
-      }
-    }
-  },
 
   'fluids-consumables': {
     name: 'Fluids & Consumables',
@@ -406,12 +383,12 @@ export const MAINTENANCE_CATEGORIES: MaintenanceCategorySystem = {
     }
   },
 
-  'user-defined': {
-    name: 'User-Defined (Custom)',
+  'custom-service': {
+    name: 'Custom Service Reminder',
     subcategories: {
       'custom': {
-        name: 'Custom Category & Sub-Category',
-        description: 'User-defined maintenance not covered by standard categories'
+        name: 'Custom Service',
+        description: 'Add your own maintenance reminder (e.g., State Inspection, Smog Check)'
       }
     }
   }

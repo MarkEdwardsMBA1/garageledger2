@@ -18,7 +18,10 @@ import { Vehicle } from '../types';
 
 interface RouteParams {
   selectedVehicleIds: string[];
-  selectedVehicles: Vehicle[];
+  selectedVehicles: (Omit<Vehicle, 'createdAt' | 'updatedAt'> & {
+    createdAt: string;
+    updatedAt: string;
+  })[];
 }
 
 /**
@@ -30,7 +33,15 @@ const CreateProgramDetailsScreen: React.FC = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const route = useRoute();
-  const { selectedVehicleIds, selectedVehicles } = route.params as RouteParams;
+  const params = route.params as RouteParams;
+  const { selectedVehicleIds } = params;
+  
+  // Convert date strings back to Date objects for selectedVehicles
+  const selectedVehicles = params.selectedVehicles.map(vehicle => ({
+    ...vehicle,
+    createdAt: new Date(vehicle.createdAt),
+    updatedAt: new Date(vehicle.updatedAt),
+  }));
   
   // Program form state (Step 2: basic info only)
   const [programName, setProgramName] = useState('');
@@ -73,7 +84,11 @@ const CreateProgramDetailsScreen: React.FC = () => {
     // Navigate to Step 3 with program details
     navigation.navigate('CreateProgramServices', {
       selectedVehicleIds,
-      selectedVehicles,
+      selectedVehicles: selectedVehicles.map(vehicle => ({
+        ...vehicle,
+        createdAt: vehicle.createdAt.toISOString(),
+        updatedAt: vehicle.updatedAt.toISOString(),
+      })),
       programName: programName.trim(),
       programDescription: programDescription.trim(),
     });

@@ -15,6 +15,7 @@ import { Button } from '../components/common/Button';
 import { Typography } from '../components/common/Typography';
 import { Card } from '../components/common/Card';
 import { Loading } from '../components/common/Loading';
+import { OnboardingProgressIndicator } from '../components/common/OnboardingProgressIndicator';
 import { legalComplianceService } from '../services/LegalComplianceService';
 import { authService } from '../services/AuthService';
 import { theme } from '../utils/theme';
@@ -29,52 +30,8 @@ interface LegalCheckboxProps {
   testID?: string;
 }
 
-const LegalCheckbox: React.FC<LegalCheckboxProps> = ({
-  checked,
-  onToggle,
-  label,
-  onShowSummary,
-  onShowFullDocument,
-  testID,
-}) => {
-  return (
-    <View style={styles.checkboxContainer}>
-      <View style={styles.checkboxRow}>
-        <Button
-          title={checked ? '✓' : ''}
-          onPress={() => onToggle(!checked)}
-          variant="outline"
-          style={checked ? {...styles.checkbox, ...styles.checkboxChecked} : styles.checkbox}
-          testID={testID}
-        />
-        <Typography variant="body" style={styles.checkboxLabel}>
-          {label}
-        </Typography>
-      </View>
-      
-      {(onShowSummary || onShowFullDocument) && (
-        <View style={styles.documentLinks}>
-          {onShowSummary && (
-            <Button
-              title="View Summary"
-              onPress={onShowSummary}
-              variant="text"
-              style={styles.documentLink}
-            />
-          )}
-          {onShowFullDocument && (
-            <Button
-              title="Full Document"
-              onPress={onShowFullDocument}
-              variant="text"
-              style={styles.documentLink}
-            />
-          )}
-        </View>
-      )}
-    </View>
-  );
-};
+// Note: LegalCheckbox component is no longer used as we're using individual cards
+// Keeping for reference but not implementing since the UI has changed
 
 interface DocumentModalProps {
   visible: boolean;
@@ -140,6 +97,13 @@ export const LegalAgreementsScreen: React.FC = () => {
   const t = (key: string, fallback?: string) => fallback || key.split('.').pop() || key;
 
   const canProceed = termsAccepted && privacyAccepted && maintenanceDisclaimerAccepted;
+  const allAccepted = canProceed;
+
+  const handleAcceptAll = (accepted: boolean) => {
+    setTermsAccepted(accepted);
+    setPrivacyAccepted(accepted);
+    setMaintenanceDisclaimerAccepted(accepted);
+  };
 
   const handleAccept = async () => {
     if (!canProceed) {
@@ -173,8 +137,8 @@ export const LegalAgreementsScreen: React.FC = () => {
       // Record legal acceptance
       await legalComplianceService.recordAcceptance(currentUser.uid, acceptanceData);
 
-      // Navigate to value proposition onboarding after legal agreements  
-      navigation.navigate('OnboardingFlow' as never);
+      // Navigate to signup success as step 5 of 5
+      navigation.navigate('SignUpSuccess' as never);
     } catch (error) {
       console.error('Failed to record legal acceptance:', error);
       Alert.alert(
@@ -270,24 +234,11 @@ GarageLedger provides tracking tools only. We make no warranties about maintenan
         keyboardShouldPersistTaps="handled"
       >
         {/* Progress indicator */}
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: '80%' }]} />
-          </View>
-          <Typography variant="caption" style={styles.progressText}>
-            Step 4 of 5
-          </Typography>
-        </View>
+        <OnboardingProgressIndicator currentStep={2} totalSteps={2} />
 
         <View style={styles.header}>
-          <Typography variant="body" style={styles.headerIcon}>
-            🔒
-          </Typography>
           <Typography variant="title" style={styles.title}>
-            Privacy & Terms
-          </Typography>
-          <Typography variant="body" style={styles.subtitle}>
-            We value your privacy and want to be transparent about how we handle your data.
+            Data Consents
           </Typography>
         </View>
 
@@ -296,7 +247,14 @@ GarageLedger provides tracking tools only. We make no warranties about maintenan
           <View style={styles.summaryItem}>
             <Typography variant="body" style={styles.summaryIcon}>✓</Typography>
             <Typography variant="body" style={styles.summaryText}>
-              Your vehicle data stays yours — export anytime
+              Your data is encrypted, secure, and stays yours – export anytime
+            </Typography>
+          </View>
+          
+          <View style={styles.summaryItem}>
+            <Typography variant="body" style={styles.summaryIcon}>✓</Typography>
+            <Typography variant="body" style={styles.summaryText}>
+              We don't sell your personal or vehicle data
             </Typography>
           </View>
           
@@ -310,35 +268,103 @@ GarageLedger provides tracking tools only. We make no warranties about maintenan
           <View style={styles.summaryItem}>
             <Typography variant="body" style={styles.summaryIcon}>✓</Typography>
             <Typography variant="body" style={styles.summaryText}>
-              Secure cloud storage with data encryption
+              You can review these documents anytime in Settings
             </Typography>
           </View>
         </Card>
 
-        <Card style={styles.agreementsCard}>
-          <LegalCheckbox
-            checked={termsAccepted}
-            onToggle={setTermsAccepted}
-            label="I agree to the Terms of Service"
-            onShowSummary={showTermsSummary}
-            testID="terms-checkbox"
-          />
+        {/* Accept All card */}
+        <Card style={styles.agreementCard}>
+          <View style={styles.agreementRow}>
+            <Typography variant="body" style={styles.agreementText}>
+              Accept All
+            </Typography>
+            <View style={[styles.radioToggle, allAccepted ? styles.radioToggleActive : null]}>
+              <Button
+                title=""
+                onPress={() => handleAcceptAll(!allAccepted)}
+                variant="text"
+                style={StyleSheet.flatten([styles.radioButton, allAccepted && styles.radioButtonActive])}
+                testID="accept-all-toggle"
+              />
+            </View>
+          </View>
+        </Card>
 
-          <LegalCheckbox
-            checked={privacyAccepted}
-            onToggle={setPrivacyAccepted}
-            label="I agree to the Privacy Policy"
-            onShowSummary={showPrivacySummary}
-            testID="privacy-checkbox"
-          />
+        {/* Individual agreement cards */}
+        <Card style={styles.agreementCard}>
+          <View style={styles.agreementRow}>
+            <Typography variant="body" style={styles.agreementText}>
+              I agree to Terms of Service
+            </Typography>
+            <View style={[styles.radioToggle, termsAccepted ? styles.radioToggleActive : null]}>
+              <Button
+                title=""
+                onPress={() => setTermsAccepted(!termsAccepted)}
+                variant="text"
+                style={StyleSheet.flatten([styles.radioButton, termsAccepted && styles.radioButtonActive])}
+                testID="terms-toggle"
+              />
+            </View>
+          </View>
+          <View style={styles.documentLinks}>
+            <Button
+              title="View Summary"
+              onPress={showTermsSummary}
+              variant="text"
+              style={styles.documentLink}
+            />
+          </View>
+        </Card>
 
-          <LegalCheckbox
-            checked={maintenanceDisclaimerAccepted}
-            onToggle={setMaintenanceDisclaimerAccepted}
-            label="I understand the maintenance disclaimer"
-            onShowSummary={showMaintenanceDisclaimer}
-            testID="disclaimer-checkbox"
-          />
+        <Card style={styles.agreementCard}>
+          <View style={styles.agreementRow}>
+            <Typography variant="body" style={styles.agreementText}>
+              I agree to the Privacy Policy
+            </Typography>
+            <View style={[styles.radioToggle, privacyAccepted ? styles.radioToggleActive : null]}>
+              <Button
+                title=""
+                onPress={() => setPrivacyAccepted(!privacyAccepted)}
+                variant="text"
+                style={StyleSheet.flatten([styles.radioButton, privacyAccepted && styles.radioButtonActive])}
+                testID="privacy-toggle"
+              />
+            </View>
+          </View>
+          <View style={styles.documentLinks}>
+            <Button
+              title="View Summary"
+              onPress={showPrivacySummary}
+              variant="text"
+              style={styles.documentLink}
+            />
+          </View>
+        </Card>
+
+        <Card style={styles.agreementCard}>
+          <View style={styles.agreementRow}>
+            <Typography variant="body" style={styles.agreementText}>
+              I understand the Maintenance Disclaimer
+            </Typography>
+            <View style={[styles.radioToggle, maintenanceDisclaimerAccepted ? styles.radioToggleActive : null]}>
+              <Button
+                title=""
+                onPress={() => setMaintenanceDisclaimerAccepted(!maintenanceDisclaimerAccepted)}
+                variant="text"
+                style={StyleSheet.flatten([styles.radioButton, maintenanceDisclaimerAccepted && styles.radioButtonActive])}
+                testID="disclaimer-toggle"
+              />
+            </View>
+          </View>
+          <View style={styles.documentLinks}>
+            <Button
+              title="View Summary"
+              onPress={showMaintenanceDisclaimer}
+              variant="text"
+              style={styles.documentLink}
+            />
+          </View>
         </Card>
 
         <View style={styles.buttons}>
@@ -351,9 +377,6 @@ GarageLedger provides tracking tools only. We make no warranties about maintenan
             testID="accept-continue-button"
           />
 
-          <Typography variant="caption" style={styles.footerText}>
-            You can review these anytime in Settings
-          </Typography>
         </View>
       </ScrollView>
 
@@ -376,25 +399,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.xl,
-  },
-  progressContainer: {
-    marginBottom: theme.spacing.xl,
-    alignItems: 'center',
-  },
-  progressBar: {
-    width: '100%',
-    height: 4,
-    backgroundColor: theme.colors.borderLight,
-    borderRadius: 2,
-    marginBottom: theme.spacing.sm,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: theme.colors.primary,
-    borderRadius: 2,
-  },
-  progressText: {
-    color: theme.colors.textSecondary,
   },
   header: {
     alignItems: 'center',
@@ -438,39 +442,59 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.base,
   },
-  agreementsCard: {
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.xl,
-  },
-  checkboxContainer: {
+  settingsReviewText: {
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
     marginBottom: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.md,
+    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.base,
   },
-  checkboxRow: {
+  agreementCard: {
+    padding: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
+  },
+  agreementRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: theme.spacing.sm,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    minHeight: 24,
-    marginRight: theme.spacing.sm,
-    borderRadius: 4,
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 0,
+    justifyContent: 'space-between',
+    marginBottom: theme.spacing.xs,
   },
-  checkboxChecked: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
-  checkboxLabel: {
+  agreementText: {
     flex: 1,
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.text,
     lineHeight: theme.typography.lineHeight.normal * theme.typography.fontSize.base,
+  },
+  radioToggle: {
+    width: 50,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: theme.colors.borderLight,
+    padding: 2,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  },
+  radioToggleActive: {
+    backgroundColor: theme.colors.primary,
+    alignItems: 'flex-end',
+  },
+  radioButton: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: theme.colors.surface,
+    minHeight: 26,
+    padding: 0,
+    margin: 0,
+    ...theme.shadows.sm,
+  },
+  radioButtonActive: {
+    backgroundColor: theme.colors.surface,
   },
   documentLinks: {
     flexDirection: 'row',
-    paddingLeft: 36, // Align with checkbox text
+    paddingLeft: 0,
   },
   documentLink: {
     marginRight: theme.spacing.md,

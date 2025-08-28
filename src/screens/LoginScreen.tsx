@@ -111,7 +111,7 @@ export const LoginScreen: React.FC = () => {
   };
 
   const navigateToSignUp = () => {
-    navigation.navigate('SignUp' as never);
+    navigation.navigate('WelcomeChoice' as never);
   };
 
   const navigateToWelcome = () => {

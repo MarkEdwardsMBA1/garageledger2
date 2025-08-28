@@ -87,9 +87,9 @@
     "make": "Make",
     "model": "Model",
     "year": "Year",
-    "vin": "VIN",
-    "mileage": "Mileage",
-    "notes": "Notes",
+    "vin": "VIN (Optional)",
+    "mileage": "Mileage (Optional)",
+    "notes": "Notes (Optional)",
     "photo": "Photo",
     "noVehicles": "No vehicles added yet",
     "addFirstVehicle": "Add your first vehicle to get started",
@@ -264,6 +264,17 @@
     "nameRequired": "Program name is required",
     "tasksRequired": "At least one service reminder is required",
     "taskNameRequired": "Service reminder name is required",
+    "customService": {
+      "title": "Custom Service Reminder",
+      "subtitle": "Add your own maintenance reminder",
+      "serviceNameLabel": "Service Name",
+      "placeholder": "e.g., State Inspection",
+      "examplesLabel": "Common Examples:",
+      "errorRequired": "Service name is required",
+      "errorTooShort": "Service name must be at least 3 characters",
+      "errorTooLong": "Service name must be 50 characters or less",
+      "errorInvalidChars": "Service name contains invalid characters"
+    },
     "taskCategoryRequired": "Service reminder category is required",
     "taskIntervalRequired": "Service reminder interval is required",
     "assignPrograms": "Assign Programs",
@@ -407,23 +418,27 @@
   "errors": {
     "generic": {
       "title": "Something went wrong",
-      "message": "An unexpected error occurred. Please try again."
+      "message": "Please try again in a moment."
     },
     "network": {
-      "title": "Connection Error",
-      "message": "Please check your internet connection and try again."
+      "title": "Connection issue",
+      "message": "Check your internet and try again."
     },
     "notFound": {
-      "title": "Not Found",
-      "message": "The item you're looking for could not be found."
+      "title": "Not found",
+      "message": "This item is no longer available."
     },
     "unauthorized": {
-      "title": "Access Denied",
-      "message": "You don't have permission to access this content."
+      "title": "Sign in required",
+      "message": "Please sign in to continue."
     },
     "empty": {
-      "title": "No Data",
-      "message": "No items found."
+      "title": "No vehicles yet",
+      "message": "Add your first vehicle to get started."
+    },
+    "maintenance": {
+      "title": "Temporarily unavailable",
+      "message": "Please try again in a few minutes."
     }
   },
   "export": {
@@ -439,6 +454,8 @@
     "invalidYear": "Please enter a valid year",
     "invalidMileage": "Please enter a valid mileage",
     "invalidVin": "VIN should be 17 characters",
+    "weakPassword": "Secure your garage with at least 8 characters",
+    "passwordNeedsNumber": "Add a number or special character to strengthen your key",
     "selectVehicle": "Please select a vehicle to log maintenance for",
     "titleRequired": "What type of maintenance did you perform? Please add a title",
     "mileageRequired": "We need your current mileage to track maintenance intervals",
@@ -449,9 +466,10 @@
     "tagline": "Track your car's life"
   },
   "auth": {
-    "emailAlreadyExists": "Oops! An account with this email already exists. Please sign in.",
+    "emailAlreadyExists": "An account with this email already exists. Please sign in.",
     "signUpFailed": "Sign Up Failed",
-    "required": "Authentication Required",
+    "required": "Please sign in to continue",
+    "signIn": "Sign In",
     "signInPrompt": "Please sign in to add vehicles"
   }
 }

@@ -35,6 +35,7 @@ import { LoginScreen } from '../screens/LoginScreen';
 import { SignUpScreen } from '../screens/SignUpScreen';
 import { SplashScreen } from '../screens/SplashScreen';
 import { WelcomeScreen } from '../screens/WelcomeScreen';
+import { WelcomeChoiceScreen } from '../screens/WelcomeChoiceScreen';
 import { SignUpSuccessScreen } from '../screens/SignUpSuccessScreen';
 import { LegalAgreementsScreen } from '../screens/LegalAgreementsScreen';
 import { OnboardingFlowScreen } from '../screens/OnboardingFlowScreen';
@@ -72,7 +73,7 @@ const VehiclesStack: React.FC = () => {
         component={VehiclesScreen}
         options={{
           title: t('vehicles.title', 'My Vehicles'),
-          // No headerBackTitle needed for root tab screen
+          headerLeft: () => null, // Remove back button for root tab screen
         }}
       />
       <Stack.Screen
@@ -138,6 +139,7 @@ const MaintenanceStackNavigator: React.FC = () => {
         component={TabbedInsightsScreen}
         options={{
           title: t('navigation.insights', 'Insights'),
+          headerLeft: () => null, // Remove back button for root tab screen
         }}
       />
       <Stack.Screen
@@ -169,6 +171,7 @@ const OnboardingStack: React.FC = () => {
       <Stack.Screen name="OnboardingFlow" component={OnboardingFlowScreen} />
       <Stack.Screen name="GoalsSetup" component={GoalsSetupScreen} />
       <Stack.Screen name="GoalsSuccess" component={GoalsSuccessScreen} />
+      <Stack.Screen name="WelcomeChoice" component={WelcomeChoiceScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="SignUp" component={SignUpScreen} />
       <Stack.Screen name="LegalAgreements" component={LegalAgreementsScreen} />
@@ -192,8 +195,11 @@ const LegalComplianceStack: React.FC = () => {
       }}
       initialRouteName="LegalAgreements"
     >
-      <Stack.Screen name="LegalAgreements" component={LegalAgreementsScreen} />
       <Stack.Screen name="OnboardingFlow" component={OnboardingFlowScreen} />
+      <Stack.Screen name="WelcomeChoice" component={WelcomeChoiceScreen} />
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="SignUp" component={SignUpScreen} />
+      <Stack.Screen name="LegalAgreements" component={LegalAgreementsScreen} />
       <Stack.Screen name="SignUpSuccess" component={SignUpSuccessScreen} />
       <Stack.Screen name="FirstVehicleWizard" component={FirstVehicleWizardScreen} />
       <Stack.Screen name="FirstVehicleSuccess" component={FirstVehicleSuccessScreen} />
@@ -228,7 +234,7 @@ const ProgramsStackNavigator: React.FC = () => {
         component={ProgramsScreen}
         options={{
           title: t('navigation.programs', 'Programs'),
-          // No headerBackTitle needed for root tab screen
+          headerLeft: () => null, // Remove back button for root tab screen
         }}
       />
       <Stack.Screen
@@ -396,7 +402,8 @@ const AppNavigationRouter: React.FC = () => {
   // Effect to check if user has completed initial legal acceptance
   React.useEffect(() => {
     const checkLegalCompliance = async () => {
-      if (isAuthenticated && user && !isCheckingCompliance) {
+      // Double-check authentication state to avoid errors during sign-out
+      if (isAuthenticated && user?.uid && !isCheckingCompliance) {
         setIsCheckingCompliance(true);
         try {
           // Import services
@@ -425,8 +432,15 @@ const AppNavigationRouter: React.FC = () => {
           }
           
           // Vehicle data already loaded above for compliance check
-        } catch (error) {
-          console.error('Failed to check legal compliance:', error);
+        } catch (error: any) {
+          // Silently handle auth errors during sign-out to avoid error flood
+          if (error.message?.includes('Authentication required') || 
+              error.message?.includes('auth') ||
+              error.message?.includes('Unauthorized')) {
+            // Don't log these during normal sign-out flow
+          } else {
+            console.error('Failed to check legal compliance:', error);
+          }
           // Default to NOT requiring compliance to prevent lockouts
           setNeedsLegalCompliance(false);
         } finally {

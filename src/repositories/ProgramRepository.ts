@@ -3,8 +3,8 @@ import { MaintenanceProgram, ProgramAssignment, IBaseRepository, ConflictDetecti
 
 export interface IProgramRepository extends IBaseRepository<MaintenanceProgram> {
   // Program-specific methods
-  getUserPrograms(): Promise<MaintenanceProgram[]>;
-  getActivePrograms(): Promise<MaintenanceProgram[]>;
+  getUserPrograms(userId: string): Promise<MaintenanceProgram[]>;
+  getActivePrograms(userId: string): Promise<MaintenanceProgram[]>;
   getProgramsByVehicle(vehicleId: string): Promise<MaintenanceProgram[]>;
   
   // Program assignment methods

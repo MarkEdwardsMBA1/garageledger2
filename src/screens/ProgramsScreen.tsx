@@ -15,7 +15,7 @@ import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { Loading } from '../components/common/Loading';
 import { EmptyState } from '../components/common/ErrorState';
-import { ClipboardIcon, MaintenanceIcon, ChevronRightIcon } from '../components/icons';
+import { ClipboardIcon, MaintenanceIcon, ChevronRightIcon, CalendarIcon } from '../components/icons';
 import { programRepository } from '../repositories/SecureProgramRepository';
 import { MaintenanceProgram } from '../types';
 import { useAuth } from '../contexts/AuthContext';
@@ -155,18 +155,36 @@ const ProgramsScreen: React.FC = () => {
     );
   };
 
-  // Render empty state
-  const renderEmptyState = () => (
-    <EmptyState
-      title={t('programs.noProgramsTitle', 'No Programs Yet')}
-      message={t('programs.noProgramsMessage', 'Create your first maintenance program to get started with proactive vehicle maintenance.')}
-      icon={<ClipboardIcon size={48} color={theme.colors.textSecondary} />}
-      primaryAction={{
-        title: t('programs.createFirst', 'Create First Program'),
-        onPress: handleCreateProgram,
-      }}
-    />
-  );
+  // Render empty state (card-based design matching Vehicles screen)
+  const renderEmptyState = () => {
+    console.log('📅 ProgramsScreen: Rendering custom empty state with card layout');
+    return (
+      <View style={styles.emptyStateContainer}>
+        <Card variant="elevated" style={styles.emptyStateCard}>
+          <View style={styles.emptyStateContent}>
+            {/* Calendar image at the top */}
+            <View style={styles.emptyStateImageContainer}>
+              <CalendarIcon size={160} color={theme.colors.text} />
+            </View>
+            
+            {/* Text below the image */}
+            <Typography variant="body" style={styles.emptyStateText}>
+              This is where your list of maintenance programs will appear. Click Create Program to get started.
+            </Typography>
+          </View>
+        </Card>
+        
+        {/* CTA button below the card */}
+        <Button
+          title="Create Program"
+          onPress={handleCreateProgram}
+          variant="primary"
+          style={styles.emptyStateCTAButton}
+          testID="create-program-empty-button"
+        />
+      </View>
+    );
+  };
 
   // Render no search results
   const renderNoResults = () => (
@@ -317,6 +335,41 @@ const styles = StyleSheet.create({
   },
   addProgramButton: {
     minHeight: 48,
+  },
+
+  // Empty state styles (matching Vehicles screen)
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: theme.spacing.xl,
+    paddingTop: theme.spacing.xl * 2,
+  },
+  emptyStateCard: {
+    width: '100%',
+    maxWidth: 320,
+    marginBottom: theme.spacing.xl,
+  },
+  emptyStateContent: {
+    alignItems: 'center',
+    paddingVertical: theme.spacing['2xl'],
+    paddingHorizontal: theme.spacing.lg,
+    minHeight: 280,
+  },
+  emptyStateImageContainer: {
+    marginBottom: theme.spacing.xl,
+  },
+  emptyStateText: {
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.text,
+    textAlign: 'center',
+    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.base,
+  },
+  emptyStateCTAButton: {
+    width: '100%',
+    maxWidth: 320,
+    minHeight: 48,
+    backgroundColor: theme.colors.primary, // Engine blue
   },
 });
 

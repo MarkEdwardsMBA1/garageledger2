@@ -257,35 +257,6 @@ const SettingsScreen: React.FC = () => {
             <Text style={styles.profileEmail}>
               {user?.email || t('settings.notSignedIn', 'Not signed in')}
             </Text>
-            {user && !user.emailVerified && (
-              <View style={styles.emailVerificationSection}>
-                <Text style={styles.emailNotVerified}>
-                  ⚠️ Email not verified
-                </Text>
-                <Text style={styles.emailVerificationText}>
-                  Verify your email to secure your account and enable password recovery.
-                </Text>
-                <View style={styles.emailButtonsContainer}>
-                  <TouchableOpacity 
-                    style={[styles.verifyEmailButton, styles.primaryButton]}
-                    onPress={handleSendVerification}
-                  >
-                    <Text style={styles.verifyEmailButtonText}>
-                      📧 Send Verification Email
-                    </Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity 
-                    style={[styles.verifyEmailButton, styles.secondaryButton]}
-                    onPress={handleRefreshEmailVerification}
-                  >
-                    <Text style={styles.refreshButtonText}>
-                      🔄 Check Status
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
           </View>
           {!user && (
             <TouchableOpacity
@@ -299,6 +270,47 @@ const SettingsScreen: React.FC = () => {
           )}
         </View>
       </Card>
+
+      {/* Email Verification Card - only show for unverified users */}
+      {user && !user.emailVerified && (
+        <Card variant="elevated" style={styles.emailVerificationCard}>
+          <View style={styles.emailVerificationHeader}>
+            <Text style={styles.emailVerificationIcon}>⚠️</Text>
+            <View style={styles.emailVerificationHeaderText}>
+              <Text style={styles.emailVerificationTitle}>
+                Please Verify Your Email
+              </Text>
+              <Text style={styles.emailVerificationSubtitle}>
+                Complete your account setup
+              </Text>
+            </View>
+          </View>
+          
+          <Text style={styles.emailVerificationDescription}>
+            Verify your email to secure your account and enable password recovery. Check your inbox for our verification email.
+          </Text>
+          
+          <View style={styles.emailVerificationActions}>
+            <TouchableOpacity 
+              style={styles.verifyEmailPrimaryButton}
+              onPress={handleSendVerification}
+            >
+              <Text style={styles.verifyEmailPrimaryText}>
+                Send Verification Email
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.verifyEmailSecondaryButton}
+              onPress={handleRefreshEmailVerification}
+            >
+              <Text style={styles.verifyEmailSecondaryText}>
+                Already verified? Check status
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </Card>
+      )}
 
       {/* Settings Sections */}
       {settingSections.map((section) => (
@@ -427,52 +439,67 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.textSecondary,
   },
-  emailVerificationSection: {
-    marginTop: theme.spacing.sm,
-    padding: theme.spacing.md,
-    backgroundColor: theme.colors.backgroundSecondary || '#fef3c7',
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.warning || '#f59e0b',
+  // Email Verification Card Styles
+  emailVerificationCard: {
+    marginBottom: theme.spacing.xl,
+    borderLeftWidth: 4,
+    borderLeftColor: theme.colors.warning, // Signal Orange accent
   },
-  emailNotVerified: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.warning || '#f59e0b',
+  emailVerificationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  emailVerificationIcon: {
+    fontSize: 24,
+    marginRight: theme.spacing.md,
+  },
+  emailVerificationHeaderText: {
+    flex: 1,
+  },
+  emailVerificationTitle: {
+    fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.warning, // Signal Orange
     marginBottom: theme.spacing.xs,
   },
-  emailVerificationText: {
-    fontSize: theme.typography.fontSize.xs,
+  emailVerificationSubtitle: {
+    fontSize: theme.typography.fontSize.sm,
     color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.md,
-    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.xs,
   },
-  emailButtonsContainer: {
-    flexDirection: 'row',
+  emailVerificationDescription: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text,
+    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.sm,
+    marginBottom: theme.spacing.lg,
+  },
+  emailVerificationActions: {
     gap: theme.spacing.sm,
   },
-  verifyEmailButton: {
-    flex: 1,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.sm,
+  verifyEmailPrimaryButton: {
+    backgroundColor: theme.colors.warning, // Signal Orange
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
     alignItems: 'center',
+    marginBottom: theme.spacing.sm,
   },
-  primaryButton: {
-    backgroundColor: theme.colors.primary,
+  verifyEmailPrimaryText: {
+    color: theme.colors.surface,
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.semibold,
   },
-  secondaryButton: {
+  verifyEmailSecondaryButton: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: theme.colors.primary,
+    borderColor: theme.colors.warning, // Subtle Signal Orange outline
+    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
+    alignItems: 'center',
   },
-  verifyEmailButtonText: {
-    color: theme.colors.surface,
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-  },
-  refreshButtonText: {
-    color: theme.colors.primary,
+  verifyEmailSecondaryText: {
+    color: theme.colors.warning, // Signal Orange
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.medium,
   },
@@ -514,7 +541,7 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.textSecondary,
     marginBottom: theme.spacing.md,
-    textTransform: 'uppercase',
+    textTransform: 'none',
     letterSpacing: 0.5,
   },
   sectionCard: {
