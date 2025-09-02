@@ -56,6 +56,10 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
     if (onPress) {
       onPress(key);
     }
+    // Also handle expansion when the entire card is pressed
+    if (onToggleExpand) {
+      onToggleExpand(key);
+    }
   };
 
   const handleExpandToggle = () => {
@@ -99,22 +103,15 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
           )}
         </View>
 
-        {/* Expand Button */}
+        {/* Expand Indicator */}
         {onToggleExpand && (
-          <TouchableOpacity
-            style={styles.expandButton}
-            onPress={handleExpandToggle}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            testID={`${testID}-expand`}
-            accessibilityRole="button"
-            accessibilityLabel={isExpanded ? 'Collapse category' : 'Expand category'}
-          >
+          <View style={styles.expandButton}>
             {isExpanded ? (
               <ChevronDownIcon size={20} color={theme.colors.textSecondary} />
             ) : (
               <ChevronRightIcon size={20} color={theme.colors.textSecondary} />
             )}
-          </TouchableOpacity>
+          </View>
         )}
       </View>
 

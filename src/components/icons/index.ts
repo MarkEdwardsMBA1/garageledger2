@@ -17,6 +17,11 @@ export { LightningBoltIcon } from './LightningBoltIcon';
 export { MultiGearsIcon } from './MultiGearsIcon';
 export { TransmissionCircleIcon } from './TransmissionCircleIcon';
 
+// Shop Service Wizard Icons
+// export { AttachmentIcon } from './AttachmentIcon';
+// export { PhotoCameraIcon } from './PhotoCameraIcon';
+// export { LockIcon } from './LockIcon';
+
 // New Empty State Icons
 export { Car91Icon } from './Car91Icon';
 export { ReportAnalysisIcon } from './ReportAnalysisIcon';
@@ -24,6 +29,7 @@ export { CalendarIcon } from './CalendarIcon';
 export { ChecklistIcon } from './ChecklistIcon';
 export { DataStorageIcon } from './DataStorageIcon';
 export { PhoneMaintenanceIcon } from './PhoneMaintenanceIcon';
+export { AlertIcon } from './AlertIcon';
 
 // New Automotive Icons
 export {

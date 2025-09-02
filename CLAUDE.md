@@ -194,6 +194,89 @@ interface Vehicle {
 }
 ```
 
+## Shop Service Wizard Implementation
+
+**Status**: ✅ Core functionality complete, minor UX refinements pending
+
+### Architecture
+The Shop Service wizard follows a progressive modal approach using React Navigation patterns:
+
+```typescript
+// Located: src/components/common/ShopServiceWizard.tsx
+type WizardStep = 'basic' | 'services' | 'photos' | 'notes';
+
+interface ShopServiceData {
+  date: Date;
+  mileage: string;
+  totalCost: string;
+  services: SelectedService[];
+  photos: string[];
+  notes: string;
+}
+```
+
+### Implementation Pattern
+- **Step Management**: State-driven step progression with validation
+- **Modal Architecture**: Full-screen modal with step indicators
+- **Data Validation**: Each step validates before allowing progression
+- **Integration**: Auto-saves to MaintenanceLog on completion
+
+### User Flow
+```
+Log Maintenance → "Shop" → 
+Step 1: Basic Info (date, mileage, cost) → 
+Step 2: Service Categories → 
+Step 3: Receipt & Photos (with Pro upgrade prompts) → 
+Step 4: Notes & Summary → 
+Auto-save & Return
+```
+
+### Key Features Implemented
+- **Progressive Disclosure**: One focused task per step
+- **Step Indicators**: Visual progress with text above circles
+- **Upgrade Prompts**: Gentle Pro tier upselling for photos/receipts
+- **Cost Analytics Integration**: Captures totalCost for vehicle analytics
+- **Service Categories**: Reuses MaintenanceCategoryPicker system
+- **Professional Polish**: Clean typography, proper spacing, automotive theme
+
+### Known Issues & Future Improvements
+- **iOS Datepicker UX**: Currently requires two taps (input field → date button → picker)
+- **Professional Icons**: Temporary emoji usage due to runtime compatibility
+- **Cost Analytics**: Data flows to wizard but Vehicle Details analytics needs debugging
+
+### Development Notes
+- **Modal Pattern**: Can be reused for future multi-step flows
+- **Validation Strategy**: Per-step validation prevents incomplete data
+- **Theme Integration**: Uses automotive color palette and typography system
+- **Error Handling**: Graceful fallbacks for incomplete data
+
+## Current Development Roadmap
+
+### Completed ✅
+- **Shop Service Wizard Core**: Full 4-step progressive flow implemented
+- **Professional UX Polish**: Clean typography, proper spacing, step indicators
+- **Service Integration**: MaintenanceCategoryPicker integration working
+- **Data Flow**: Form data properly converts to MaintenanceLog format
+- **Upgrade Prompts**: Pro tier upselling UI implemented
+- **Log Maintenance Simplification**: Clean "Who Performed Maintenance" interface
+- **Cost Analytics Foundation**: Basic analytics card with debug info
+
+### In Progress 🔄
+- **Cost Data Analytics**: Vehicle Details cost analytics needs debugging
+- **iOS Datepicker UX**: Two-tap flow needs simplification
+
+### Pending 📋
+- **Professional Icons**: Replace emoji with custom SVG icons (after runtime fix)
+- **DIY Service Flow**: Implement progressive wizard for DIY maintenance
+- **Enhanced Cost Analytics**: Multi-metric dashboard with trends
+- **Receipt Upload**: Pro tier photo/receipt functionality
+- **Testing**: End-to-end wizard flow testing
+
+### Next Priority
+1. **Fix cost analytics data flow** from Shop Service to Vehicle Details
+2. **Implement DIY service progressive flow** using Shop Service patterns
+3. **Professional icon implementation** after resolving runtime compatibility
+
 ## Internationalization
 
 - **Languages**: English (default), Spanish

@@ -15,9 +15,10 @@ import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { Loading } from '../components/common/Loading';
 import { EmptyState } from '../components/common/ErrorState';
-import { ClipboardIcon, MaintenanceIcon, ChevronRightIcon, CalendarIcon } from '../components/icons';
+import { ClipboardIcon, MaintenanceIcon, ChevronRightIcon, CalendarIcon, AlertIcon } from '../components/icons';
 import { programRepository } from '../repositories/SecureProgramRepository';
-import { MaintenanceProgram } from '../types';
+import { vehicleRepository } from '../repositories/VehicleRepository';
+import { MaintenanceProgram, Vehicle } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 
 /**
@@ -32,7 +33,9 @@ const ProgramsScreen: React.FC = () => {
   // State management
   const [programs, setPrograms] = useState<MaintenanceProgram[]>([]);
   const [filteredPrograms, setFilteredPrograms] = useState<MaintenanceProgram[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(false);
+  const [vehiclesLoading, setVehiclesLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Load programs data
@@ -50,6 +53,22 @@ const ProgramsScreen: React.FC = () => {
       setFilteredPrograms([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Load vehicles data
+  const loadVehicles = async () => {
+    if (!isAuthenticated) return;
+    
+    setVehiclesLoading(true);
+    try {
+      const userVehicles = await vehicleRepository.getUserVehicles();
+      setVehicles(userVehicles);
+    } catch (error) {
+      console.error('Error loading vehicles:', error);
+      setVehicles([]);
+    } finally {
+      setVehiclesLoading(false);
     }
   };
 
@@ -73,14 +92,16 @@ const ProgramsScreen: React.FC = () => {
     setFilteredPrograms(filtered);
   }, [searchQuery, programs]);
 
-  // Load programs on mount and when screen is focused
+  // Load data on mount and when screen is focused
   useEffect(() => {
     loadPrograms();
+    loadVehicles();
   }, [isAuthenticated]);
 
   useFocusEffect(
     React.useCallback(() => {
       loadPrograms();
+      loadVehicles();
     }, [isAuthenticated])
   );
 
@@ -89,16 +110,65 @@ const ProgramsScreen: React.FC = () => {
     navigation.navigate('CreateProgramVehicleSelection');
   };
 
-  // Handle program selection
+  // Handle program selection - navigate to Edit Program screen
   const handleProgramPress = (program: MaintenanceProgram) => {
-    navigation.navigate('ProgramDetail', { programId: program.id });
+    navigation.navigate('EditProgram', { programId: program.id });
+  };
+
+  // Calculate overview statistics
+  const getOverviewStats = () => {
+    const totalPrograms = programs.length;
+    const assignedVehicleIds = new Set();
+    programs.forEach(program => {
+      program.assignedVehicleIds.forEach(vehicleId => assignedVehicleIds.add(vehicleId));
+    });
+    const vehiclesWithPrograms = assignedVehicleIds.size;
+    const vehiclesWithoutPrograms = vehicles.length - vehiclesWithPrograms;
+    
+    return {
+      totalPrograms,
+      vehiclesWithPrograms,
+      vehiclesWithoutPrograms
+    };
+  };
+
+  // Get vehicle display name (nickname or year make model)
+  const getVehicleDisplayName = (vehicleId: string): string => {
+    const vehicle = vehicles.find(v => v.id === vehicleId);
+    if (!vehicle) return 'Unknown Vehicle';
+    
+    if (vehicle.nickname && vehicle.nickname.trim()) {
+      return `${vehicle.nickname} (${vehicle.year} ${vehicle.make} ${vehicle.model})`;
+    }
+    return `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
   };
 
   // Render program card
   const renderProgramCard = (program: MaintenanceProgram) => {
     const taskCount = program.tasks.length;
     const activeTaskCount = program.tasks.filter(task => task.isActive).length;
+    const serviceRemindersCount = program.tasks.filter(task => task.isActive).length;
     const assignedVehicleCount = program.assignedVehicleIds.length;
+    
+    // Get assigned vehicles details with proper formatting
+    const assignedVehicles = program.assignedVehicleIds.map(vehicleId => {
+      const vehicle = vehicles.find(v => v.id === vehicleId);
+      if (!vehicle) return 'Unknown Vehicle';
+      
+      if (vehicle.nickname && vehicle.nickname.trim()) {
+        return `${vehicle.nickname}, ${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+      }
+      return `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+    });
+
+    // Format last updated date
+    const formatDate = (date: Date) => {
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric'
+      });
+    };
 
     return (
       <TouchableOpacity
@@ -108,50 +178,97 @@ const ProgramsScreen: React.FC = () => {
       >
         <Card variant="elevated" style={styles.programCard}>
           <View style={styles.programHeader}>
-            <View style={styles.programInfo}>
-              <Typography variant="heading" style={styles.programName}>
-                {program.name}
+            <Typography variant="heading" style={styles.programName}>
+              {program.name}
+            </Typography>
+            {program.description && (
+              <Typography variant="body" style={styles.programDescription} numberOfLines={2}>
+                {program.description}
               </Typography>
-              {program.description && (
-                <Typography variant="body" style={styles.programDescription} numberOfLines={2}>
-                  {program.description}
-                </Typography>
-              )}
-            </View>
-            <View style={styles.programStatus}>
-              <View style={[styles.statusIndicator, { 
-                backgroundColor: program.isActive ? theme.colors.success : theme.colors.textSecondary 
-              }]} />
-              <ChevronRightIcon size={20} color={theme.colors.textSecondary} />
-            </View>
+            )}
           </View>
 
-          <View style={styles.programStats}>
-            <View style={styles.statItem}>
-              <MaintenanceIcon size={16} color={theme.colors.primary} />
-              <Typography variant="caption" style={styles.statText}>
-                {activeTaskCount}/{taskCount} {t('programs.tasks', 'tasks')}
-              </Typography>
-            </View>
-            
-            {assignedVehicleCount > 0 && (
-              <View style={styles.statItem}>
-                <View style={[styles.vehicleIndicator, { backgroundColor: theme.colors.secondary }]} />
-                <Typography variant="caption" style={styles.statText}>
-                  {assignedVehicleCount} {assignedVehicleCount === 1 
-                    ? t('programs.vehicle', 'vehicle') 
-                    : t('programs.vehicles', 'vehicles')
-                  }
+          {/* Vehicles in Program */}
+          {assignedVehicles.length > 0 && (
+            <View style={styles.statRow}>
+              <View style={styles.vehiclesRow}>
+                <Typography variant="caption" style={styles.statLabel}>
+                  Vehicles:{' '}
                 </Typography>
+                <View style={styles.vehiclesList}>
+                  {assignedVehicles.map((vehicleName, index) => (
+                    <Typography key={index} variant="caption" style={styles.vehicleListItem}>
+                      {vehicleName}
+                    </Typography>
+                  ))}
+                </View>
               </View>
-            )}
+            </View>
+          )}
 
-            <Typography variant="caption" style={styles.statDate}>
-              {t('programs.updated', 'Updated')} {program.updatedAt.toLocaleDateString()}
+          {/* Service Reminders Count */}
+          <View style={styles.statRow}>
+            <Typography variant="caption" style={styles.statLabel}>
+              Service reminders: {serviceRemindersCount}
+            </Typography>
+          </View>
+          
+          {/* Last Updated Date */}
+          <View style={styles.statRow}>
+            <Typography variant="caption" style={styles.statLabel}>
+              Date last updated: {formatDate(program.updatedAt)}
             </Typography>
           </View>
         </Card>
       </TouchableOpacity>
+    );
+  };
+
+  // Render overview card with statistics
+  const renderOverviewCard = () => {
+    const stats = getOverviewStats();
+    
+    return (
+      <Card variant="elevated" style={styles.overviewCard}>
+        <Typography variant="heading" style={styles.overviewTitle}>
+          Overview
+        </Typography>
+        
+        <View style={styles.overviewStats}>
+          <View style={styles.overviewStatItem}>
+            <Typography variant="title" style={styles.overviewStatNumber}>
+              {stats.totalPrograms}
+            </Typography>
+            <Typography variant="caption" style={styles.overviewStatLabel}>
+              {stats.totalPrograms === 1 ? 'Program' : 'Programs'}
+            </Typography>
+          </View>
+          
+          <View style={styles.overviewStatItem}>
+            <Typography variant="title" style={[styles.overviewStatNumber, { color: theme.colors.success }]}>
+              {stats.vehiclesWithPrograms}
+            </Typography>
+            <Typography variant="caption" style={styles.overviewStatLabel}>
+              {stats.vehiclesWithPrograms === 1 ? 'Vehicle' : 'Vehicles'} with Programs
+            </Typography>
+          </View>
+          
+          <View style={styles.overviewStatItem}>
+            <Typography 
+              variant="title" 
+              style={[
+                styles.overviewStatNumber, 
+                { color: stats.vehiclesWithoutPrograms === 0 ? theme.colors.success : '#f59e0b' } // Racing Green if 0, yellow if > 0
+              ]}
+            >
+              {stats.vehiclesWithoutPrograms}
+            </Typography>
+            <Typography variant="caption" style={styles.overviewStatLabel}>
+              {stats.vehiclesWithoutPrograms === 1 ? 'Vehicle' : 'Vehicles'} without Programs
+            </Typography>
+          </View>
+        </View>
+      </Card>
     );
   };
 
@@ -191,24 +308,14 @@ const ProgramsScreen: React.FC = () => {
     <EmptyState
       title={t('common.empty.title', 'No Results Found')}
       message={`No programs found for "${searchQuery}"`}
-      icon="🔍"
+      illustration={<AlertIcon size={80} color="#f59e0b" />}
     />
   );
 
   return (
     <View style={styles.container}>
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Input
-          placeholder={t('programs.searchPlaceholder', 'Search programs...')}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          style={styles.searchInput}
-        />
-      </View>
-
       {/* Programs List */}
-      {loading ? (
+      {loading || vehiclesLoading ? (
         <View style={styles.loadingContainer}>
           <Loading message={t('programs.loading', 'Loading programs...')} />
         </View>
@@ -217,8 +324,21 @@ const ProgramsScreen: React.FC = () => {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
+          {/* Overview Card - Always show when we have data */}
+          {(programs.length > 0 || vehicles.length > 0) && renderOverviewCard()}
+          
+          {/* Search Bar - Below Overview card */}
+          <View style={styles.searchContainer}>
+            <Input
+              placeholder={t('programs.searchPlaceholder', 'Search programs...')}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              style={styles.searchInput}
+            />
+          </View>
+
           {filteredPrograms.length === 0 ? (
-            searchQuery ? renderNoResults() : renderEmptyState()
+            searchQuery ? renderNoResults() : (programs.length === 0 ? renderEmptyState() : null)
           ) : (
             <>
               {filteredPrograms.map(renderProgramCard)}
@@ -246,11 +366,43 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   
+  // Overview Section
+  overviewCard: {
+    marginBottom: theme.spacing.md,
+    padding: theme.spacing.lg,
+  },
+  overviewTitle: {
+    color: theme.colors.text,
+    marginBottom: theme.spacing.md,
+    textAlign: 'left',
+  },
+  overviewStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'flex-start',
+  },
+  overviewStatItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  overviewStatNumber: {
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+    fontSize: 28,
+    fontWeight: theme.typography.fontWeight.bold,
+  },
+  overviewStatLabel: {
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    fontSize: theme.typography.fontSize.sm,
+  },
+
   // Search Section
   searchContainer: {
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.sm,
-    backgroundColor: theme.colors.surface,
+    paddingHorizontal: 0,
+    paddingVertical: theme.spacing.sm,
+    backgroundColor: 'transparent',
+    marginBottom: theme.spacing.sm,
   },
   searchInput: {
     marginVertical: 0,
@@ -275,14 +427,7 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
   },
   programHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
     marginBottom: theme.spacing.md,
-  },
-  programInfo: {
-    flex: 1,
-    marginRight: theme.spacing.md,
   },
   programName: {
     color: theme.colors.text,
@@ -292,23 +437,27 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.base,
   },
-  programStatus: {
+
+  // Vehicles Section in Program Cards
+  vehiclesRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.xs,
+    alignItems: 'flex-start',
   },
-  statusIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+  vehiclesList: {
+    flex: 1,
+  },
+  vehicleListItem: {
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xs / 2,
+    fontSize: theme.typography.fontSize.sm, // Match caption variant size
   },
   
-  // Program Stats
-  programStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.lg,
-    flexWrap: 'wrap',
+  statRow: {
+    marginBottom: theme.spacing.xs,
+  },
+  statLabel: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.fontSize.sm,
   },
   statItem: {
     flexDirection: 'row',

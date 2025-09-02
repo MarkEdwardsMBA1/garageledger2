@@ -357,9 +357,6 @@ const CreateProgramVehicleSelectionScreen: React.FC = () => {
                                 </Typography>
                               </View>
                             </View>
-                            <Typography variant="caption" style={styles.editHint}>
-                              Tap to edit
-                            </Typography>
                           </View>
                         </TouchableOpacity>
                       ))}
@@ -549,10 +546,6 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xs,
   },
   
-  editHint: {
-    color: theme.colors.primary,
-    fontWeight: theme.typography.fontWeight.medium,
-  },
   
   // Footer
   footer: {

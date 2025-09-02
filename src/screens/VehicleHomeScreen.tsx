@@ -16,13 +16,14 @@ import { Button } from '../components/common/Button';
 import { Loading } from '../components/common/Loading';
 import { EmptyState } from '../components/common/ErrorState';
 import { Typography } from '../components/common/Typography';
-import { ActivityIcon, SpannerIcon } from '../components/icons';
+import { ActivityIcon, SpannerIcon, CheckIcon, AlertTriangleIcon, MaintenanceIcon } from '../components/icons';
 import { maintenanceLogRepository } from '../repositories/FirebaseMaintenanceLogRepository';
 import { vehicleRepository } from '../repositories/VehicleRepository';
 import { programRepository } from '../repositories/SecureProgramRepository';
 import { getCategoryName, getSubcategoryName } from '../types/MaintenanceCategories';
 import { Vehicle, MaintenanceLog, MaintenanceProgram } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import { calculateVehicleStatusSummary, VehicleStatusSummary } from '../services/VehicleStatusService';
 
 interface VehicleHomeParams {
   vehicleId: string;
@@ -45,6 +46,7 @@ const VehicleHomeScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [programActionLoading, setProgramActionLoading] = useState<string | null>(null);
+  const [vehicleStatus, setVehicleStatus] = useState<VehicleStatusSummary | null>(null);
 
   // Load vehicle data
   const loadVehicleData = async () => {
@@ -68,6 +70,10 @@ const VehicleHomeScreen: React.FC = () => {
       setVehicle(vehicleData);
       setMaintenanceLogs(logs);
       setPrograms(vehiclePrograms);
+      
+      // Calculate vehicle status after data is loaded
+      const statusSummary = calculateVehicleStatusSummary(vehicleData, vehiclePrograms, logs);
+      setVehicleStatus(statusSummary);
     } catch (err: any) {
       console.error('Error loading vehicle data:', err);
       setError(err.message || 'Failed to load vehicle data');
@@ -203,12 +209,9 @@ const VehicleHomeScreen: React.FC = () => {
 
   const renderQuickActions = () => (
     <Card variant="elevated" style={styles.sectionCard}>
-      <View style={styles.sectionTitleContainer}>
-        <SpannerIcon size={18} color={theme.colors.primary} />
-        <Typography variant="heading" style={styles.sectionTitleWithIcon}>
-          {t('dashboard.quickActions', 'Quick Actions')}
-        </Typography>
-      </View>
+      <Typography variant="heading" style={styles.sectionTitle}>
+        {t('dashboard.quickActions', 'Quick Actions')}
+      </Typography>
       
       <View style={styles.actionButtons}>
         <Button
@@ -236,23 +239,119 @@ const VehicleHomeScreen: React.FC = () => {
     </Card>
   );
 
-  const renderStatusSummary = () => (
-    <Card variant="elevated" style={styles.sectionCard}>
-      <Typography variant="heading" style={styles.sectionTitle}>
-        📊 Status Summary
-      </Typography>
-      
-      <View style={styles.statusItem}>
-        <Typography variant="bodyLarge" style={styles.statusGood}>
-          ✅ No overdue maintenance
+  const renderVehicleStatus = () => {
+    if (!vehicleStatus) {
+      return (
+        <Card variant="elevated" style={styles.sectionCard}>
+          <Typography variant="heading" style={styles.sectionTitle}>
+            Vehicle Status
+          </Typography>
+          <Typography variant="body" style={styles.statusLoading}>
+            Calculating status...
+          </Typography>
+        </Card>
+      );
+    }
+
+    const { nextService, overdueServices } = vehicleStatus;
+
+    // Show all maintenance up to date
+    if (overdueServices.length === 0) {
+      return (
+        <Card variant="elevated" style={[styles.sectionCard, styles.statusCardUpToDate]}>
+          <Typography variant="heading" style={styles.sectionTitle}>
+            Vehicle Status
+          </Typography>
+          
+          <View style={styles.statusHeaderRow}>
+            <Typography variant="caption" style={styles.statusUpToDateText}>
+              All maintenance up to date
+            </Typography>
+          </View>
+          
+          {vehicleStatus.lastMaintenanceDate && (
+            <View style={[styles.statRow, styles.lastServiceRow]}>
+              <Typography variant="caption" style={styles.statLabel}>
+                Last service: {vehicleStatus.lastMaintenanceDate.toLocaleDateString()}
+              </Typography>
+            </View>
+          )}
+        </Card>
+      );
+    }
+
+    const getStatusColor = () => {
+      switch(nextService.status) {
+        case 'overdue': return theme.colors.error;     // Critical Red
+        case 'due': return theme.colors.warning;       // Signal Orange  
+        case 'upcoming': return theme.colors.info;     // Electric Blue
+        default: return theme.colors.success;          // Racing Green
+      }
+    };
+
+    const getStatusIcon = () => {
+      switch(nextService.status) {
+        case 'overdue': return <AlertTriangleIcon size={24} color={theme.colors.error} />;
+        case 'due': return <MaintenanceIcon size={24} color={theme.colors.warning} />;
+        case 'upcoming': return <MaintenanceIcon size={24} color={theme.colors.info} />;
+        default: return <CheckIcon size={24} color={theme.colors.success} />;
+      }
+    };
+
+    const getStatusMessage = () => {
+      switch(nextService.status) {
+        case 'overdue': return 'Service Overdue';
+        case 'due': return 'Service Due Soon';
+        case 'upcoming': return 'Next Service';
+        default: return 'Up to Date';
+      }
+    };
+
+    // Show overdue services 
+    return (
+      <Card 
+        variant="elevated" 
+        style={[
+          styles.sectionCard, 
+          styles.statusCard,
+          { borderLeftColor: theme.colors.error, borderLeftWidth: 4 }
+        ]}
+      >
+        <Typography variant="heading" style={styles.sectionTitle}>
+          Vehicle Status
         </Typography>
-      </View>
-      
-      <Typography variant="bodySmall" style={styles.statusNote}>
-        Manual reminders coming soon!
-      </Typography>
-    </Card>
-  );
+        
+        {/* Services Overdue Header with Count */}
+        <View style={styles.statusHeaderRow}>
+          <Typography variant="caption" style={styles.overdueLabel}>
+            Services overdue: {overdueServices.length}
+          </Typography>
+        </View>
+
+        {/* Numbered Overdue Services List */}
+        <View style={styles.overdueServicesTable}>
+          {overdueServices.map((service, index) => (
+            <View key={index} style={styles.overdueServiceRow}>
+              <Typography variant="caption" style={styles.overdueServiceNumber}>
+                {index + 1}.
+              </Typography>
+              <Typography variant="caption" style={styles.overdueServiceName}>
+                {service.service} • {service.dueIn}
+              </Typography>
+            </View>
+          ))}
+        </View>
+        
+        {vehicleStatus.lastMaintenanceDate && (
+          <View style={[styles.statRow, styles.lastServiceRow]}>
+            <Typography variant="caption" style={styles.statLabel}>
+              Last service: {vehicleStatus.lastMaintenanceDate.toLocaleDateString()}
+            </Typography>
+          </View>
+        )}
+      </Card>
+    );
+  };
 
   const renderActivePrograms = () => {
     if (programs.length === 0) {
@@ -407,7 +506,9 @@ const VehicleHomeScreen: React.FC = () => {
 
         <View style={styles.timeline}>
           {recentLogs.map((log, index) => {
-            const [categoryKey, subcategoryKey] = log.category.split(':');
+            // Safely handle category parsing with fallback
+            const categoryParts = log.category?.split(':') || ['general', 'maintenance'];
+            const [categoryKey, subcategoryKey] = categoryParts;
             const subcategoryName = getSubcategoryName(categoryKey, subcategoryKey);
             const categoryName = getCategoryName(categoryKey);
             
@@ -452,31 +553,183 @@ const VehicleHomeScreen: React.FC = () => {
     );
   };
 
-  const renderCostInsights = () => {
-    if (maintenanceLogs.length === 0) return null;
-
-    // Calculate total cost for this vehicle
-    const totalCost = maintenanceLogs.reduce((sum, log) => sum + (log.cost || 0), 0);
+  const renderCostAnalytics = () => {
+    if (maintenanceLogs.length === 0) {
+      // Show placeholder when no maintenance logs exist
+      return (
+        <Card variant="elevated" style={styles.sectionCard}>
+          <Typography variant="heading" style={styles.sectionTitle}>
+            Cost & Analytics
+          </Typography>
+          <Typography variant="body" style={styles.statusLoading}>
+            Add maintenance records with costs to see analytics
+          </Typography>
+        </Card>
+      );
+    }
     
-    if (totalCost === 0) return null;
+    const analytics = calculateCostAnalytics(maintenanceLogs, vehicle);
+    
+    // Debug: Show what we found
+    console.log('DEBUG - Maintenance logs:', maintenanceLogs.length);
+    console.log('DEBUG - Logs with costs:', maintenanceLogs.filter(log => (log.totalCost || 0) > 0).length);
+    console.log('DEBUG - First log structure:', maintenanceLogs[0]);
+    
+    // Show placeholder when no costs are recorded
+    if (analytics.totalCost === 0) {
+      return (
+        <Card variant="elevated" style={styles.sectionCard}>
+          <Typography variant="heading" style={styles.sectionTitle}>
+            Cost & Analytics
+          </Typography>
+          <Typography variant="body" style={styles.statusLoading}>
+            Add cost information to your maintenance records to see spending analytics
+          </Typography>
+          <Typography variant="caption" style={styles.statusLoading}>
+            Debug: Found {maintenanceLogs.length} logs, {maintenanceLogs.filter(log => (log.totalCost || 0) > 0).length} with costs
+          </Typography>
+        </Card>
+      );
+    }
 
     return (
       <Card variant="elevated" style={styles.sectionCard}>
         <Typography variant="heading" style={styles.sectionTitle}>
-          Cost Insights
+          Cost & Analytics
         </Typography>
         
-        <View style={styles.costSummary}>
-          <Typography variant="bodyLarge" style={styles.costTotal}>
-            ${totalCost.toFixed(2)} total spent
-          </Typography>
+        {/* Cost Metrics Grid */}
+        <View style={styles.costMetricsGrid}>
+          <View style={styles.costMetricItem}>
+            <Typography variant="bodyLarge" style={styles.costMetricValue}>
+              ${analytics.totalCost}
+            </Typography>
+            <Typography variant="caption" style={styles.costMetricLabel}>
+              Total Spent
+            </Typography>
+          </View>
           
-          <Typography variant="bodySmall" style={styles.costDetail}>
-            Across {maintenanceLogs.length} maintenance {maintenanceLogs.length === 1 ? 'entry' : 'entries'}
+          <View style={styles.costMetricItem}>
+            <Typography variant="bodyLarge" style={styles.costMetricValue}>
+              ${analytics.averagePerService}
+            </Typography>
+            <Typography variant="caption" style={styles.costMetricLabel}>
+              Avg per Service
+            </Typography>
+          </View>
+          
+          {analytics.recent30Days > 0 && (
+            <View style={styles.costMetricItem}>
+              <Typography variant="bodyLarge" style={styles.costMetricValue}>
+                ${analytics.recent30Days}
+              </Typography>
+              <Typography variant="caption" style={styles.costMetricLabel}>
+                Last 30 Days
+              </Typography>
+            </View>
+          )}
+          
+          {analytics.costPerMile && (
+            <View style={styles.costMetricItem}>
+              <Typography variant="bodyLarge" style={styles.costMetricValue}>
+                ${analytics.costPerMile}/mi
+              </Typography>
+              <Typography variant="caption" style={styles.costMetricLabel}>
+                Cost per Mile
+              </Typography>
+            </View>
+          )}
+        </View>
+
+        {/* Summary */}
+        <View style={[styles.statRow, styles.costSummaryRow]}>
+          <Typography variant="caption" style={styles.statLabel}>
+            {maintenanceLogs.length} maintenance {maintenanceLogs.length === 1 ? 'entry' : 'entries'} • {analytics.timespan}
           </Typography>
         </View>
+        
+        {analytics.trend && (
+          <View style={styles.statRow}>
+            <Typography variant="caption" style={[
+              styles.costTrendText,
+              { color: analytics.trend === 'increasing' ? theme.colors.warning : theme.colors.success }
+            ]}>
+              {analytics.trend === 'increasing' 
+                ? `📈 Spending trending up (${analytics.trendPercentage}%)`
+                : `📉 Spending trending down (${analytics.trendPercentage}%)`
+              }
+            </Typography>
+          </View>
+        )}
       </Card>
     );
+  };
+
+  // Enhanced cost analytics calculation
+  const calculateCostAnalytics = (logs: MaintenanceLog[], vehicle: Vehicle | null) => {
+    const logsWithCost = logs.filter(log => (log.totalCost || 0) > 0);
+    if (logsWithCost.length === 0) {
+      return { totalCost: 0, averagePerService: 0, recent30Days: 0 };
+    }
+
+    const totalCost = logsWithCost.reduce((sum, log) => sum + (log.totalCost || 0), 0);
+    const averagePerService = totalCost / logsWithCost.length;
+    
+    // Calculate recent 30 days spending
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const recent30Days = logsWithCost
+      .filter(log => log.date >= thirtyDaysAgo)
+      .reduce((sum, log) => sum + (log.totalCost || 0), 0);
+
+    // Calculate cost per mile (if we have mileage data)
+    const sortedLogs = logsWithCost.sort((a, b) => a.date.getTime() - b.date.getTime());
+    const oldestLog = sortedLogs[0];
+    const newestLog = sortedLogs[sortedLogs.length - 1];
+    let costPerMile = null;
+    
+    if (oldestLog && newestLog && oldestLog.mileage && newestLog.mileage) {
+      const milesDriven = newestLog.mileage - oldestLog.mileage;
+      if (milesDriven > 0) {
+        costPerMile = (totalCost / milesDriven).toFixed(3);
+      }
+    }
+
+    // Calculate timespan
+    const oldestDate = sortedLogs[0]?.date;
+    const newestDate = sortedLogs[sortedLogs.length - 1]?.date;
+    let timespan = 'All time';
+    if (oldestDate && newestDate && oldestDate !== newestDate) {
+      const monthsDiff = Math.ceil((newestDate.getTime() - oldestDate.getTime()) / (1000 * 60 * 60 * 24 * 30));
+      timespan = monthsDiff <= 12 ? `${monthsDiff} ${monthsDiff === 1 ? 'month' : 'months'}` : `${Math.ceil(monthsDiff / 12)} years`;
+    }
+
+    // Calculate trend (compare first half vs second half of data)
+    let trend = null;
+    let trendPercentage = 0;
+    if (logsWithCost.length >= 4) {
+      const midPoint = Math.floor(logsWithCost.length / 2);
+      const firstHalf = sortedLogs.slice(0, midPoint);
+      const secondHalf = sortedLogs.slice(midPoint);
+      
+      const firstHalfAvg = firstHalf.reduce((sum, log) => sum + (log.totalCost || 0), 0) / firstHalf.length;
+      const secondHalfAvg = secondHalf.reduce((sum, log) => sum + (log.totalCost || 0), 0) / secondHalf.length;
+      
+      if (Math.abs(secondHalfAvg - firstHalfAvg) / firstHalfAvg > 0.2) { // 20% threshold
+        trend = secondHalfAvg > firstHalfAvg ? 'increasing' : 'decreasing';
+        trendPercentage = Math.abs(Math.round(((secondHalfAvg - firstHalfAvg) / firstHalfAvg) * 100));
+      }
+    }
+
+    return {
+      totalCost: totalCost.toFixed(2),
+      averagePerService: averagePerService.toFixed(2),
+      recent30Days: recent30Days.toFixed(2),
+      costPerMile,
+      timespan,
+      trend,
+      trendPercentage
+    };
   };
 
   if (loading) {
@@ -517,10 +770,10 @@ const VehicleHomeScreen: React.FC = () => {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {renderVehicleHeader()}
       {renderQuickActions()}
-      {renderStatusSummary()}
+      {renderVehicleStatus()}
       {renderActivePrograms()}
       {renderMaintenanceTimeline()}
-      {renderCostInsights()}
+      {renderCostAnalytics()}
     </ScrollView>
   );
 };
@@ -543,7 +796,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
   },
   vehicleInfo: {
-    gap: theme.spacing.sm,
+    gap: theme.spacing.xs,
   },
   vehicleName: {
     color: theme.colors.text,
@@ -614,6 +867,109 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     fontStyle: 'italic',
     marginTop: theme.spacing.sm,
+  },
+  
+  // Enhanced Status Card Styles
+  statusCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: theme.colors.border,
+  },
+  statusCardUpToDate: {
+    borderLeftColor: theme.colors.success,
+    borderLeftWidth: 4,
+  },
+  statusHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
+  },
+  statusContent: {
+    gap: theme.spacing.xs,
+  },
+  statusLoading: {
+    color: theme.colors.textSecondary,
+    fontStyle: 'italic',
+  },
+  statusUpToDate: {
+    color: theme.colors.success,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  statusLastMaintenance: {
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.xs,
+  },
+  statusMessage: {
+    fontWeight: theme.typography.fontWeight.semibold,
+    marginBottom: theme.spacing.xs,
+  },
+  statusServiceName: {
+    color: theme.colors.text,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  statusDueIn: {
+    color: theme.colors.textSecondary,
+  },
+  statusUrgent: {
+    color: theme.colors.error,
+    fontWeight: theme.typography.fontWeight.medium,
+    marginTop: theme.spacing.xs,
+  },
+  
+  // Programs Screen Consistent Formatting
+  statRow: {
+    marginBottom: theme.spacing.xs,
+  },
+  statLabel: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.fontSize.sm,
+  },
+  statusUpToDateText: {
+    color: theme.colors.success,
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  statusHeaderRow: {
+    marginTop: theme.spacing.xs,
+    marginBottom: theme.spacing.sm,
+  },
+  
+  // Clean Numbered List Overdue Services Formatting
+  overdueLabel: {
+    color: theme.colors.error,
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  overdueServicesTable: {
+    marginLeft: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
+  },
+  overdueServiceRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: theme.spacing.xs / 2,
+    paddingVertical: 1, // Subtle row separation
+  },
+  overdueServiceNumber: {
+    color: theme.colors.error,
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.medium,
+    minWidth: 16,
+    marginRight: theme.spacing.xs,
+    lineHeight: theme.typography.fontSize.sm * 1.3,
+  },
+  overdueServiceName: {
+    color: theme.colors.error,
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.medium,
+    flex: 1,
+    lineHeight: theme.typography.fontSize.sm * 1.3,
+  },
+  lastServiceRow: {
+    marginTop: theme.spacing.xs,
+    paddingTop: theme.spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.borderLight,
   },
   timelineHeader: {
     flexDirection: 'row',
@@ -752,12 +1108,46 @@ const styles = StyleSheet.create({
   vehicleInfoSubtitle: {
     color: theme.colors.textSecondary,
     textAlign: 'center',
-    marginTop: theme.spacing.xs,
   },
   mileageSubtitle: {
     color: theme.colors.textSecondary,
     textAlign: 'center',
-    marginTop: theme.spacing.xs,
+  },
+  
+  // Cost Analytics Styles
+  costMetricsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+  },
+  costMetricItem: {
+    flex: 1,
+    minWidth: '45%',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.sm,
+  },
+  costMetricValue: {
+    color: theme.colors.text,
+    fontWeight: theme.typography.fontWeight.semibold,
+    marginBottom: theme.spacing.xs / 2,
+  },
+  costMetricLabel: {
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    fontSize: theme.typography.fontSize.sm,
+  },
+  costSummaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: theme.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.borderLight,
+  },
+  costTrendText: {
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.medium,
   },
 });
 

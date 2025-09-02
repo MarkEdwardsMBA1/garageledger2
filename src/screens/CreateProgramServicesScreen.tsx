@@ -28,7 +28,6 @@ import { MaintenanceProgram, ProgramTask, Vehicle, AdvancedServiceConfiguration 
 import { useAuth } from '../contexts/AuthContext';
 import { CategorySearch } from '../components/common/CategorySearch';
 import { CategoryGrid } from '../components/common/CategoryGrid';
-import { CustomServiceBottomSheet } from '../components/programs/CustomServiceBottomSheet';
 import { getOrderedCategoryData, searchCategories, CategoryDisplayData } from '../utils/CategoryIconMapping';
 
 interface RouteParams {
@@ -478,9 +477,6 @@ const CreateProgramServicesScreen: React.FC = () => {
     wasJustSelected: boolean;  // Track if this was just selected or was already selected
   } | null>(null);
   
-  // Custom service bottom sheet state
-  const [showCustomServiceSheet, setShowCustomServiceSheet] = useState(false);
-  const [pendingCustomServiceKey, setPendingCustomServiceKey] = useState<string | null>(null);
 
   // Handle service card tap (opens bottom sheet for configuration)
   const handleServiceCardTap = (service: CuratedService) => {
@@ -599,58 +595,10 @@ const CreateProgramServicesScreen: React.FC = () => {
 
   // Handle advanced service configuration (using Basic tab's bottom sheet)
   const handleAdvancedServiceConfigure = (serviceKey: string, serviceName: string, categoryName: string, wasJustSelected: boolean = false) => {
-    // Check if this is a custom service that needs special handling
-    if (serviceKey === 'custom-service.custom') {
-      setPendingCustomServiceKey(serviceKey);
-      setShowCustomServiceSheet(true);
-      return;
-    }
-    
     setAdvancedConfigService({ serviceKey, serviceName, categoryName, wasJustSelected });
     setShowConfigSheet(true);
   };
 
-  // Handle custom service name creation
-  const handleCustomServiceSaved = (serviceName: string) => {
-    if (!pendingCustomServiceKey) return;
-    
-    // Create a unique service ID using the custom service name
-    const customServiceKey = `custom-service.${serviceName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
-    
-    // Add to selected services
-    setSelectedServices(prev => {
-      const updated = new Set(prev);
-      // Remove the original pending key and add the new custom key
-      updated.delete(pendingCustomServiceKey);
-      updated.add(customServiceKey);
-      return updated;
-    });
-    
-    // Now open the interval configuration for this custom service
-    setAdvancedConfigService({ 
-      serviceKey: customServiceKey, 
-      serviceName: serviceName, 
-      categoryName: 'Custom Service Reminder', 
-      wasJustSelected: true 
-    });
-    setShowConfigSheet(true);
-    
-    // Reset custom service state
-    setPendingCustomServiceKey(null);
-  };
-
-  // Handle custom service cancellation
-  const handleCustomServiceCanceled = () => {
-    if (pendingCustomServiceKey) {
-      // Remove from selected services since user canceled
-      setSelectedServices(prev => {
-        const updated = new Set(prev);
-        updated.delete(pendingCustomServiceKey);
-        return updated;
-      });
-      setPendingCustomServiceKey(null);
-    }
-  };
 
   // Create adapter to convert advanced service to Basic tab format
   const createAdvancedServiceAdapter = (serviceKey: string, serviceName: string, categoryName: string): CuratedService => {
@@ -789,16 +737,8 @@ const CreateProgramServicesScreen: React.FC = () => {
         t('programs.programCreated', 'Maintenance program created successfully!'),
         [
           {
-            text: t('programs.assignToVehicles', 'Assign to Vehicles'),
-            onPress: () => navigation.navigate('AssignProgramToVehicles', { 
-              programId: createdProgram.id,
-              programName: createdProgram.name 
-            })
-          },
-          {
             text: t('common.done', 'Done'),
-            onPress: () => navigation.navigate('ProgramsList'),
-            style: 'cancel'
+            onPress: () => navigation.navigate('ProgramsList')
           }
         ]
       );
@@ -987,15 +927,6 @@ const CreateProgramServicesScreen: React.FC = () => {
         />
       )}
 
-      {/* Custom Service Bottom Sheet */}
-      <CustomServiceBottomSheet
-        isVisible={showCustomServiceSheet}
-        onServiceSaved={handleCustomServiceSaved}
-        onClose={() => {
-          setShowCustomServiceSheet(false);
-          handleCustomServiceCanceled();
-        }}
-      />
     </View>
   );
 };
@@ -1041,8 +972,8 @@ const AdvancedCategoryMode: React.FC<AdvancedCategoryModeProps> = ({
   const filteredCategories = searchQuery ? searchCategories(searchQuery) : allCategories;
 
   const handleCategoryPress = (categoryKey: string) => {
-    // For now, just expand/collapse the category
-    onToggleExpand(categoryKey);
+    // CategoryCard already handles expansion in its handlePress function
+    // No need to do anything here as it would double-toggle
   };
 
   return (

@@ -127,7 +127,7 @@ const RemindersScreen: React.FC = () => {
         {
           text: t('programs.viewProgram', 'View Program'),
           onPress: () => navigation.navigate('Programs', {
-            screen: 'ProgramDetail',
+            screen: 'EditProgram',
             params: { programId: reminder.programId }
           })
         },

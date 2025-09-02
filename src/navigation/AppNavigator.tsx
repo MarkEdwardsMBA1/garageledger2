@@ -20,13 +20,16 @@ import VehiclesScreen from '../screens/VehiclesScreen';
 import VehicleHomeScreen from '../screens/VehicleHomeScreen';
 import TabbedInsightsScreen from '../screens/TabbedInsightsScreen';
 import AddMaintenanceLogScreen from '../screens/AddMaintenanceLogScreen';
+import ShopServiceStep1Screen from '../screens/ShopServiceStep1Screen';
+import ShopServiceStep2Screen from '../screens/ShopServiceStep2Screen';
+import ShopServiceStep3Screen from '../screens/ShopServiceStep3Screen';
+import ShopServiceStep4Screen from '../screens/ShopServiceStep4Screen';
 import ProgramsScreen from '../screens/ProgramsScreen';
 import CreateProgramVehicleSelectionScreen from '../screens/CreateProgramVehicleSelectionScreen';
 import CreateProgramDetailsScreen from '../screens/CreateProgramDetailsScreen';
 import CreateProgramServicesScreen from '../screens/CreateProgramServicesScreen';
 import AssignProgramsScreen from '../screens/AssignProgramsScreen';
 import AssignProgramToVehiclesScreen from '../screens/AssignProgramToVehiclesScreen';
-import ProgramDetailScreen from '../screens/ProgramDetailScreen';
 import EditProgramScreen from '../screens/EditProgramScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import AddVehicleScreen from '../screens/AddVehicleScreen';
@@ -121,6 +124,7 @@ const MaintenanceStackNavigator: React.FC = () => {
   
   return (
     <Stack.Navigator
+      initialRouteName="MaintenanceList"
       screenOptions={{
         headerStyle: {
           backgroundColor: theme.colors.primary, // Engine Blue header
@@ -149,6 +153,42 @@ const MaintenanceStackNavigator: React.FC = () => {
           title: t('maintenance.logMaintenance', 'Log Maintenance'),
           headerBackTitle: 'Insights', // Shows arrow + parent name
           headerLeft: undefined, // Use default back button (ensures arrow shows)
+        }}
+      />
+      <Stack.Screen
+        name="ShopServiceStep1"
+        component={ShopServiceStep1Screen}
+        options={{
+          title: 'Shop Service',
+          headerBackTitle: 'Back',
+          headerLeft: undefined,
+        }}
+      />
+      <Stack.Screen
+        name="ShopServiceStep2"
+        component={ShopServiceStep2Screen}
+        options={{
+          title: 'Shop Service',
+          headerBackTitle: 'Back',
+          headerLeft: undefined,
+        }}
+      />
+      <Stack.Screen
+        name="ShopServiceStep3"
+        component={ShopServiceStep3Screen}
+        options={{
+          title: 'Shop Service',
+          headerBackTitle: 'Back',
+          headerLeft: undefined,
+        }}
+      />
+      <Stack.Screen
+        name="ShopServiceStep4"
+        component={ShopServiceStep4Screen}
+        options={{
+          title: 'Shop Service',
+          headerBackTitle: 'Back',
+          headerLeft: undefined,
         }}
       />
     </Stack.Navigator>
@@ -251,7 +291,7 @@ const ProgramsStackNavigator: React.FC = () => {
         component={CreateProgramDetailsScreen}
         options={{
           title: t('programs.createProgram', 'Create Program'), 
-          headerBackTitle: 'Programs', // Shows arrow + parent name
+          headerBackTitle: 'Back', // Shows arrow + "Back"
           headerLeft: undefined, // Use default back button (ensures arrow shows)
         }}
       />
@@ -260,7 +300,7 @@ const ProgramsStackNavigator: React.FC = () => {
         component={CreateProgramServicesScreen}
         options={{
           title: t('programs.createProgram', 'Create Program'), 
-          headerBackTitle: 'Programs', // Shows arrow + parent name
+          headerBackTitle: 'Back', // Shows arrow + "Back"
           headerLeft: undefined, // Use default back button (ensures arrow shows)
         }}
       />
@@ -278,15 +318,6 @@ const ProgramsStackNavigator: React.FC = () => {
         component={AssignProgramToVehiclesScreen}
         options={{
           title: t('programs.assignToVehicles', 'Assign to Vehicles'),
-          headerBackTitle: 'Programs', // Shows arrow + parent name
-          headerLeft: undefined, // Use default back button (ensures arrow shows)
-        }}
-      />
-      <Stack.Screen
-        name="ProgramDetail"
-        component={ProgramDetailScreen}
-        options={{
-          title: t('programs.programDetails', 'Program Details'),
           headerBackTitle: 'Programs', // Shows arrow + parent name
           headerLeft: undefined, // Use default back button (ensures arrow shows)
         }}

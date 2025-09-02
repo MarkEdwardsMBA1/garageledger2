@@ -57,75 +57,100 @@ export interface CategoryStats {
 export const categoryIconMap: { [key: string]: CategoryIconConfig } = {
   'brake-system': {
     icon: DiscBrakeIcon,
-    color: theme.colors.text,            // Standardized text color
-    bgColor: theme.colors.backgroundSecondary, // Premium titanium-like tint
+    color: '#111827',                    // Oil Black - clean, professional automotive color
+    bgColor: '#f1f5f915',               // Light gray background with alpha
     name: 'Brake System',
   },
   'steering-suspension': {
     icon: SuspensionIcon,
-    color: theme.colors.text,            // Standardized text color
-    bgColor: theme.colors.backgroundSecondary, // Premium titanium-like tint
+    color: '#111827',                    // Oil Black - clean, professional automotive color
+    bgColor: '#f1f5f915',               // Light gray background with alpha
     name: 'Steering & Suspension',
   },
   'engine-powertrain': {
     icon: EngineIcon,
-    color: theme.colors.text,            // Standardized text color
-    bgColor: theme.colors.backgroundSecondary, // Premium titanium-like tint
+    color: '#111827',                    // Oil Black - clean, professional automotive color
+    bgColor: '#f1f5f915',               // Light gray background with alpha
     name: 'Engine & Powertrain',
   },
   'tires-wheels': {
     icon: TireIcon,
-    color: theme.colors.text,            // Standardized text color
-    bgColor: theme.colors.backgroundSecondary, // Premium titanium-like tint
+    color: '#111827',                    // Oil Black - clean, professional automotive color
+    bgColor: '#f1f5f915',               // Light gray background with alpha
     name: 'Tires & Wheels',
   },
   'electrical': {
     icon: LightningBoltIcon,
-    color: theme.colors.text,            // Standardized text color
-    bgColor: theme.colors.backgroundSecondary, // Premium titanium-like tint
+    color: '#111827',                    // Oil Black - clean, professional automotive color
+    bgColor: '#f1f5f915',               // Light gray background with alpha
     name: 'Electrical',
   },
   'transmission-drivetrain': {
     icon: TransmissionCircleIcon,
-    color: theme.colors.text,            // Standardized text color
-    bgColor: theme.colors.backgroundSecondary, // Premium titanium-like tint
+    color: '#111827',                    // Oil Black - clean, professional automotive color
+    bgColor: '#f1f5f915',               // Light gray background with alpha
     name: 'Transmission & Drivetrain',
   },
   'interior-comfort': {
     icon: AirFilterIcon,
-    color: theme.colors.text,            // Standardized text color
-    bgColor: theme.colors.backgroundSecondary, // Premium titanium-like tint
+    color: '#111827',                    // Oil Black - clean, professional automotive color
+    bgColor: '#f1f5f915',               // Light gray background with alpha
     name: 'Interior Comfort & Convenience',
   },
   'hvac-climate': {
     icon: ThermometerIcon,
-    color: theme.colors.text,            // Standardized text color
-    bgColor: theme.colors.backgroundSecondary, // Premium titanium-like tint
+    color: '#111827',                    // Oil Black - clean, professional automotive color
+    bgColor: '#f1f5f915',               // Light gray background with alpha
     name: 'HVAC & Climate Control',
   },
   'body-exterior': {
     icon: CarDoorIcon,
-    color: theme.colors.text,            // Standardized text color
-    bgColor: theme.colors.backgroundSecondary, // Premium titanium-like tint
+    color: '#111827',                    // Oil Black - clean, professional automotive color
+    bgColor: '#f1f5f915',               // Light gray background with alpha
     name: 'Body & Exterior',
   },
   'lighting': {
     icon: LowBeamIcon,
-    color: theme.colors.text,            // Standardized text color
-    bgColor: theme.colors.backgroundSecondary, // Premium titanium-like tint
+    color: '#111827',                    // Oil Black - clean, professional automotive color
+    bgColor: '#f1f5f915',               // Light gray background with alpha
     name: 'Lighting',
   },
   'fluids-consumables': {
     icon: OilCanIcon,
-    color: theme.colors.text,            // Standardized text color
-    bgColor: theme.colors.backgroundSecondary, // Premium titanium-like tint
+    color: '#111827',                    // Oil Black - clean, professional automotive color
+    bgColor: '#f1f5f915',               // Light gray background with alpha
     name: 'Fluids & Consumables',
   },
   'user-defined': {
-    icon: SettingsIcon,              // Use the better gear icon from steering-suspension
-    color: theme.colors.text,            // Standardized text color
-    bgColor: theme.colors.backgroundSecondary, // Premium titanium-like tint
+    icon: SettingsIcon,
+    color: '#111827',                    // Oil Black - clean, professional automotive color
+    bgColor: '#f1f5f915',               // Light gray background with alpha
     name: 'User-Defined (Custom)',
+  },
+  'custom-service': {
+    icon: SettingsIcon,
+    color: '#111827',                    // Oil Black - clean, professional automotive color
+    bgColor: '#f1f5f915',               // Light gray background with alpha
+    name: 'Custom Service',
+  },
+  // Legacy key aliases for backward compatibility with tests
+  'hvac': {
+    icon: ThermometerIcon,
+    color: '#111827',                    // Oil Black - clean, professional automotive color
+    bgColor: '#f1f5f915',               // Light gray background with alpha
+    name: 'HVAC & Climate Control',
+  },
+  'exterior': {
+    icon: CarDoorIcon,
+    color: '#111827',                    // Oil Black - clean, professional automotive color
+    bgColor: '#f1f5f915',               // Light gray background with alpha
+    name: 'Body & Exterior',
+  },
+  'interior': {
+    icon: AirFilterIcon,
+    color: '#111827',                    // Oil Black - clean, professional automotive color
+    bgColor: '#f1f5f915',               // Light gray background with alpha
+    name: 'Interior Comfort & Convenience',
   },
 };
 
@@ -150,8 +175,8 @@ export const getCategoryDisplayData = (): CategoryDisplayData[] => {
       key: categoryKey,
       config: iconConfig || {
         icon: SettingsIcon,
-        color: theme.colors.text,
-        bgColor: theme.colors.backgroundSecondary, // Premium titanium-like tint
+        color: '#111827',                    // Oil Black - clean, professional automotive color
+        bgColor: '#f1f5f915',               // Light gray background with alpha
         name: getCategoryName(categoryKey),
       },
       totalServices: subcategoryKeys.length,
@@ -223,9 +248,13 @@ export const getOrderedCategoryData = (): CategoryDisplayData[] => {
     'steering-suspension',    // Handling & safety
     'tires-wheels',          // Contact patch
     'electrical',            // Modern vehicle systems
-    'hvac',                  // Comfort
-    'exterior',              // Appearance
-    'interior',              // Convenience
+    'transmission-drivetrain', // Drivetrain
+    'hvac-climate',          // Comfort
+    'body-exterior',         // Appearance
+    'interior-comfort',      // Convenience
+    'lighting',              // Visibility
+    'fluids-consumables',    // Maintenance supplies
+    'custom-service',        // User-defined
   ];
   
   return priorityOrder

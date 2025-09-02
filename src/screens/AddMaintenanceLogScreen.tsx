@@ -1,5 +1,5 @@
 // Add Maintenance Log screen - Create new maintenance record
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -21,8 +22,9 @@ import { PhotoPicker } from '../components/common/PhotoPicker';
 import { Loading } from '../components/common/Loading';
 import { Typography } from '../components/common/Typography';
 import { MaintenanceCategorySelector } from '../components/common/MaintenanceCategorySelector';
+import { MaintenanceCategoryPicker } from '../components/common/MaintenanceCategoryPicker';
 import { getSubcategoryName } from '../types/MaintenanceCategories';
-import { Vehicle, MaintenanceLog } from '../types';
+import { Vehicle, MaintenanceLog, SelectedService, AdvancedServiceConfiguration } from '../types';
 import { maintenanceLogRepository } from '../repositories/FirebaseMaintenanceLogRepository';
 import { vehicleRepository } from '../repositories/VehicleRepository';
 import { useAuth } from '../contexts/AuthContext';
@@ -35,14 +37,13 @@ interface MaintenanceLogFormData {
   title: string;
   date: Date;
   mileage: string;
-  categoryKey: string;
-  subcategoryKey: string;
-  cost: string;
+  services: SelectedService[]; // Multiple services per log entry
+  totalCost: string;
   notes: string;
   tags: string;
   photos: string[];
   // Service type for detailed tracking
-  serviceType: 'shop' | 'diy';
+  serviceType: 'shop' | 'diy' | null;
   // Shop service specific fields
   shopName: string;
   serviceDescription: string;
@@ -96,23 +97,42 @@ const AddMaintenanceLogScreen: React.FC = () => {
   const [currentVehicle, setCurrentVehicle] = useState<Vehicle | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showAdvancedParts, setShowAdvancedParts] = useState(false);
+  const [serviceConfigurations, setServiceConfigurations] = useState<Map<string, AdvancedServiceConfiguration>>(new Map());
+  const [showDIYPicker, setShowDIYPicker] = useState(false);
+  const [showShopPicker, setShowShopPicker] = useState(false);
   const vehicleId = params?.vehicleId;
   const [formData, setFormData] = useState<MaintenanceLogFormData>({
     title: '',
     date: new Date(),
     mileage: '',
-    categoryKey: '',
-    subcategoryKey: '',
-    cost: '',
+    services: [],
+    totalCost: '',
     notes: '',
     tags: '',
     photos: [],
-    serviceType: 'diy',
+    serviceType: null as 'shop' | 'diy' | null,
     shopName: '',
     serviceDescription: '',
     parts: [],
     fluids: [],
   });
+
+  // Configure navigation header with back button
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: 'Log Maintenance',
+      headerLeft: () => (
+        <TouchableOpacity 
+          onPress={() => navigation.goBack()}
+          style={{ flexDirection: 'row', alignItems: 'center', paddingLeft: 10 }}
+        >
+          <Ionicons name="chevron-back" size={24} color={theme.colors.surface} />
+          <Text style={{ color: theme.colors.surface, fontSize: 17, marginLeft: 5 }}>Back</Text>
+        </TouchableOpacity>
+      ),
+      headerBackTitle: 'Back',
+    });
+  }, [navigation, vehicleId]);
 
   // Load the specific vehicle for this maintenance log
   useEffect(() => {
@@ -162,22 +182,14 @@ const AddMaintenanceLogScreen: React.FC = () => {
     
     setLoading(true);
     try {
-      // Calculate total cost for DIY services
+      // Calculate total cost
       let totalCost: number | undefined;
       if (formData.serviceType === 'shop') {
-        totalCost = formData.cost && parseFloat(formData.cost) > 0 ? parseFloat(formData.cost) : undefined;
+        totalCost = formData.totalCost && parseFloat(formData.totalCost) > 0 ? parseFloat(formData.totalCost) : undefined;
       } else if (formData.serviceType === 'diy') {
-        const partsCost = formData.parts.reduce((sum, part) => {
-          const quantity = parseFloat(part.quantity) || 0;
-          const unitCost = parseFloat(part.unitCost) || 0;
-          return sum + (quantity * unitCost);
-        }, 0);
-        
-        const fluidsCost = formData.fluids.reduce((sum, fluid) => {
-          return sum + (parseFloat(fluid.cost) || 0);
-        }, 0);
-        
-        totalCost = partsCost + fluidsCost > 0 ? partsCost + fluidsCost : undefined;
+        // For now, use the totalCost field directly for DIY
+        // TODO: Re-implement detailed parts/fluids cost calculation for multiple services
+        totalCost = formData.totalCost && parseFloat(formData.totalCost) > 0 ? parseFloat(formData.totalCost) : undefined;
       }
 
       // Prepare title and notes based on service type
@@ -185,13 +197,23 @@ const AddMaintenanceLogScreen: React.FC = () => {
       let notes: string | undefined;
       
       if (formData.serviceType === 'shop') {
-        title = formData.serviceDescription.trim();
+        title = formData.serviceDescription.trim() || (
+          formData.services.length === 1 
+            ? formData.services[0].serviceName 
+            : `${formData.services.length} Services`
+        );
         // Combine shop name and additional notes
         const shopInfo = formData.shopName.trim() ? `Shop: ${formData.shopName.trim()}` : '';
         const additionalNotes = formData.notes.trim();
         notes = [shopInfo, additionalNotes].filter(n => n).join('\n') || undefined;
       } else {
-        title = formData.title.trim() || getSubcategoryName(formData.categoryKey, formData.subcategoryKey);
+        title = formData.title.trim() || (
+          formData.services.length === 1 
+            ? formData.services[0].serviceName 
+            : formData.services.length > 1 
+              ? `${formData.services.length} Services`
+              : 'Maintenance'
+        );
         notes = formData.notes.trim() || undefined;
       }
 
@@ -201,12 +223,15 @@ const AddMaintenanceLogScreen: React.FC = () => {
         title,
         date: formData.date,
         mileage: parseInt(formData.mileage) || 0,
-        category: `${formData.categoryKey}:${formData.subcategoryKey}`, // Store as combined key
-        cost: totalCost,
+        services: formData.services, // Store services array
+        totalCost,
         notes,
         tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0),
         photos: formData.photos,
         createdAt: new Date(),
+        serviceType: formData.serviceType,
+        shopName: formData.shopName.trim() || undefined,
+        serviceDescription: formData.serviceDescription.trim() || undefined,
       };
 
       // Remove undefined fields to prevent Firestore errors
@@ -231,9 +256,8 @@ const AddMaintenanceLogScreen: React.FC = () => {
                 title: '',
                 date: prev.date, // Keep same date
                 mileage: prev.mileage, // Keep same mileage
-                categoryKey: '',
-                subcategoryKey: '',
-                cost: '',
+                services: [],
+                totalCost: '',
                 notes: '',
                 tags: '',
                 photos: [],
@@ -248,7 +272,7 @@ const AddMaintenanceLogScreen: React.FC = () => {
           {
             text: t('common.done', 'Done'),
             style: 'cancel',
-            onPress: () => navigation.navigate('MaintenanceList'),
+            onPress: () => navigation.goBack(),
           },
         ]
       );
@@ -287,8 +311,8 @@ const AddMaintenanceLogScreen: React.FC = () => {
       missingFields.push('• Service date');
     }
 
-    if (!formData.categoryKey || !formData.subcategoryKey) {
-      missingFields.push('• Maintenance type/category');
+    if (!formData.services || formData.services.length === 0) {
+      missingFields.push('• At least one maintenance service');
     }
 
     // Check shop service requirements
@@ -296,13 +320,13 @@ const AddMaintenanceLogScreen: React.FC = () => {
       if (!formData.serviceDescription || !formData.serviceDescription.trim()) {
         missingFields.push('• Service description (what was performed)');
       }
-      if (formData.cost && isNaN(parseFloat(formData.cost))) {
-        invalidFields.push('• Cost must be a valid amount (e.g., 45.99) or leave blank');
+      if (formData.totalCost && isNaN(parseFloat(formData.totalCost))) {
+        invalidFields.push('• Total cost must be a valid amount (e.g., 45.99) or leave blank');
       }
     }
 
-    // Validate DIY parts and fluids if detailed tracking is enabled
-    if (formData.serviceType === 'diy' && supportsDetailedTracking(formData.categoryKey, formData.subcategoryKey)) {
+    // Validate DIY parts and fluids if detailed tracking is enabled (disabled for now)
+    if (false && formData.serviceType === 'diy') {
       // Validate parts
       formData.parts.forEach((part, index) => {
         if (part.quantity && isNaN(parseFloat(part.quantity))) {
@@ -368,11 +392,13 @@ const AddMaintenanceLogScreen: React.FC = () => {
   };
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(Platform.OS === 'ios');
+    // Always hide the date picker after selection
+    setShowDatePicker(false);
     if (selectedDate) {
       setFormData(prev => ({ ...prev, date: selectedDate }));
     }
   };
+
 
   const renderVehicleContext = () => {
     if (!currentVehicle) {
@@ -399,19 +425,28 @@ const AddMaintenanceLogScreen: React.FC = () => {
     );
   };
 
-  const handleCategorySelection = (categoryKey: string, subcategoryKey: string) => {
-    setFormData(prev => ({ 
-      ...prev, 
-      categoryKey, 
-      subcategoryKey,
-      // Auto-populate title based on subcategory selection if title is empty
-      title: prev.title || getSubcategoryName(categoryKey, subcategoryKey),
-      // Initialize parts/fluids for Oil & Filter Change
-      parts: supportsDetailedTracking(categoryKey, subcategoryKey) ? 
-        (prev.parts.length === 0 ? getDefaultParts(categoryKey, subcategoryKey) : prev.parts) : [],
-      fluids: supportsDetailedTracking(categoryKey, subcategoryKey) ? 
-        (prev.fluids.length === 0 ? getDefaultFluids(categoryKey, subcategoryKey) : prev.fluids) : []
+  const handleServicesSelection = (services: SelectedService[], configs?: Map<string, AdvancedServiceConfiguration>) => {
+    setFormData(prev => ({
+      ...prev,
+      services,
+      // Auto-populate title based on services selection if title is empty
+      title: prev.title || (
+        services.length === 1 
+          ? services[0].serviceName 
+          : services.length > 1 
+            ? `${services.length} Services`
+            : ''
+      ),
+      // For now, disable detailed parts/fluids tracking with multiple services
+      // We can add this back later as an advanced feature
+      parts: [],
+      fluids: []
     }));
+    
+    // Store service configurations for detailed tracking
+    if (configs) {
+      setServiceConfigurations(configs);
+    }
   };
 
   // Check if category supports detailed part tracking
@@ -692,51 +727,10 @@ const AddMaintenanceLogScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Vehicle Context */}
-        {renderVehicleContext()}
-
-        {/* Mileage & Date */}
+        {/* Service Selection */}
         <Card variant="elevated" style={styles.sectionCard}>
           <Typography variant="heading" style={styles.sectionTitle}>
-            {t('maintenance.mileageAndDate', 'Mileage & Date')}
-          </Typography>
-          
-          <Input
-            label={t('maintenance.mileage', 'Mileage')}
-            value={formData.mileage}
-            onChangeText={(mileage) => setFormData(prev => ({ ...prev, mileage }))}
-            placeholder="50000"
-            keyboardType="numeric"
-            required
-          />
-          
-          <TouchableOpacity
-            style={styles.dateSelector}
-            onPress={() => setShowDatePicker(true)}
-          >
-            <Typography variant="label" style={styles.dateLabel}>
-              {t('maintenance.date', 'Date')} *
-            </Typography>
-            <Typography variant="bodyLarge" style={styles.dateValue}>
-              {formatDate(formData.date)}
-            </Typography>
-          </TouchableOpacity>
-          
-          {showDatePicker && (
-            <DateTimePicker
-              value={formData.date}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              onChange={handleDateChange}
-              maximumDate={new Date()} // Prevent future dates
-            />
-          )}
-        </Card>
-
-        {/* Service Type Selection (at the top for better UX flow) */}
-        <Card variant="elevated" style={styles.sectionCard}>
-          <Typography variant="heading" style={styles.sectionTitle}>
-            Service Type
+            Who Performed the Maintenance?
           </Typography>
           
           <View style={styles.serviceTypeContainer}>
@@ -745,13 +739,16 @@ const AddMaintenanceLogScreen: React.FC = () => {
                 styles.serviceTypeOption,
                 formData.serviceType === 'diy' && styles.serviceTypeOptionSelected
               ]}
-              onPress={() => setFormData(prev => ({ ...prev, serviceType: 'diy' }))}
+              onPress={() => {
+                setFormData(prev => ({ ...prev, serviceType: 'diy' }));
+                setShowDIYPicker(true);
+              }}
             >
               <Typography variant="bodyLarge" style={[
                 styles.serviceTypeText,
                 formData.serviceType === 'diy' && styles.serviceTypeTextSelected
               ]}>
-                🛠️ DIY Service
+                DIY
               </Typography>
               <Typography variant="body" style={[
                 styles.serviceTypeDescription,
@@ -766,13 +763,15 @@ const AddMaintenanceLogScreen: React.FC = () => {
                 styles.serviceTypeOption,
                 formData.serviceType === 'shop' && styles.serviceTypeOptionSelected
               ]}
-              onPress={() => setFormData(prev => ({ ...prev, serviceType: 'shop' }))}
+              onPress={() => {
+                navigation.navigate('ShopServiceStep1', { vehicleId: vehicleId });
+              }}
             >
               <Typography variant="bodyLarge" style={[
                 styles.serviceTypeText,
                 formData.serviceType === 'shop' && styles.serviceTypeTextSelected
               ]}>
-                🔧 Shop Service
+                Shop
               </Typography>
               <Typography variant="body" style={[
                 styles.serviceTypeDescription,
@@ -784,19 +783,9 @@ const AddMaintenanceLogScreen: React.FC = () => {
           </View>
         </Card>
 
-        {/* Category Selection */}
-        <Card variant="elevated" style={styles.sectionCard}>
-          <MaintenanceCategorySelector
-            label={t('maintenance.category', 'Category')}
-            categoryKey={formData.categoryKey}
-            subcategoryKey={formData.subcategoryKey}
-            onSelectionChange={handleCategorySelection}
-            required
-          />
-        </Card>
 
         {/* Shop Service Details */}
-        {formData.serviceType === 'shop' && formData.categoryKey && (
+        {formData.serviceType === 'shop' && formData.services.length > 0 && (
           <Card variant="elevated" style={styles.sectionCard}>
             <Typography variant="heading" style={styles.sectionTitle}>
               Shop Service Details
@@ -820,8 +809,8 @@ const AddMaintenanceLogScreen: React.FC = () => {
             
             <Input
               label="Total Cost"
-              value={formData.cost}
-              onChangeText={(cost) => setFormData(prev => ({ ...prev, cost }))}
+              value={formData.totalCost}
+              onChangeText={(totalCost) => setFormData(prev => ({ ...prev, totalCost }))}
               placeholder="89.99"
               keyboardType="numeric"
             />
@@ -829,7 +818,7 @@ const AddMaintenanceLogScreen: React.FC = () => {
         )}
 
         {/* Detailed Parts & Fluids (DIY service for supported categories) */}
-        {formData.serviceType === 'diy' && supportsDetailedTracking(formData.categoryKey, formData.subcategoryKey) && (
+        {false && formData.serviceType === 'diy' && (
           <>
             {/* Parts Section */}
             <Card variant="elevated" style={styles.sectionCard}>
@@ -1004,59 +993,6 @@ const AddMaintenanceLogScreen: React.FC = () => {
           </>
         )}
 
-        {/* Additional Details */}
-        <Card variant="elevated" style={styles.sectionCard}>
-          <Typography variant="heading" style={styles.sectionTitle}>
-            {t('maintenance.additionalDetails', 'Additional Details')}
-          </Typography>
-          
-          <Input
-            label={t('maintenance.notes', 'Notes')}
-            value={formData.notes}
-            onChangeText={(notes) => setFormData(prev => ({ ...prev, notes }))}
-            placeholder={t('maintenance.notesPlaceholder', 'Additional notes about the maintenance...')}
-            multiline
-            numberOfLines={3}
-          />
-
-          <Input
-            label={t('maintenance.tags', 'Tags')}
-            value={formData.tags}
-            onChangeText={(tags) => setFormData(prev => ({ ...prev, tags }))}
-            placeholder={t('maintenance.tagsPlaceholder', 'warranty, dealer, DIY (separate with commas)')}
-          />
-        </Card>
-
-        {/* Photos */}
-        <Card variant="elevated" style={styles.sectionCard}>
-          <Typography variant="heading" style={styles.sectionTitle}>
-            {t('maintenance.photos', 'Photos')}
-          </Typography>
-          
-          <PhotoPicker
-            onPhotoSelected={handlePhotoSelected}
-            placeholder={t('maintenance.addPhoto', 'Add maintenance photo')}
-          />
-
-          {/* Display selected photos */}
-          {formData.photos.length > 0 && (
-            <View style={styles.photoList}>
-              {formData.photos.map((photoUri, index) => (
-                <View key={index} style={styles.photoItem}>
-                  <Typography variant="bodySmall">
-                    Photo {index + 1}
-                  </Typography>
-                  <Button
-                    title={t('common.remove', 'Remove')}
-                    variant="text"
-                    size="sm"
-                    onPress={() => handlePhotoRemoved(index)}
-                  />
-                </View>
-              ))}
-            </View>
-          )}
-        </Card>
       </ScrollView>
 
       {/* Action Buttons */}
@@ -1064,18 +1000,36 @@ const AddMaintenanceLogScreen: React.FC = () => {
         <Button
           title={t('common.cancel', 'Cancel')}
           variant="outline"
-          onPress={() => navigation.navigate('MaintenanceList')}
+          onPress={() => navigation.goBack()}
           style={styles.button}
           disabled={loading}
         />
         <Button
-          title={t('maintenance.logMaintenance', 'Log Maintenance')}
+          title={t('common.save', 'Save')}
           variant="primary"
           onPress={handleSave}
           disabled={loading}
           style={styles.button}
         />
       </View>
+
+      {/* DIY Service Picker Modal */}
+      <MaintenanceCategoryPicker
+        visible={showDIYPicker}
+        selectedServices={formData.serviceType === 'diy' ? formData.services : []}
+        onSelectionComplete={(services, configs) => {
+          setFormData(prev => ({ ...prev, serviceType: 'diy', services }));
+          if (configs) {
+            setServiceConfigurations(configs);
+          }
+          setShowDIYPicker(false);
+        }}
+        onCancel={() => setShowDIYPicker(false)}
+        allowMultiple={true}
+        enableConfiguration={true}
+        serviceType="diy"
+      />
+
     </View>
   );
 };

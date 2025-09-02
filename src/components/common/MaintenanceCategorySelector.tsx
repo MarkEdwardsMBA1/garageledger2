@@ -10,15 +10,13 @@ import { useTranslation } from 'react-i18next';
 import { theme } from '../../utils/theme';
 import { Typography } from './Typography';
 import { MaintenanceCategoryPicker } from './MaintenanceCategoryPicker';
-import { getCategoryName, getSubcategoryName } from '../../types/MaintenanceCategories';
+import { SelectedService, AdvancedServiceConfiguration } from '../../types';
 
 interface MaintenanceCategorySelectorProps {
-  /** Selected category key */
-  categoryKey?: string;
-  /** Selected subcategory key */
-  subcategoryKey?: string;
-  /** Called when selection changes */
-  onSelectionChange: (categoryKey: string, subcategoryKey: string) => void;
+  /** Selected services */
+  selectedServices?: SelectedService[];
+  /** Called when services change */
+  onServicesChange: (services: SelectedService[], configs?: Map<string, AdvancedServiceConfiguration>) => void;
   /** Label for the selector */
   label?: string;
   /** Whether selector is disabled */
@@ -27,41 +25,53 @@ interface MaintenanceCategorySelectorProps {
   required?: boolean;
   /** Error message to display */
   error?: string;
+  /** Whether to allow multiple service selection */
+  allowMultiple?: boolean;
+  /** Enable detailed configuration for parts/fluids/costs */
+  enableConfiguration?: boolean;
+  /** Service type for configuration UI (shop = simple, diy = advanced) */
+  serviceType?: 'shop' | 'diy';
 }
 
 /**
  * Maintenance Category Selector
- * Shows selected category/subcategory and opens hierarchical picker
+ * Shows selected services and opens category picker modal
  */
 export const MaintenanceCategorySelector: React.FC<MaintenanceCategorySelectorProps> = ({
-  categoryKey,
-  subcategoryKey,
-  onSelectionChange,
+  selectedServices = [],
+  onServicesChange,
   label,
   disabled = false,
   required = false,
   error,
+  allowMultiple = true,
+  enableConfiguration = false,
+  serviceType = 'diy',
 }) => {
   const { t } = useTranslation();
   const [pickerVisible, setPickerVisible] = useState(false);
 
-  const handleSelectionComplete = (selectedCategoryKey: string, selectedSubcategoryKey: string) => {
-    onSelectionChange(selectedCategoryKey, selectedSubcategoryKey);
+  const handleSelectionComplete = (services: SelectedService[], configs?: Map<string, AdvancedServiceConfiguration>) => {
+    onServicesChange(services, configs);
     setPickerVisible(false);
   };
 
   const getDisplayText = () => {
-    if (!categoryKey || !subcategoryKey) {
-      return t('maintenance.selectMaintenanceType', 'Select Maintenance Type');
+    if (selectedServices.length === 0) {
+      return allowMultiple 
+        ? t('maintenance.selectMaintenanceServices', 'Select Maintenance Services')
+        : t('maintenance.selectMaintenanceType', 'Select Maintenance Type');
     }
     
-    const categoryName = getCategoryName(categoryKey);
-    const subcategoryName = getSubcategoryName(categoryKey, subcategoryKey);
+    if (selectedServices.length === 1) {
+      return selectedServices[0].serviceName;
+    }
     
-    return `${categoryName} → ${subcategoryName}`;
+    // Multiple services selected
+    return t('maintenance.servicesSelected', `${selectedServices.length} services selected`);
   };
 
-  const hasSelection = categoryKey && subcategoryKey;
+  const hasSelection = selectedServices.length > 0;
 
   return (
     <View style={styles.container}>
@@ -103,10 +113,10 @@ export const MaintenanceCategorySelector: React.FC<MaintenanceCategorySelectorPr
           </View>
         </View>
         
-        {hasSelection && (
+        {hasSelection && selectedServices.length > 1 && (
           <View style={styles.selectionPreview}>
-            <Typography variant="caption" style={styles.categoryPath}>
-              {getCategoryName(categoryKey)}
+            <Typography variant="caption" style={styles.servicesList}>
+              {selectedServices.map(service => service.serviceName).join(', ')}
             </Typography>
           </View>
         )}
@@ -120,11 +130,13 @@ export const MaintenanceCategorySelector: React.FC<MaintenanceCategorySelectorPr
 
       <MaintenanceCategoryPicker
         visible={pickerVisible}
-        selectedCategory={categoryKey}
-        selectedSubcategory={subcategoryKey}
+        selectedServices={selectedServices}
         onSelectionComplete={handleSelectionComplete}
         onCancel={() => setPickerVisible(false)}
         disabled={disabled}
+        allowMultiple={allowMultiple}
+        enableConfiguration={enableConfiguration}
+        serviceType={serviceType}
       />
     </View>
   );
@@ -194,9 +206,10 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: theme.colors.borderLight,
   },
-  categoryPath: {
+  servicesList: {
     color: theme.colors.textSecondary,
     fontStyle: 'italic',
+    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.sm,
   },
   errorText: {
     color: theme.colors.error,

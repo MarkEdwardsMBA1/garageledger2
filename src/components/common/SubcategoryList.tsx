@@ -6,6 +6,7 @@ import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { theme } from '../../utils/theme';
 import { Typography } from './Typography';
 import { CheckIcon } from '../icons';
+import { AddCustomServiceModal } from './AddCustomServiceModal';
 import { getSubcategoryKeys, getSubcategoryName, getComponents } from '../../types/MaintenanceCategories';
 import { AdvancedServiceConfiguration } from '../../types';
 
@@ -50,18 +51,79 @@ export const SubcategoryList: React.FC<SubcategoryListProps> = ({
   onConfigureService,
   testID = 'subcategory-list',
 }) => {
+  // State for custom service modal
+  const [showCustomServiceModal, setShowCustomServiceModal] = useState(false);
 
   // Get subcategories for this category
   const subcategoryKeys = getSubcategoryKeys(categoryKey);
   
   // Build service items with component details
-  const services: ServiceItem[] = subcategoryKeys.map(subKey => ({
+  const baseServices: ServiceItem[] = subcategoryKeys.map(subKey => ({
     key: `${categoryKey}.${subKey}`,
     name: getSubcategoryName(categoryKey, subKey),
     components: getComponents(categoryKey, subKey),
   }));
 
+  // Extract created custom services if this is the custom-service category
+  const customServices: ServiceItem[] = [];
+  const regularServices: ServiceItem[] = [];
+
+  if (categoryKey === 'custom-service') {
+    // Find all selected services that start with 'custom-service.' but aren't the base selector
+    const createdCustomServices = Array.from(selectedServices)
+      .filter(serviceKey => 
+        serviceKey.startsWith('custom-service.') && 
+        serviceKey !== 'custom-service.custom'
+      )
+      .sort(); // Sort alphabetically for consistent order (creation order would require timestamps)
+
+    // Create service items for created custom services
+    createdCustomServices.forEach(serviceKey => {
+      const config = serviceConfigs?.get(serviceKey);
+      const customServiceName = config?.displayName || 
+        serviceKey.replace('custom-service.', '').replace(/-/g, ' ')
+          .replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+      
+      customServices.push({
+        key: serviceKey,
+        name: customServiceName,
+        components: undefined, // Custom services don't have predefined components
+      });
+    });
+
+    // Separate the base "Custom Service" selector from other services
+    baseServices.forEach(service => {
+      if (service.key === 'custom-service.custom') {
+        regularServices.push(service);
+      } else {
+        regularServices.push(service);
+      }
+    });
+  } else {
+    regularServices.push(...baseServices);
+  }
+
+  // Combine: created custom services first, then regular services (with Custom Service selector at end)
+  const services: ServiceItem[] = [...customServices, ...regularServices];
+
   const handleServiceToggle = (serviceKey: string, serviceName: string) => {
+    // Special handling for the base custom service selector
+    if (serviceKey === 'custom-service.custom') {
+      const wasSelected = selectedServices.has(serviceKey);
+      
+      if (wasSelected) {
+        // If already selected, open config to reconfigure
+        if (onConfigureService) {
+          onConfigureService(serviceKey, serviceName, categoryKey, false);
+        }
+      } else {
+        // If not selected, show custom service modal
+        setShowCustomServiceModal(true);
+      }
+      return;
+    }
+
+    // Created custom services and standard services both use regular handling
     const wasSelected = selectedServices.has(serviceKey);
     
     if (wasSelected) {
@@ -78,18 +140,28 @@ export const SubcategoryList: React.FC<SubcategoryListProps> = ({
     }
   };
 
-  const formatComponents = (components: ServiceItem['components']): string => {
-    const parts = components?.parts || [];
-    const fluids = components?.fluids || [];
-    const labor = components?.labor || [];
+  // Handle custom service save from modal
+  const handleCustomServiceSave = (customServiceName: string) => {
+    // Create unique service key
+    const customServiceKey = `custom-service.${customServiceName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
     
-    const allComponents = [...parts, ...fluids, ...labor];
+    // Add to selected services
+    onToggleService(customServiceKey);
     
-    if (allComponents.length === 0) return '';
-    if (allComponents.length <= 2) return allComponents.join(', ');
+    // Close modal
+    setShowCustomServiceModal(false);
     
-    return `${allComponents.slice(0, 2).join(', ')} +${allComponents.length - 2} more`;
+    // Open interval configuration with the new service name
+    if (onConfigureService) {
+      onConfigureService(customServiceKey, customServiceName, 'Custom Service Reminder', true);
+    }
   };
+
+  // Handle custom service cancel from modal
+  const handleCustomServiceCancel = () => {
+    setShowCustomServiceModal(false);
+  };
+
 
   if (services.length === 0) {
     return (
@@ -106,7 +178,8 @@ export const SubcategoryList: React.FC<SubcategoryListProps> = ({
       {services.map((service, index) => {
         const isSelected = selectedServices.has(service.key);
         const isConfigured = serviceConfigs.has(service.key);
-        const componentText = formatComponents(service.components);
+        const isCustomServiceSelector = service.key === 'custom-service.custom';
+        const isCreatedCustomService = service.key.startsWith('custom-service.') && service.key !== 'custom-service.custom';
         
         return (
           <View
@@ -117,7 +190,7 @@ export const SubcategoryList: React.FC<SubcategoryListProps> = ({
               isConfigured && styles.serviceItemConfigured,
             ]}
           >
-            {/* Main Service Row */}
+            {/* Standard Service Row */}
             <TouchableOpacity
               style={styles.serviceContent}
               onPress={() => handleServiceToggle(service.key, service.name)}
@@ -141,9 +214,10 @@ export const SubcategoryList: React.FC<SubcategoryListProps> = ({
                   {service.name}
                 </Typography>
                 
-                {componentText && (
-                  <Typography variant="caption" style={styles.componentText}>
-                    {componentText}
+                {/* Show "Custom" label for created custom services */}
+                {isCreatedCustomService && (
+                  <Typography variant="caption" style={styles.customServiceLabel}>
+                    Custom
                   </Typography>
                 )}
 
@@ -158,6 +232,13 @@ export const SubcategoryList: React.FC<SubcategoryListProps> = ({
           </View>
         );
       })}
+
+      {/* Custom Service Modal */}
+      <AddCustomServiceModal
+        visible={showCustomServiceModal}
+        onSave={handleCustomServiceSave}
+        onCancel={handleCustomServiceCancel}
+      />
     </View>
   );
 };
@@ -237,16 +318,23 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.semibold,
   },
 
-  componentText: {
-    color: theme.colors.textSecondary,
-    lineHeight: theme.typography.lineHeight.tight * theme.typography.fontSize.sm,
-    marginBottom: theme.spacing.xs,
-  },
 
   configuredText: {
     color: theme.colors.success,
     fontWeight: theme.typography.fontWeight.medium,
     letterSpacing: theme.typography.letterSpacing.wide,
+  },
+
+  customServiceLabel: {
+    color: theme.colors.primary,
+    backgroundColor: theme.colors.primaryLight || `${theme.colors.primary}08`,
+    paddingHorizontal: theme.spacing.xs,
+    paddingVertical: 2,
+    borderRadius: theme.borderRadius.sm,
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.medium,
+    alignSelf: 'flex-start',
+    marginBottom: theme.spacing.xs,
   },
 
 });

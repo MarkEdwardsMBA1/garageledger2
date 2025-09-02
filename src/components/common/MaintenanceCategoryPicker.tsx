@@ -2,201 +2,185 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Modal,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { theme } from '../../utils/theme';
 import { Button } from './Button';
 import { Typography } from './Typography';
-import { Card } from './Card';
-import { 
-  MAINTENANCE_CATEGORIES,
-  getCategoryKeys,
-  getSubcategoryKeys,
-  getCategoryName,
-  getSubcategoryName,
-  getComponents,
-  MaintenanceComponents
-} from '../../types/MaintenanceCategories';
+import { CategoryGrid } from './CategoryGrid';
+import { getOrderedCategoryData } from '../../utils/CategoryIconMapping';
+import { SelectedService, AdvancedServiceConfiguration, ServiceConfiguration } from '../../types';
+import { getSubcategoryName } from '../../types/MaintenanceCategories';
+import { ServiceConfigBottomSheet } from './ServiceConfigBottomSheet';
 
 interface MaintenanceCategoryPickerProps {
-  /** Selected category key */
-  selectedCategory?: string;
-  /** Selected subcategory key */
-  selectedSubcategory?: string;
-  /** Called when category and subcategory are selected */
-  onSelectionComplete: (categoryKey: string, subcategoryKey: string) => void;
+  /** Previously selected services */
+  selectedServices?: SelectedService[];
+  /** Called when services are selected */
+  onSelectionComplete: (services: SelectedService[], configs?: Map<string, AdvancedServiceConfiguration>) => void;
   /** Called when selection is cancelled */
   onCancel?: () => void;
   /** Whether picker is visible */
   visible: boolean;
   /** Disable interaction */
   disabled?: boolean;
+  /** Whether to allow multiple service selection */
+  allowMultiple?: boolean;
+  /** Enable detailed configuration for parts/fluids/costs */
+  enableConfiguration?: boolean;
+  /** Service type for configuration UI (shop = simple, diy = advanced) */
+  serviceType?: 'shop' | 'diy';
 }
 
-type PickerStep = 'category' | 'subcategory';
-
 /**
- * Hierarchical maintenance category picker
- * Guides users through category → subcategory selection
+ * Maintenance category picker with CategoryCard consistency
+ * Uses same visual components as Create Program Advanced tab
  */
 export const MaintenanceCategoryPicker: React.FC<MaintenanceCategoryPickerProps> = ({
-  selectedCategory,
-  selectedSubcategory,
+  selectedServices = [],
   onSelectionComplete,
   onCancel,
   visible,
   disabled = false,
+  allowMultiple = true,
+  enableConfiguration = false,
+  serviceType = 'diy',
 }) => {
   const { t } = useTranslation();
-  const [currentStep, setCurrentStep] = useState<PickerStep>('category');
-  const [tempCategoryKey, setTempCategoryKey] = useState<string>(selectedCategory || '');
+  
+  // Convert SelectedService[] to Set<string> for compatibility with CategoryGrid
+  const initialSelectedSet = new Set(
+    selectedServices.map(service => `${service.categoryKey}.${service.subcategoryKey}`)
+  );
+  
+  const [selectedServiceKeys, setSelectedServiceKeys] = useState<Set<string>>(initialSelectedSet);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  
+  // Configuration state (only when enableConfiguration is true)
+  const [serviceConfigs, setServiceConfigs] = useState<Map<string, AdvancedServiceConfiguration>>(new Map());
+  const [showConfigSheet, setShowConfigSheet] = useState(false);
+  const [configService, setConfigService] = useState<{
+    serviceKey: string;
+    serviceName: string;
+    categoryName: string;
+    wasJustSelected?: boolean;
+  } | null>(null);
 
-  const handleCategorySelect = (categoryKey: string) => {
-    setTempCategoryKey(categoryKey);
-    setCurrentStep('subcategory');
-  };
-
-  const handleSubcategorySelect = (subcategoryKey: string) => {
-    onSelectionComplete(tempCategoryKey, subcategoryKey);
-    // Reset state
-    setCurrentStep('category');
-    setTempCategoryKey('');
-  };
-
-  const handleBack = () => {
-    if (currentStep === 'subcategory') {
-      setCurrentStep('category');
-    } else if (onCancel) {
-      onCancel();
+  // Handle category expand/collapse
+  const handleToggleExpand = (categoryKey: string) => {
+    const updated = new Set(expandedCategories);
+    if (updated.has(categoryKey)) {
+      updated.delete(categoryKey);
+    } else {
+      updated.add(categoryKey);
     }
+    setExpandedCategories(updated);
   };
 
+  // Handle service selection/deselection
+  const handleToggleService = (serviceKey: string) => {
+    const updated = new Set(selectedServiceKeys);
+    
+    if (allowMultiple) {
+      // Multiple selection: toggle the service
+      if (updated.has(serviceKey)) {
+        updated.delete(serviceKey);
+      } else {
+        updated.add(serviceKey);
+      }
+    } else {
+      // Single selection: replace with new selection
+      updated.clear();
+      updated.add(serviceKey);
+    }
+    
+    setSelectedServiceKeys(updated);
+  };
+
+  // Convert selected service keys back to SelectedService objects
+  const convertToSelectedServices = (): SelectedService[] => {
+    return Array.from(selectedServiceKeys).map(serviceKey => {
+      const [categoryKey, subcategoryKey] = serviceKey.split('.');
+      const serviceName = getSubcategoryName(categoryKey, subcategoryKey);
+      
+      return {
+        categoryKey,
+        subcategoryKey,
+        serviceName,
+      };
+    });
+  };
+
+  // Handle service configuration
+  const handleConfigureService = (serviceKey: string, serviceName: string, categoryName: string, wasJustSelected: boolean = false) => {
+    if (!enableConfiguration) return;
+    
+    setConfigService({ serviceKey, serviceName, categoryName, wasJustSelected });
+    setShowConfigSheet(true);
+  };
+
+  // Handle configuration save
+  const handleConfigurationSave = (config: ServiceConfiguration) => {
+    if (configService) {
+      // Since ServiceConfigBottomSheet returns AdvancedServiceConfiguration, cast it
+      const advancedConfig = config as AdvancedServiceConfiguration;
+      setServiceConfigs(prev => new Map(prev).set(configService.serviceKey, advancedConfig));
+    }
+    setShowConfigSheet(false);
+    setConfigService(null);
+  };
+
+  // Handle configuration cancel
+  const handleConfigurationCancel = () => {
+    // If this was a service that was just selected, deselect it
+    if (configService?.wasJustSelected) {
+      setSelectedServiceKeys(prev => {
+        const updated = new Set(prev);
+        updated.delete(configService.serviceKey);
+        return updated;
+      });
+    }
+    
+    setShowConfigSheet(false);
+    setConfigService(null);
+  };
+
+  // Create adapter for ServiceConfigBottomSheet
+  const createServiceAdapter = (serviceKey: string, serviceName: string, categoryName: string) => {
+    return {
+      id: serviceKey,
+      name: serviceName,
+      category: categoryName,
+      description: `${serviceName} maintenance`,
+      defaultMileage: 10000,
+      defaultTimeValue: 12,
+      defaultTimeUnit: 'months',
+      intervalType: 'dual'
+    };
+  };
+
+  // Handle save - convert selections and close
+  const handleSave = () => {
+    const services = convertToSelectedServices();
+    const configs = enableConfiguration ? serviceConfigs : undefined;
+    onSelectionComplete(services, configs);
+  };
+
+  // Handle cancel
   const handleCancel = () => {
-    setCurrentStep('category');
-    setTempCategoryKey('');
+    // Reset to initial state
+    setSelectedServiceKeys(initialSelectedSet);
+    setExpandedCategories(new Set());
     if (onCancel) {
       onCancel();
     }
   };
 
-  const renderCategoryStep = () => {
-    const categoryKeys = getCategoryKeys();
-
-    return (
-      <View style={styles.stepContainer}>
-        <ScrollView style={styles.optionsContainer} showsVerticalScrollIndicator={false}>
-          {categoryKeys.map((categoryKey) => (
-            <TouchableOpacity
-              key={categoryKey}
-              style={[
-                styles.categoryOption,
-                selectedCategory === categoryKey && styles.selectedOption,
-              ]}
-              onPress={() => handleCategorySelect(categoryKey)}
-              disabled={disabled}
-            >
-              <Typography
-                variant="bodyLarge"
-                style={[
-                  styles.optionText,
-                  selectedCategory === categoryKey && styles.selectedOptionText,
-                ]}
-              >
-                {getCategoryName(categoryKey)}
-              </Typography>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-    );
-  };
-
-  const renderSubcategoryStep = () => {
-    const subcategoryKeys = getSubcategoryKeys(tempCategoryKey);
-    const categoryName = getCategoryName(tempCategoryKey);
-
-    return (
-      <View style={styles.stepContainer}>
-        <View style={styles.breadcrumbContainer}>
-          <TouchableOpacity onPress={() => setCurrentStep('category')}>
-            <Typography variant="bodySmall" style={styles.breadcrumbLink}>
-              {t('maintenance.categories', 'Categories')}
-            </Typography>
-          </TouchableOpacity>
-          <Typography variant="bodySmall" style={styles.breadcrumbSeparator}> → </Typography>
-          <Typography variant="bodySmall" style={styles.breadcrumbCurrent}>
-            {categoryName}
-          </Typography>
-        </View>
-
-        
-        <ScrollView style={styles.optionsContainer} showsVerticalScrollIndicator={false}>
-          {subcategoryKeys.map((subcategoryKey) => {
-            const subcategoryName = getSubcategoryName(tempCategoryKey, subcategoryKey);
-            const components = getComponents(tempCategoryKey, subcategoryKey);
-            
-            return (
-              <TouchableOpacity
-                key={subcategoryKey}
-                style={[
-                  styles.subcategoryOption,
-                  selectedCategory === tempCategoryKey && 
-                  selectedSubcategory === subcategoryKey && 
-                  styles.selectedOption,
-                ]}
-                onPress={() => handleSubcategorySelect(subcategoryKey)}
-                disabled={disabled}
-              >
-                <View style={styles.subcategoryContent}>
-                  <Typography
-                    variant="bodyLarge"
-                    style={[
-                      styles.optionText,
-                      selectedCategory === tempCategoryKey && 
-                      selectedSubcategory === subcategoryKey && 
-                      styles.selectedOptionText,
-                    ]}
-                  >
-                    {subcategoryName}
-                  </Typography>
-                  
-                  {components && (
-                    <View style={styles.componentsPreview}>
-                      {components.parts && components.parts.length > 0 && (
-                        <Typography variant="caption" style={styles.componentType}>
-                          Parts: {components.parts.slice(0, 2).join(', ')}
-                          {components.parts.length > 2 && ` (+${components.parts.length - 2} more)`}
-                        </Typography>
-                      )}
-                      {components.fluids && components.fluids.length > 0 && (
-                        <Typography variant="caption" style={styles.componentType}>
-                          Fluids: {components.fluids.slice(0, 2).join(', ')}
-                          {components.fluids.length > 2 && ` (+${components.fluids.length - 2} more)`}
-                        </Typography>
-                      )}
-                      {components.labor && components.labor.length > 0 && (
-                        <Typography variant="caption" style={styles.componentType}>
-                          Labor: {components.labor.slice(0, 2).join(', ')}
-                          {components.labor.length > 2 && ` (+${components.labor.length - 2} more)`}
-                        </Typography>
-                      )}
-                    </View>
-                  )}
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
-    );
-  };
-
-  if (!visible) return null;
+  // Get category display data for CategoryGrid
+  const categoryData = getOrderedCategoryData();
 
   return (
     <Modal
@@ -208,24 +192,70 @@ export const MaintenanceCategoryPicker: React.FC<MaintenanceCategoryPickerProps>
       <View style={styles.modalContainer}>
         <View style={styles.header}>
           <Button
-            title={currentStep === 'subcategory' ? t('common.back', 'Back') : t('common.cancel', 'Cancel')}
+            title={t('common.cancel', 'Cancel')}
             variant="text"
-            onPress={handleBack}
+            onPress={handleCancel}
             style={styles.headerButton}
           />
           <Typography variant="title" style={styles.modalTitle}>
-            {currentStep === 'category' 
-              ? t('maintenance.selectCategory', 'Select Maintenance Category')
-              : t('maintenance.selectSubcategory', 'Select Specific Maintenance')
+            {serviceType === 'shop' 
+              ? t('maintenance.selectShopServices', 'Select Shop Services')
+              : t('maintenance.selectDIYServices', 'Select DIY Services')
             }
           </Typography>
           <View style={styles.headerButton} />
         </View>
 
         <View style={styles.content}>
-          {currentStep === 'category' ? renderCategoryStep() : renderSubcategoryStep()}
+          <ScrollView 
+            style={styles.categoryContainer} 
+            showsVerticalScrollIndicator={false}
+          >
+            <CategoryGrid
+              categories={categoryData}
+              expandedCategories={expandedCategories}
+              onToggleExpand={handleToggleExpand}
+              selectedServices={selectedServiceKeys}
+              onToggleService={handleToggleService}
+              serviceConfigs={enableConfiguration ? serviceConfigs : undefined}
+              onConfigureService={enableConfiguration ? handleConfigureService : undefined}
+            />
+          </ScrollView>
+        </View>
+        
+        {/* Bottom Button Bar */}
+        <View style={styles.bottomButtonBar}>
+          <Button
+            title={t('common.cancel', 'Cancel')}
+            variant="text"
+            onPress={handleCancel}
+            style={styles.bottomButton}
+          />
+          <Button
+            title={t('common.save', 'Save')}
+            variant="primary"
+            onPress={handleSave}
+            disabled={selectedServiceKeys.size === 0}
+            style={styles.bottomButton}
+          />
         </View>
       </View>
+
+      {/* Service Configuration Bottom Sheet */}
+      {enableConfiguration && configService && (
+        <ServiceConfigBottomSheet
+          visible={showConfigSheet}
+          service={createServiceAdapter(
+            configService.serviceKey,
+            configService.serviceName,
+            configService.categoryName
+          )}
+          existingConfig={serviceConfigs.get(configService.serviceKey)}
+          onSave={handleConfigurationSave}
+          onCancel={handleConfigurationCancel}
+          serviceType={serviceType}
+        />
+      )}
     </Modal>
   );
 };
@@ -237,92 +267,43 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: theme.spacing.lg,
+    justifyContent: 'space-between',
+    paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.primary,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.borderLight,
+    borderBottomColor: theme.colors.border,
   },
   headerButton: {
-    width: 80,
+    minWidth: 60,
   },
   modalTitle: {
+    color: theme.colors.surface,
     flex: 1,
     textAlign: 'center',
-    color: theme.colors.text,
+    fontWeight: theme.typography.fontWeight.semibold,
   },
   content: {
     flex: 1,
-    padding: theme.spacing.lg,
+    backgroundColor: theme.colors.background,
   },
-  stepContainer: {
+  categoryContainer: {
     flex: 1,
-  },
-  breadcrumbContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.md,
-    paddingHorizontal: theme.spacing.sm,
-  },
-  breadcrumbLink: {
-    color: theme.colors.primary,
-  },
-  breadcrumbSeparator: {
-    color: theme.colors.textSecondary,
-  },
-  breadcrumbCurrent: {
-    color: theme.colors.text,
-    fontWeight: theme.typography.fontWeight.medium,
-  },
-  stepTitle: {
-    marginBottom: theme.spacing.lg,
-    color: theme.colors.text,
-  },
-  optionsContainer: {
-    flex: 1,
-  },
-  categoryOption: {
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.sm,
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 2,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-  },
-  subcategoryOption: {
     padding: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
   },
-  selectedOption: {
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primaryLight + '10',
+  bottomButtonBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    backgroundColor: theme.colors.background,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
   },
-  optionText: {
-    textAlign: 'center',
-    color: theme.colors.text,
-  },
-  selectedOptionText: {
-    color: theme.colors.primary,
-    fontWeight: theme.typography.fontWeight.semibold,
-  },
-  subcategoryContent: {
-    alignItems: 'center',
-  },
-  componentsPreview: {
-    marginTop: theme.spacing.xs,
-    alignItems: 'center',
-    gap: theme.spacing.xs / 2,
-  },
-  componentType: {
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: theme.typography.lineHeight.snug * theme.typography.fontSize.xs,
+  bottomButton: {
+    flex: 1,
+    marginHorizontal: theme.spacing.sm,
   },
 });
 

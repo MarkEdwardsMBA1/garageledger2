@@ -230,7 +230,7 @@ export class FirebaseMaintenanceLogRepository extends BaseRepository<Maintenance
       const searchLower = searchTerm.toLowerCase();
       return allLogs.filter(log => 
         log.title.toLowerCase().includes(searchLower) ||
-        log.category.toLowerCase().includes(searchLower) ||
+        log.services.some(service => service.serviceName.toLowerCase().includes(searchLower)) ||
         log.notes?.toLowerCase().includes(searchLower) ||
         log.tags.some(tag => tag.toLowerCase().includes(searchLower))
       );
@@ -353,12 +353,15 @@ export class FirebaseMaintenanceLogRepository extends BaseRepository<Maintenance
       date: data.date instanceof Timestamp ? data.date.toDate() : data.date,
       mileage: data.mileage,
       title: data.title,
-      category: data.category,
-      cost: data.cost,
+      services: data.services || [],
+      totalCost: data.totalCost,
       notes: data.notes,
       tags: data.tags || [],
       photos: data.photos || [],
       createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : data.createdAt,
+      serviceType: data.serviceType,
+      shopName: data.shopName,
+      serviceDescription: data.serviceDescription,
     };
   }
 }

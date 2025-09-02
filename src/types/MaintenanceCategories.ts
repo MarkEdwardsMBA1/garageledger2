@@ -28,7 +28,7 @@ export const MAINTENANCE_CATEGORIES: MaintenanceCategorySystem = {
     name: 'Brake System',
     subcategories: {
       'brake-pads-rotors': {
-        name: 'Brake Pads, Rotors & Anti-Rattle Clips',
+        name: 'Brake Pads & Rotors',
         components: {
           parts: ['Brake Pads', 'Brake Rotors', 'Anti-Rattle Clips']
         }

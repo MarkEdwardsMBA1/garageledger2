@@ -20,18 +20,31 @@ export interface Vehicle {
   updatedAt: Date;
 }
 
+// Selected service for maintenance logging
+export interface SelectedService {
+  categoryKey: string;
+  subcategoryKey: string;
+  serviceName: string; // Display name for the service
+  cost?: number; // Optional cost per service
+}
+
 export interface MaintenanceLog {
   id: string;
   vehicleId: string;
   date: Date;
   mileage: number;
   title: string;
-  category: string; // Stored as key, translated at presentation layer
-  cost?: number;
+  services: SelectedService[]; // Support multiple services per log entry
+  totalCost?: number; // Total cost across all services
   notes?: string;
   tags: string[];
   photos: string[];
   createdAt: Date;
+  // Service type for detailed tracking
+  serviceType?: 'shop' | 'diy';
+  // Shop service specific fields
+  shopName?: string;
+  serviceDescription?: string;
 }
 
 export interface Reminder {

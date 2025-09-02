@@ -23,6 +23,7 @@ import { EmptyState } from '../components/common/ErrorState';
 import { SegmentedControl } from '../components/common/SegmentedControl';
 import { ChipsGroup } from '../components/common/ChipsGroup';
 import { QuickPicks } from '../components/common/QuickPicks';
+import { CheckIcon, MaintenanceIcon, ChevronRightIcon } from '../components/icons';
 import { programRepository } from '../repositories/SecureProgramRepository';
 import { MaintenanceProgram, ProgramTask } from '../types';
 import { useAuth } from '../contexts/AuthContext';
@@ -647,12 +648,17 @@ const EditProgramScreen: React.FC = () => {
 
         {/* Services Section */}
         <Card variant="outlined" style={styles.servicesCard}>
-          <Typography variant="heading" style={styles.sectionTitle}>
-            {t('programs.services', 'Services')} ({serviceConfigurations.size})
-          </Typography>
-          <Typography variant="caption" style={styles.sectionSubtitle}>
-            {t('programs.tapToConfigureService', 'Tap a service card to configure reminders')}
-          </Typography>
+          <View style={styles.servicesHeader}>
+            <Typography variant="heading" style={styles.sectionTitle}>
+              {t('programs.serviceReminders', 'Service Reminders')}
+            </Typography>
+            <Typography variant="caption" style={styles.progressText}>
+              {serviceConfigurations.size} of {CURATED_SERVICES.length} reminders configured
+            </Typography>
+            <View style={styles.progressIndicator}>
+              <View style={[styles.progressBar, { width: `${(serviceConfigurations.size / CURATED_SERVICES.length) * 100}%` }]} />
+            </View>
+          </View>
           
           <View style={styles.serviceGrid}>
             {CURATED_SERVICES.map((service) => {
@@ -669,9 +675,18 @@ const EditProgramScreen: React.FC = () => {
                   onPress={() => handleServiceCardTap(service)}
                 >
                   <View style={styles.serviceCardContent}>
-                    <Typography variant="subheading" style={styles.serviceCardTitle}>
-                      {service.name}
-                    </Typography>
+                    <View style={styles.serviceCardHeader}>
+                      <Typography variant="subheading" style={[styles.serviceCardTitle, isConfigured && styles.serviceCardTitleConfigured]}>
+                        {service.name}
+                      </Typography>
+                      {isConfigured ? (
+                        <View style={styles.serviceCardCheckIcon}>
+                          <CheckIcon size={18} color={theme.colors.success} />
+                        </View>
+                      ) : (
+                        <ChevronRightIcon size={16} color={theme.colors.textSecondary} />
+                      )}
+                    </View>
                     <Typography variant="caption" style={styles.serviceCardCategory}>
                       {service.category}
                     </Typography>
@@ -686,18 +701,10 @@ const EditProgramScreen: React.FC = () => {
                       </View>
                     ) : (
                       <View style={styles.serviceCardDefault}>
-                        <Typography variant="caption" style={styles.serviceCardDefaultText}>
-                          Tap to configure
-                        </Typography>
+                        {/* Visual indicators (border, chevron) are sufficient - no text needed */}
                       </View>
                     )}
                   </View>
-                  
-                  {isConfigured && (
-                    <View style={styles.serviceCardCheck}>
-                      <View style={styles.checkMark} />
-                    </View>
-                  )}
                 </TouchableOpacity>
               );
             })}
@@ -762,10 +769,6 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     marginBottom: theme.spacing.md,
   },
-  sectionSubtitle: {
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.lg,
-  },
   input: {
     marginBottom: theme.spacing.md,
   },
@@ -773,6 +776,26 @@ const styles = StyleSheet.create({
   // Services Card
   servicesCard: {
     marginBottom: theme.spacing.lg,
+  },
+  servicesHeader: {
+    marginBottom: theme.spacing.md,
+  },
+  progressText: {
+    color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.normal,
+    marginBottom: theme.spacing.sm,
+    marginTop: theme.spacing.xs,
+  },
+  progressIndicator: {
+    height: 4,
+    backgroundColor: theme.colors.borderLight,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: theme.colors.success,
+    borderRadius: 2,
   },
   serviceGrid: {
     flexDirection: 'row',
@@ -784,23 +807,38 @@ const styles = StyleSheet.create({
     width: '48%',
     backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: theme.colors.border,
     padding: theme.spacing.md,
     minHeight: 120,
-    position: 'relative',
+    ...theme.shadows.sm,
   },
   serviceCardConfigured: {
-    borderColor: theme.colors.primary,
-    backgroundColor: `${theme.colors.primary}10`,
+    borderColor: theme.colors.success,
+    backgroundColor: `${theme.colors.success}08`,
+    ...theme.shadows.md,
   },
   serviceCardContent: {
     flex: 1,
   },
-  serviceCardTitle: {
-    color: theme.colors.text,
+  serviceCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: theme.spacing.xs,
+  },
+  serviceCardTitle: {
+    flex: 1,
+    color: theme.colors.text,
     fontWeight: theme.typography.fontWeight.medium,
+    marginRight: theme.spacing.xs,
+  },
+  serviceCardTitleConfigured: {
+    color: theme.colors.success,
+    fontWeight: theme.typography.fontWeight.semibold,
+  },
+  serviceCardCheckIcon: {
+    padding: 2,
   },
   serviceCardCategory: {
     color: theme.colors.textSecondary,
@@ -810,29 +848,15 @@ const styles = StyleSheet.create({
     marginTop: 'auto',
   },
   serviceCardConfigText: {
-    color: theme.colors.primary,
+    color: theme.colors.text,
     fontWeight: theme.typography.fontWeight.medium,
   },
   serviceCardDefault: {
     marginTop: 'auto',
   },
-  serviceCardDefaultText: {
-    color: theme.colors.textSecondary,
-    fontStyle: 'italic',
-  },
-  serviceCardCheck: {
-    position: 'absolute',
-    top: theme.spacing.sm,
-    right: theme.spacing.sm,
-  },
-  checkMark: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: theme.colors.primary,
-  },
   
   // Footer
+  // Enhanced Footer with Automotive Styling
   footer: {
     position: 'absolute',
     bottom: 0,
@@ -842,14 +866,18 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md,
     padding: theme.spacing.lg,
     backgroundColor: theme.colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
+    borderTopWidth: 2,
+    borderTopColor: theme.colors.primary,
+    ...theme.shadows.lg,
   },
   cancelButton: {
     flex: 1,
+    borderColor: theme.colors.border,
   },
   saveButton: {
     flex: 2,
+    backgroundColor: theme.colors.primary,
+    ...theme.shadows.md,
   },
 });
 
