@@ -25,6 +25,7 @@ export interface SelectedService {
   categoryKey: string;
   subcategoryKey: string;
   serviceName: string; // Display name for the service
+  serviceId: string; // Composite key: categoryKey.subcategoryKey
   cost?: number; // Optional cost per service
 }
 
@@ -144,6 +145,48 @@ export interface ProgramTask {
     labor?: string[];
   };
 }
+
+// ===== PROGRAM TYPE DETECTION =====
+
+export type ProgramType = 'basic' | 'advanced';
+
+/**
+ * Detect whether a program is Basic or Advanced based on task structure
+ * Basic: Tasks have no categoryKey/subcategoryKey (curated services only)
+ * Advanced: Tasks have categoryKey/subcategoryKey (full category system)
+ */
+export const detectProgramType = (program: MaintenanceProgram): ProgramType => {
+  if (!program.tasks || program.tasks.length === 0) {
+    return 'basic'; // Empty programs default to basic
+  }
+  
+  // Check if any task has Advanced mode fields
+  const hasAdvancedTasks = program.tasks.some(task => 
+    task.categoryKey && task.subcategoryKey
+  );
+  
+  return hasAdvancedTasks ? 'advanced' : 'basic';
+};
+
+/**
+ * Get display name for program type
+ */
+export const getProgramTypeDisplayName = (type: ProgramType): string => {
+  return type === 'basic' ? 'Basic' : 'Advanced';
+};
+
+/**
+ * Get program type with display name from MaintenanceProgram
+ */
+export const getProgramTypeInfo = (program: MaintenanceProgram) => {
+  const type = detectProgramType(program);
+  return {
+    type,
+    displayName: getProgramTypeDisplayName(type),
+    isBasic: type === 'basic',
+    isAdvanced: type === 'advanced'
+  };
+};
 
 export interface ProgramAssignment {
   id: string;

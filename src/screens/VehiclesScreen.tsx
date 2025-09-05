@@ -6,7 +6,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Image,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { theme } from '../utils/theme';
@@ -14,7 +13,8 @@ import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { AutomotiveErrorState } from '../components/common/AutomotiveErrorState';
 import { Loading } from '../components/common/Loading';
-import { CameraIcon, CarSilhouetteIcon, Car91Icon } from '../components/icons';
+import { Car91Icon } from '../components/icons';
+import VehicleCard from '../components/common/VehicleCard';
 import { Vehicle } from '../types';
 import { vehicleRepository } from '../repositories/VehicleRepository';
 import { useAuth } from '../contexts/AuthContext';
@@ -152,69 +152,18 @@ const VehiclesScreen: React.FC<VehiclesScreenProps> = ({ navigation }) => {
     );
   };
 
-  // Get vehicle title and subtitle for display
-  const getVehicleDisplayInfo = (vehicle: Vehicle) => {
-    const nickname = vehicle.nickname?.trim();
-    const vehicleInfo = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
-    
-    if (nickname && nickname.length > 0) {
-      return {
-        title: nickname,
-        vehicleInfo: vehicleInfo
-      };
-    } else {
-      return {
-        title: vehicleInfo,
-        vehicleInfo: null
-      };
-    }
-  };
+  // Vehicle display logic now handled by VehicleCard component
 
   const renderVehiclesList = () => (
     <ScrollView contentContainerStyle={styles.listContainer}>
-      {vehicles.map((vehicle) => {
-        const displayInfo = getVehicleDisplayInfo(vehicle);
-        return (
-          <Card
-            key={vehicle.id}
-            variant="elevated"
-            title={displayInfo.title}
-            subtitle={
-              <View style={styles.subtitleContainer}>
-                {displayInfo.vehicleInfo && (
-                  <Text style={styles.vehicleInfoText}>
-                    {displayInfo.vehicleInfo}
-                  </Text>
-                )}
-                <Text style={styles.mileageText}>
-                  {vehicle.mileage ? `${vehicle.mileage.toLocaleString()} ${t('vehicles.miles', 'miles')}` : t('vehicles.mileageNotSet', 'Mileage not set')}
-                </Text>
-              </View>
-            }
-            pressable
-            onPress={() => {
-              navigation.navigate('VehicleHome', { vehicleId: vehicle.id });
-            }}
-          >
-          {vehicle.photoUri ? (
-            <Image 
-              source={{ uri: vehicle.photoUri }} 
-              style={styles.vehicleImage}
-              resizeMode="cover"
-            />
-          ) : (
-            <View style={styles.vehicleImagePlaceholder}>
-              <View style={styles.carSilhouetteBackground}>
-                <CarSilhouetteIcon size={80} color={theme.colors.textLight} />
-              </View>
-              <View style={styles.cameraOverlay}>
-                <CameraIcon size={20} color={theme.colors.textSecondary} />
-              </View>
-            </View>
-          )}
-        </Card>
-        );
-      })}
+      {vehicles.map((vehicle) => (
+        <VehicleCard
+          key={vehicle.id}
+          vehicle={vehicle}
+          showImage={true}
+          onPress={() => navigation.navigate('VehicleHome', { vehicleId: vehicle.id })}
+        />
+      ))}
       
       {/* Add Vehicle button at bottom of list */}
       <View style={styles.addVehicleButtonContainer}>

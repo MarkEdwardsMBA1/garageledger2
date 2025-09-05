@@ -740,8 +740,7 @@ const AddMaintenanceLogScreen: React.FC = () => {
                 formData.serviceType === 'diy' && styles.serviceTypeOptionSelected
               ]}
               onPress={() => {
-                setFormData(prev => ({ ...prev, serviceType: 'diy' }));
-                setShowDIYPicker(true);
+                navigation.navigate('DIYServiceStep1', { vehicleId: vehicleId });
               }}
             >
               <Typography variant="bodyLarge" style={[

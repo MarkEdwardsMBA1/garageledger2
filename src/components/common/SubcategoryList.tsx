@@ -7,7 +7,7 @@ import { theme } from '../../utils/theme';
 import { Typography } from './Typography';
 import { CheckIcon } from '../icons';
 import { AddCustomServiceModal } from './AddCustomServiceModal';
-import { getSubcategoryKeys, getSubcategoryName, getComponents } from '../../types/MaintenanceCategories';
+import { getSubcategoryKeys, getSubcategoryName, getComponents, getServiceConfigType } from '../../types/MaintenanceCategories';
 import { AdvancedServiceConfiguration } from '../../types';
 
 interface SubcategoryListProps {
@@ -127,14 +127,28 @@ export const SubcategoryList: React.FC<SubcategoryListProps> = ({
     const wasSelected = selectedServices.has(serviceKey);
     
     if (wasSelected) {
-      // If already selected, open config to reconfigure
-      if (onConfigureService) {
+      // Check if this service needs configuration
+      const [categoryKeyPart, subcategoryKey] = serviceKey.split('.');
+      const serviceConfigType = getServiceConfigType(categoryKeyPart, subcategoryKey);
+      
+      if (serviceConfigType === 'labor-only') {
+        // For labor-only services, toggle (deselect) when clicked again
+        onToggleService(serviceKey);
+      } else if (onConfigureService) {
+        // For other services, open config to reconfigure
         onConfigureService(serviceKey, serviceName, categoryKey, false);
       }
     } else {
-      // If not selected, select it and open config
+      // If not selected, select it
       onToggleService(serviceKey);
-      if (onConfigureService) {
+      
+      // Check if this service needs configuration
+      const [categoryKeyPart, subcategoryKey] = serviceKey.split('.');
+      const serviceConfigType = getServiceConfigType(categoryKeyPart, subcategoryKey);
+      
+      // Only open configuration for services that need parts, fluids, or detailed setup
+      // Skip configuration for labor-only services like tire rotation
+      if (onConfigureService && serviceConfigType !== 'labor-only') {
         onConfigureService(serviceKey, serviceName, categoryKey, true);
       }
     }

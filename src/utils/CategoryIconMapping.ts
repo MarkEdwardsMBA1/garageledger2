@@ -61,6 +61,18 @@ export const categoryIconMap: { [key: string]: CategoryIconConfig } = {
     bgColor: '#f1f5f915',               // Light gray background with alpha
     name: 'Brake System',
   },
+  'cooling-system': {
+    icon: ThermometerIcon,
+    color: '#111827',                    // Oil Black - clean, professional automotive color
+    bgColor: '#f1f5f915',               // Light gray background with alpha
+    name: 'Cooling System',
+  },
+  'tires-wheels': {
+    icon: TireIcon,
+    color: '#111827',                    // Oil Black - clean, professional automotive color
+    bgColor: '#f1f5f915',               // Light gray background with alpha
+    name: 'Tires & Wheels',
+  },
   'steering-suspension': {
     icon: SuspensionIcon,
     color: '#111827',                    // Oil Black - clean, professional automotive color
@@ -72,12 +84,6 @@ export const categoryIconMap: { [key: string]: CategoryIconConfig } = {
     color: '#111827',                    // Oil Black - clean, professional automotive color
     bgColor: '#f1f5f915',               // Light gray background with alpha
     name: 'Engine & Powertrain',
-  },
-  'tires-wheels': {
-    icon: TireIcon,
-    color: '#111827',                    // Oil Black - clean, professional automotive color
-    bgColor: '#f1f5f915',               // Light gray background with alpha
-    name: 'Tires & Wheels',
   },
   'electrical': {
     icon: LightningBoltIcon,
@@ -236,25 +242,28 @@ export const searchCategories = (searchTerm: string): CategoryDisplayData[] => {
 };
 
 /**
- * Default category order for display (by importance/frequency)
+ * Default category order for display (by user-specified order)
  */
 export const getOrderedCategoryData = (): CategoryDisplayData[] => {
   const allData = getCategoryDisplayData();
   
-  // Order by importance: safety-critical, powertrain, comfort, accessories
+  // Order as specified: Engine & Powertrain, Cooling System, Transmission & Drivetrain, 
+  // Brake System, Tires & Wheels, Steering & Suspension, Interior Comfort & Convenience, 
+  // HVAC & Climate Control, Lighting, Electrical, Body & Exterior, Fluids & Consumables, Custom Service
   const priorityOrder = [
-    'brake-system',           // Safety first
-    'engine-powertrain',      // Core functionality
-    'steering-suspension',    // Handling & safety
-    'tires-wheels',          // Contact patch
-    'electrical',            // Modern vehicle systems
-    'transmission-drivetrain', // Drivetrain
-    'hvac-climate',          // Comfort
-    'body-exterior',         // Appearance
-    'interior-comfort',      // Convenience
-    'lighting',              // Visibility
-    'fluids-consumables',    // Maintenance supplies
-    'custom-service',        // User-defined
+    'engine-powertrain',      // Engine & Powertrain
+    'cooling-system',         // Cooling System
+    'transmission-drivetrain', // Transmission & Drivetrain
+    'brake-system',           // Brake System
+    'tires-wheels',           // Tires & Wheels
+    'steering-suspension',    // Steering & Suspension
+    'interior-comfort',       // Interior Comfort & Convenience
+    'hvac-climate',           // HVAC & Climate Control
+    'lighting',               // Lighting
+    'electrical',             // Electrical
+    'body-exterior',          // Body & Exterior
+    'fluids-consumables',     // Fluids & Consumables
+    'custom-service',         // Custom Service
   ];
   
   return priorityOrder

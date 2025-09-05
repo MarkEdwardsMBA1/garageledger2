@@ -18,12 +18,19 @@ import { Typography } from '../components/common/Typography';
 // Import screens  
 import VehiclesScreen from '../screens/VehiclesScreen';
 import VehicleHomeScreen from '../screens/VehicleHomeScreen';
-import TabbedInsightsScreen from '../screens/TabbedInsightsScreen';
+import MaintenanceHistoryScreen from '../screens/MaintenanceHistoryScreen';
+import ServiceDetailScreen from '../screens/ServiceDetailScreen';
+import VehicleAnalyticsScreen from '../screens/VehicleAnalyticsScreen';
+import FleetInsightsScreen from '../screens/FleetInsightsScreen';
 import AddMaintenanceLogScreen from '../screens/AddMaintenanceLogScreen';
 import ShopServiceStep1Screen from '../screens/ShopServiceStep1Screen';
 import ShopServiceStep2Screen from '../screens/ShopServiceStep2Screen';
 import ShopServiceStep3Screen from '../screens/ShopServiceStep3Screen';
 import ShopServiceStep4Screen from '../screens/ShopServiceStep4Screen';
+import DIYServiceStep1Screen from '../screens/DIYServiceStep1Screen';
+import DIYServiceStep2Screen from '../screens/DIYServiceStep2Screen';
+import DIYServiceStep3Screen from '../screens/DIYServiceStep3Screen';
+import DIYServiceStep4Screen from '../screens/DIYServiceStep4Screen';
 import ProgramsScreen from '../screens/ProgramsScreen';
 import CreateProgramVehicleSelectionScreen from '../screens/CreateProgramVehicleSelectionScreen';
 import CreateProgramDetailsScreen from '../screens/CreateProgramDetailsScreen';
@@ -49,6 +56,39 @@ import { FirstVehicleSuccessScreen } from '../screens/FirstVehicleSuccessScreen'
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
+
+/**
+ * Fleet Insights stack navigator  
+ */
+const FleetInsightsStack: React.FC = () => {
+  const t = (key: string, fallback?: string) => fallback || key.split('.').pop() || key;
+  
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: theme.colors.primary, // Engine Blue header
+          borderBottomWidth: 0, // Remove border for cleaner look
+        },
+        headerTitleStyle: {
+          fontSize: theme.typography.fontSize.lg,
+          fontWeight: theme.typography.fontWeight.semibold,
+          color: theme.colors.surface, // White text on Engine Blue
+        },
+        headerTintColor: theme.colors.surface, // White back button and icons
+      }}
+    >
+      <Stack.Screen
+        name="FleetInsightsList"
+        component={FleetInsightsScreen}
+        options={{
+          title: t('navigation.insights', 'Fleet Insights'),
+          headerLeft: () => null, // Remove back button for root tab screen
+        }}
+      />
+    </Stack.Navigator>
+  );
+};
 
 /**
  * Vehicles stack navigator
@@ -103,12 +143,123 @@ const VehiclesStack: React.FC = () => {
         }}
       />
       <Stack.Screen
+        name="MaintenanceHistory"
+        component={MaintenanceHistoryScreen}
+        options={({ route }) => {
+          const params = route.params as any;
+          return {
+            title: 'Maintenance History',
+            headerBackTitle: 'Vehicle Details',
+            headerLeft: undefined, // Use default back button
+          };
+        }}
+      />
+      <Stack.Screen
+        name="ServiceDetail"
+        component={ServiceDetailScreen}
+        options={{
+          title: 'Service Details',
+          headerBackTitle: 'Back',
+          headerLeft: undefined,
+        }}
+      />
+      <Stack.Screen
+        name="VehicleAnalytics"
+        component={VehicleAnalyticsScreen}
+        options={{
+          title: 'Analytics',
+          headerBackTitle: 'Back',
+          headerLeft: undefined,
+        }}
+      />
+      <Stack.Screen
         name="EditVehicle"
         component={EditVehicleScreen}
         options={{
           title: t('vehicles.editVehicle', 'Edit Vehicle'),
           headerBackTitle: 'Vehicles', // Shows arrow + parent name
           headerLeft: undefined, // Use default back button (ensures arrow shows)
+        }}
+      />
+      <Stack.Screen
+        name="AddMaintenanceLog"
+        component={AddMaintenanceLogScreen}
+        options={{
+          title: t('maintenance.logMaintenance', 'Log Maintenance'),
+          headerBackTitle: 'Vehicle', // Shows arrow + parent name
+          headerLeft: undefined, // Use default back button (ensures arrow shows)
+        }}
+      />
+      <Stack.Screen
+        name="ShopServiceStep1"
+        component={ShopServiceStep1Screen}
+        options={{
+          title: 'Shop Service',
+          headerBackTitle: 'Back',
+          headerLeft: undefined,
+        }}
+      />
+      <Stack.Screen
+        name="ShopServiceStep2"
+        component={ShopServiceStep2Screen}
+        options={{
+          title: 'Shop Service',
+          headerBackTitle: 'Back',
+          headerLeft: undefined,
+        }}
+      />
+      <Stack.Screen
+        name="ShopServiceStep3"
+        component={ShopServiceStep3Screen}
+        options={{
+          title: 'Shop Service',
+          headerBackTitle: 'Back',
+          headerLeft: undefined,
+        }}
+      />
+      <Stack.Screen
+        name="ShopServiceStep4"
+        component={ShopServiceStep4Screen}
+        options={{
+          title: 'Shop Service',
+          headerBackTitle: 'Back',
+          headerLeft: undefined,
+        }}
+      />
+      <Stack.Screen
+        name="DIYServiceStep1"
+        component={DIYServiceStep1Screen}
+        options={{
+          title: 'DIY Service',
+          headerBackTitle: 'Back',
+          headerLeft: undefined,
+        }}
+      />
+      <Stack.Screen
+        name="DIYServiceStep2"
+        component={DIYServiceStep2Screen}
+        options={{
+          title: 'DIY Service',
+          headerBackTitle: 'Back',
+          headerLeft: undefined,
+        }}
+      />
+      <Stack.Screen
+        name="DIYServiceStep3"
+        component={DIYServiceStep3Screen}
+        options={{
+          title: 'DIY Service',
+          headerBackTitle: 'Back',
+          headerLeft: undefined,
+        }}
+      />
+      <Stack.Screen
+        name="DIYServiceStep4"
+        component={DIYServiceStep4Screen}
+        options={{
+          title: 'DIY Service',
+          headerBackTitle: 'Back',
+          headerLeft: undefined,
         }}
       />
     </Stack.Navigator>
@@ -140,7 +291,7 @@ const MaintenanceStackNavigator: React.FC = () => {
     >
       <Stack.Screen
         name="MaintenanceList"
-        component={TabbedInsightsScreen}
+        component={FleetInsightsScreen}
         options={{
           title: t('navigation.insights', 'Insights'),
           headerLeft: () => null, // Remove back button for root tab screen
@@ -187,6 +338,42 @@ const MaintenanceStackNavigator: React.FC = () => {
         component={ShopServiceStep4Screen}
         options={{
           title: 'Shop Service',
+          headerBackTitle: 'Back',
+          headerLeft: undefined,
+        }}
+      />
+      <Stack.Screen
+        name="DIYServiceStep1"
+        component={DIYServiceStep1Screen}
+        options={{
+          title: 'DIY Service',
+          headerBackTitle: 'Back',
+          headerLeft: undefined,
+        }}
+      />
+      <Stack.Screen
+        name="DIYServiceStep2"
+        component={DIYServiceStep2Screen}
+        options={{
+          title: 'DIY Service',
+          headerBackTitle: 'Back',
+          headerLeft: undefined,
+        }}
+      />
+      <Stack.Screen
+        name="DIYServiceStep3"
+        component={DIYServiceStep3Screen}
+        options={{
+          title: 'DIY Service',
+          headerBackTitle: 'Back',
+          headerLeft: undefined,
+        }}
+      />
+      <Stack.Screen
+        name="DIYServiceStep4"
+        component={DIYServiceStep4Screen}
+        options={{
+          title: 'DIY Service',
           headerBackTitle: 'Back',
           headerLeft: undefined,
         }}
@@ -327,7 +514,7 @@ const ProgramsStackNavigator: React.FC = () => {
         component={EditProgramScreen}
         options={{
           title: t('programs.editProgram', 'Edit Program'),
-          headerBackTitle: 'Details', // Shows arrow + parent name
+          headerBackTitle: 'Back', // Consistent with footer Cancel button
           headerLeft: undefined, // Use default back button (ensures arrow shows)
         }}
       />
@@ -388,9 +575,9 @@ const MainAppNavigator: React.FC = () => {
         />
         <Tab.Screen
           name="Insights"
-          component={MaintenanceStackNavigator}
+          component={FleetInsightsStack}
           options={{
-            title: t('navigation.insights', 'Insights'),
+            title: t('navigation.insights', 'Fleet Insights'),
             tabBarIcon: ({ color, size }) => (
               <TabIcon name="insights" color={color} size={size} />
             ),

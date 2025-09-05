@@ -1,4 +1,4 @@
-// Shop Service Step 2: Service Selection
+// DIY Service Step 2: Service Selection with Details
 import React, { useState, useLayoutEffect } from 'react';
 import {
   View,
@@ -14,33 +14,32 @@ import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { MaintenanceCategoryPicker } from '../components/common/MaintenanceCategoryPicker';
-import { SelectedService } from '../types';
+import { SelectedService, AdvancedServiceConfiguration } from '../types';
 
-interface ShopServiceStep1SerializableData {
+interface DIYServiceStep1SerializableData {
   date: string; // ISO string from navigation
   mileage: string;
-  totalCost: string;
-  shopName: string;
-  shopAddress: string;
-  shopPhone: string;
-  shopEmail: string;
 }
 
-interface ShopServiceStep2Params {
+interface DIYServiceStep2Params {
   vehicleId: string;
-  step1Data: ShopServiceStep1SerializableData;
+  step1Data: DIYServiceStep1SerializableData;
   selectedServices?: SelectedService[];
+  serviceConfigs?: { [key: string]: AdvancedServiceConfiguration }; // Plain object for navigation
   notes?: string;
 }
 
-export const ShopServiceStep2Screen: React.FC = () => {
+export const DIYServiceStep2Screen: React.FC = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const route = useRoute();
-  const params = route.params as ShopServiceStep2Params;
+  const params = route.params as DIYServiceStep2Params;
   
   const [selectedServices, setSelectedServices] = useState<SelectedService[]>(
     params?.selectedServices || []
+  );
+  const [serviceConfigs, setServiceConfigs] = useState<Map<string, AdvancedServiceConfiguration>>(
+    params?.serviceConfigs ? new Map(Object.entries(params.serviceConfigs)) : new Map()
   );
   const [notes, setNotes] = useState(params?.notes || '');
   const [showCategoryPicker, setShowCategoryPicker] = useState(
@@ -59,8 +58,11 @@ export const ShopServiceStep2Screen: React.FC = () => {
     });
   }, [navigation]);
 
-  const handleServiceSelection = (services: SelectedService[]) => {
+  const handleServiceSelection = (services: SelectedService[], configs?: { [key: string]: AdvancedServiceConfiguration }) => {
     setSelectedServices(services);
+    if (configs) {
+      setServiceConfigs(new Map(Object.entries(configs)));
+    }
     setShowCategoryPicker(false);
   };
 
@@ -82,19 +84,21 @@ export const ShopServiceStep2Screen: React.FC = () => {
   const handleNext = () => {
     if (!validateForm()) return;
 
-    navigation.navigate('ShopServiceStep3', {
+    navigation.navigate('DIYServiceStep3', {
       vehicleId: params.vehicleId,
       step1Data: params.step1Data,
       selectedServices: selectedServices,
+      serviceConfigs: Object.fromEntries(serviceConfigs),
       notes: notes,
     });
   };
 
   const handleBack = () => {
-    navigation.navigate('ShopServiceStep1', {
+    navigation.navigate('DIYServiceStep1', {
       vehicleId: params.vehicleId,
       data: params.step1Data, // Already serializable
       selectedServices: selectedServices, // Pass along selected services
+      serviceConfigs: Object.fromEntries(serviceConfigs), // Pass along service configs
       notes: notes, // Pass along notes
     });
   };
@@ -108,27 +112,13 @@ export const ShopServiceStep2Screen: React.FC = () => {
           selectedServices={selectedServices}
           onSelectionComplete={handleServiceSelection}
           onCancel={() => navigation.goBack()}
-          serviceType="shop"
-          enableConfiguration={false}
+          serviceType="diy"
+          enableConfiguration={true} // Enable detailed parts/fluids configuration for DIY
         />
       ) : (
         // Show selected services summary
         <View style={styles.content}>
           <ScrollView style={styles.scrollContent}>
-            <Card variant="elevated" style={styles.summaryCard}>
-              <Typography variant="heading" style={styles.summaryTitle}>
-                Summary
-              </Typography>
-              <View style={styles.summaryRow}>
-                <Typography variant="body" style={styles.summaryText}>
-                  Services: {selectedServices.length}
-                </Typography>
-                <Typography variant="body" style={styles.summaryText}>
-                  Total Cost: ${params.step1Data.totalCost}
-                </Typography>
-              </View>
-            </Card>
-
             <Card variant="elevated" style={styles.selectedServicesCard}>
               <Typography variant="heading" style={styles.selectedServicesTitle}>
                 Services
@@ -139,6 +129,7 @@ export const ShopServiceStep2Screen: React.FC = () => {
                   <Typography variant="body" style={styles.serviceName}>
                     • {service.serviceName}
                   </Typography>
+                  {/* TODO: Show cost breakdown when parts/fluids are configured */}
                 </View>
               ))}
             </Card>
@@ -148,7 +139,7 @@ export const ShopServiceStep2Screen: React.FC = () => {
                 label="Additional Notes (Optional)"
                 value={notes}
                 onChangeText={setNotes}
-                placeholder="Any additional details about the service, parts replaced, or observations..."
+                placeholder="Any additional details about the work performed, tools used, or observations..."
                 multiline
                 numberOfLines={4}
               />
@@ -212,31 +203,11 @@ const styles = StyleSheet.create({
   serviceName: {
     color: theme.colors.text,
   },
-  serviceCategory: {
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.xs / 2,
-    marginLeft: theme.spacing.md,
-  },
   notesSection: {
     marginBottom: theme.spacing.md,
   },
   editButton: {
     marginBottom: theme.spacing.lg,
-  },
-  summaryCard: {
-    marginBottom: theme.spacing.lg,
-  },
-  summaryTitle: {
-    color: theme.colors.text,
-    marginBottom: theme.spacing.md,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  summaryText: {
-    color: theme.colors.text,
-    fontWeight: theme.typography.fontWeight.medium,
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -251,4 +222,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ShopServiceStep2Screen;
+export default DIYServiceStep2Screen;

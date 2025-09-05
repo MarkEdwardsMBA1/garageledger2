@@ -12,13 +12,14 @@ import { theme } from '../utils/theme';
 import { Typography } from '../components/common/Typography';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
+import InfoCard from '../components/common/InfoCard';
 import { Input } from '../components/common/Input';
 import { Loading } from '../components/common/Loading';
 import { EmptyState } from '../components/common/ErrorState';
 import { ClipboardIcon, MaintenanceIcon, ChevronRightIcon, CalendarIcon, AlertIcon } from '../components/icons';
 import { programRepository } from '../repositories/SecureProgramRepository';
 import { vehicleRepository } from '../repositories/VehicleRepository';
-import { MaintenanceProgram, Vehicle } from '../types';
+import { MaintenanceProgram, Vehicle, getProgramTypeInfo } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 
 /**
@@ -150,6 +151,9 @@ const ProgramsScreen: React.FC = () => {
     const serviceRemindersCount = program.tasks.filter(task => task.isActive).length;
     const assignedVehicleCount = program.assignedVehicleIds.length;
     
+    // Get program type information
+    const programTypeInfo = getProgramTypeInfo(program);
+    
     // Get assigned vehicles details with proper formatting
     const assignedVehicles = program.assignedVehicleIds.map(vehicleId => {
       const vehicle = vehicles.find(v => v.id === vehicleId);
@@ -176,21 +180,32 @@ const ProgramsScreen: React.FC = () => {
         onPress={() => handleProgramPress(program)}
         activeOpacity={0.7}
       >
-        <Card variant="elevated" style={styles.programCard}>
-          <View style={styles.programHeader}>
-            <Typography variant="heading" style={styles.programName}>
-              {program.name}
+        <InfoCard
+          title={program.name}
+          subtitle={program.description}
+          style={styles.programCard}
+        >
+          {/* Program Type */}
+          <View style={styles.statRow}>
+            <Typography variant="caption" style={styles.statLabel}>
+              Program Type:{' '}
             </Typography>
-            {program.description && (
-              <Typography variant="body" style={styles.programDescription} numberOfLines={2}>
-                {program.description}
+            <View style={[
+              styles.programTypeBadge,
+              programTypeInfo.isAdvanced && styles.programTypeBadgeAdvanced
+            ]}>
+              <Typography variant="caption" style={[
+                styles.programTypeText,
+                programTypeInfo.isAdvanced && styles.programTypeTextAdvanced
+              ]}>
+                {programTypeInfo.displayName}
               </Typography>
-            )}
+            </View>
           </View>
 
           {/* Vehicles in Program */}
           {assignedVehicles.length > 0 && (
-            <View style={styles.statRow}>
+            <View style={[styles.statRow, { flexDirection: 'column', alignItems: 'flex-start' }]}>
               <View style={styles.vehiclesRow}>
                 <Typography variant="caption" style={styles.statLabel}>
                   Vehicles:{' '}
@@ -207,19 +222,19 @@ const ProgramsScreen: React.FC = () => {
           )}
 
           {/* Service Reminders Count */}
-          <View style={styles.statRow}>
+          <View style={[styles.statRow, { flexDirection: 'row', alignItems: 'center' }]}>
             <Typography variant="caption" style={styles.statLabel}>
               Service reminders: {serviceRemindersCount}
             </Typography>
           </View>
           
           {/* Last Updated Date */}
-          <View style={styles.statRow}>
+          <View style={[styles.statRow, { flexDirection: 'row', alignItems: 'center' }]}>
             <Typography variant="caption" style={styles.statLabel}>
               Date last updated: {formatDate(program.updatedAt)}
             </Typography>
           </View>
-        </Card>
+        </InfoCard>
       </TouchableOpacity>
     );
   };
@@ -229,11 +244,10 @@ const ProgramsScreen: React.FC = () => {
     const stats = getOverviewStats();
     
     return (
-      <Card variant="elevated" style={styles.overviewCard}>
-        <Typography variant="heading" style={styles.overviewTitle}>
-          Overview
-        </Typography>
-        
+      <InfoCard
+        title="Overview"
+        style={styles.overviewCard}
+      >
         <View style={styles.overviewStats}>
           <View style={styles.overviewStatItem}>
             <Typography variant="title" style={styles.overviewStatNumber}>
@@ -268,7 +282,7 @@ const ProgramsScreen: React.FC = () => {
             </Typography>
           </View>
         </View>
-      </Card>
+      </InfoCard>
     );
   };
 
@@ -277,7 +291,10 @@ const ProgramsScreen: React.FC = () => {
     console.log('📅 ProgramsScreen: Rendering custom empty state with card layout');
     return (
       <View style={styles.emptyStateContainer}>
-        <Card variant="elevated" style={styles.emptyStateCard}>
+        <InfoCard
+          title=""
+          style={styles.emptyStateCard}
+        >
           <View style={styles.emptyStateContent}>
             {/* Calendar image at the top */}
             <View style={styles.emptyStateImageContainer}>
@@ -289,7 +306,7 @@ const ProgramsScreen: React.FC = () => {
               This is where your list of maintenance programs will appear. Click Create Program to get started.
             </Typography>
           </View>
-        </Card>
+        </InfoCard>
         
         {/* CTA button below the card */}
         <Button
@@ -453,11 +470,38 @@ const styles = StyleSheet.create({
   },
   
   statRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: theme.spacing.xs,
   },
   statLabel: {
     color: theme.colors.textSecondary,
     fontSize: theme.typography.fontSize.sm,
+  },
+  
+  // Program Type Badge Styles
+  programTypeBadge: {
+    backgroundColor: theme.colors.success + '20', // Basic programs - light green
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs / 2,
+    borderRadius: theme.borderRadius.full,
+    borderWidth: 1,
+    borderColor: theme.colors.success,
+    marginLeft: theme.spacing.xs,
+  },
+  programTypeBadgeAdvanced: {
+    backgroundColor: theme.colors.primary + '20', // Advanced programs - light blue
+    borderColor: theme.colors.primary,
+  },
+  programTypeText: {
+    color: theme.colors.success,
+    fontWeight: theme.typography.fontWeight.semibold,
+    fontSize: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  programTypeTextAdvanced: {
+    color: theme.colors.primary,
   },
   statItem: {
     flexDirection: 'row',

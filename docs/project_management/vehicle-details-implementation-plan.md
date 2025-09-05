@@ -1,19 +1,30 @@
 # Vehicle Details Enhancement Implementation Plan
 **Created**: January 31, 2025  
+**Updated**: September 4, 2025
 **Epic**: UI/UX Enhancement - Phase 2.1  
-**Status**: 🔍 **ANALYSIS COMPLETE** → 🛠️ **READY TO IMPLEMENT**  
+**Status**: 🎉 **PHASES 1-2 COMPLETE** → 📋 **PHASE 3-4 PLANNED**
+
+> **UPDATE**: Major progress today! Phases 1-2 successfully completed with simplified Vehicle Status Intelligence and Unified Maintenance History Screen. See [Progress Update](vehicle-details-progress-update.md) for full details.  
 
 ---
 
 ## 🎯 **Current State Analysis**
 
 ### ✅ **What VehicleHomeScreen Already Has:**
-- **Vehicle Header Card**: Name/nickname, year/make/model, mileage, VIN, notes ✅
+- **Vehicle Header Card**: Name/nickname, year/make/model, mileage ✅
+- **Vehicle Info Fields**: VIN, notes (need to verify visibility) ⚠️
 - **Quick Actions**: Log Maintenance, Add Reminder buttons ✅  
 - **Status Summary**: Basic placeholder with "No overdue maintenance" ✅
 - **Assigned Programs**: Program management with actions ✅
 - **Recent Maintenance**: Timeline of last 5 maintenance entries ✅
 - **Cost Insights**: Total spent calculation ✅
+
+### 🆕 **New Requirements to Add:**
+- **Vehicle Photo Integration**: Background image with accessibility overlay 🆕
+- **Enhanced Status Card**: Last service, next service due, overdue count 🆕
+- **Recent History Card**: Last 3 services with click-through to full history 🆕
+- **Enhanced Cost Analytics**: Lifetime cost, cost per mile, cost per month 🆕
+- **Action Navigation**: Comprehensive action buttons for key workflows 🆕
 
 ### 🔍 **Gap Analysis vs Enhancement Goals:**
 
@@ -104,41 +115,177 @@ const StatusIndicator = ({ service, dueIn, status }) => {
 };
 ```
 
-### **Phase 2B: Enhanced Information Display** ⭐ **(FOLLOW-UP)**
+### **Phase 2B: Enhanced Status Intelligence** ⭐ **(FOLLOW-UP)**
+**Timeline**: 0.75 sessions | **Risk**: LOW-MEDIUM | **Impact**: HIGH
+
+#### **2B.1: Enhanced Status Card**
+```typescript
+// Replace basic status with comprehensive service intelligence
+const EnhancedStatusCard = () => {
+  const { lastService, nextService, overdueServices } = calculateVehicleStatus(vehicle, programs, logs);
+  
+  return (
+    <Card variant="elevated" style={styles.statusCard}>
+      <Typography variant="heading">Status</Typography>
+      
+      <StatusSection label="Last service" service={lastService} />
+      <StatusSection label="Next service due" service={nextService} />
+      <OverdueSection overdueServices={overdueServices} />
+    </Card>
+  );
+};
+```
+
+#### **2B.2: Recent History Card Enhancement**
+```typescript
+// Limited to 3 most recent services with navigation
+const RecentHistoryCard = () => {
+  const recentServices = getLastNServices(maintenanceLogs, 3);
+  
+  return (
+    <TouchableOpacity onPress={() => navigation.navigate('MaintenanceHistory')}>
+      <Card variant="elevated">
+        <Typography variant="heading">Recent History</Typography>
+        {recentServices.map(service => (
+          <HistoryItem key={service.id} service={service} compact />
+        ))}
+        <NavigationHint text="Tap to view full history" />
+      </Card>
+    </TouchableOpacity>
+  );
+};
+```
+
+### **Phase 2C: Visual Integration & User Experience** ⭐ **(NEW)**
 **Timeline**: 0.5 sessions | **Risk**: LOW | **Impact**: MEDIUM
 
-#### **2B.1: Improved Cost Analytics**
+#### **2C.1: Vehicle Photo Integration**
+```typescript
+// Add vehicle photo as background with accessibility overlay
+const VehicleHeaderCard = ({ vehicle }) => {
+  return (
+    <Card variant="elevated" style={styles.vehicleHeader}>
+      {vehicle.photoUri && (
+        <ImageBackground 
+          source={{ uri: vehicle.photoUri }} 
+          style={styles.backgroundImage}
+          imageStyle={styles.backgroundImageStyle}
+        >
+          <View style={styles.accessibilityOverlay} />
+        </ImageBackground>
+      )}
+      
+      <View style={styles.vehicleInfo}>
+        <Typography variant="heading" style={styles.vehicleTitle}>
+          {vehicle.nickname || `${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+        </Typography>
+        
+        {/* Enhanced info display */}
+        <VehicleMetadata vehicle={vehicle} />
+        
+        <Typography variant="body" style={styles.mileage}>
+          {formatNumber(vehicle.mileage)} miles
+        </Typography>
+      </View>
+    </Card>
+  );
+};
+```
+
+#### **2C.2: Enhanced VIN & Notes Display**
+```typescript
+const VehicleMetadata = ({ vehicle }) => (
+  <View style={styles.metadata}>
+    <Typography variant="subheading" style={styles.makeModel}>
+      {vehicle.year} {vehicle.make} {vehicle.model}
+    </Typography>
+    
+    {vehicle.vin && (
+      <Typography variant="caption" style={styles.vin}>
+        VIN: {vehicle.vin}
+      </Typography>
+    )}
+    
+    {vehicle.notes && (
+      <Typography variant="caption" style={styles.notes}>
+        {vehicle.notes}
+      </Typography>
+    )}
+  </View>
+);
+```
+
+#### **2C.3: Comprehensive Action Navigation**
+```typescript
+const ActionNavigationCard = ({ vehicle, navigation }) => {
+  const actions = [
+    { id: 'edit', title: 'Edit Vehicle Details', icon: 'SettingsIcon' },
+    { id: 'log-maintenance', title: 'Add Maintenance Log', icon: 'MaintenanceIcon' },
+    { id: 'edit-program', title: 'Edit Maintenance Program', icon: 'ModificationsIcon' },
+    // Backlog items:
+    { id: 'log-mileage', title: 'Add Mileage Log', icon: 'ActivityIcon', disabled: true },
+    { id: 'view-history', title: 'View Full History', icon: 'VehicleIcon', disabled: true },
+    { id: 'insights', title: 'Vehicle Insights', icon: 'GearIcon', disabled: true },
+  ];
+
+  return (
+    <Card variant="elevated">
+      <Typography variant="heading">Actions</Typography>
+      <View style={styles.actionGrid}>
+        {actions.map(action => (
+          <ActionButton 
+            key={action.id} 
+            action={action} 
+            onPress={() => handleActionPress(action, vehicle, navigation)}
+            disabled={action.disabled}
+          />
+        ))}
+      </View>
+    </Card>
+  );
+};
+```
+
+### **Phase 2D: Enhanced Cost Analytics** ⭐ **(ENHANCED)**
+**Timeline**: 0.5 sessions | **Risk**: LOW | **Impact**: MEDIUM
+
+#### **2D.1: Comprehensive Cost Analytics**
 ```typescript
 // Replace basic "Cost Insights" with richer analytics
-const EnhancedCostCard = () => {
-  const analytics = calculateCostAnalytics(maintenanceLogs);
+const EnhancedCostCard = ({ vehicle, maintenanceLogs }) => {
+  const analytics = calculateEnhancedCostAnalytics(maintenanceLogs, vehicle);
   
   return (
     <Card variant="elevated">
       <Typography variant="heading">Cost & Analytics</Typography>
       
       <View style={styles.costMetrics}>
-        <MetricItem label="Total Spent" value={`$${analytics.total}`} />
-        <MetricItem label="Avg per Service" value={`$${analytics.average}`} />
-        <MetricItem label="Last 30 Days" value={`$${analytics.recent}`} />
+        <MetricItem 
+          label="Lifetime cost" 
+          value={`$${analytics.lifetimeCost.toLocaleString()}`} 
+        />
+        <MetricItem 
+          label="Average cost per mile" 
+          value={`$${analytics.costPerMile.toFixed(2)}`} 
+        />
+        <MetricItem 
+          label="Average cost per month" 
+          value={`$${analytics.costPerMonth.toFixed(2)}`} 
+        />
       </View>
       
       <CostTrendIndicator trend={analytics.trend} />
     </Card>
   );
 };
-```
 
-#### **2B.2: Recent History Enhancement**
-```typescript
-// Enhance existing maintenance timeline with better visuals
-const EnhancedTimelineItem = ({ log, isUpcoming }) => (
-  <View style={[styles.timelineItem, isUpcoming && styles.upcomingService]}>
-    <ServiceIcon category={log.category} />
-    <TimelineContent log={log} />
-    <ServiceStatus status={getServiceStatus(log)} />
-  </View>
-);
+interface EnhancedCostAnalytics {
+  lifetimeCost: number;
+  costPerMile: number;
+  costPerMonth: number;
+  trend: 'increasing' | 'decreasing' | 'stable';
+  recentTotalCost: number; // Last 30 days
+}
 ```
 
 ---
@@ -196,11 +343,19 @@ const EnhancedTimelineItem = ({ log, isUpcoming }) => (
 
 | Task | Impact | Complexity | Risk | Priority | Timeline |
 |------|--------|------------|------|----------|----------|
-| Service Due Calculations | HIGH | MEDIUM | MEDIUM | 🟢 **START HERE** | 0.5 sessions |
-| Enhanced Status Card | HIGH | LOW | LOW | 🟢 **IMMEDIATE** | 0.25 sessions |
-| Visual Status System | HIGH | LOW | LOW | 🟢 **FOLLOW-UP** | 0.25 sessions |
-| Cost Analytics Enhancement | MEDIUM | LOW | LOW | 🟡 **NEXT** | 0.25 sessions |
-| Timeline Visual Polish | LOW | LOW | LOW | 🟡 **OPTIONAL** | 0.25 sessions |
+| **Phase 2A**: Service Due Calculations | HIGH | MEDIUM | MEDIUM | 🟢 **START HERE** | 0.5 sessions |
+| **Phase 2B**: Enhanced Status Intelligence | HIGH | LOW | LOW | 🟢 **IMMEDIATE** | 0.75 sessions |
+| **Phase 2C**: Vehicle Photo Integration | MEDIUM | LOW | LOW | 🟡 **FOLLOW-UP** | 0.25 sessions |
+| **Phase 2C**: VIN/Notes Display Enhancement | LOW | LOW | LOW | 🟡 **NEXT** | 0.25 sessions |
+| **Phase 2C**: Action Navigation | MEDIUM | LOW | LOW | 🟡 **NEXT** | 0.25 sessions |
+| **Phase 2D**: Enhanced Cost Analytics | MEDIUM | LOW | LOW | 🟡 **FINAL** | 0.5 sessions |
+
+### **Backlog Items (Future Implementation)**
+| Task | Dependencies | Estimated Timeline |
+|------|--------------|-------------------|
+| Detailed Maintenance History Screen | Navigation framework | 1 session |
+| Mileage Log Entry | Data models, UI components | 0.5 sessions |
+| Vehicle Insights Screen | Analytics engine, charts | 1-2 sessions |
 
 ---
 

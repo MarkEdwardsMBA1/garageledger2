@@ -16,7 +16,7 @@ interface MaintenanceCategorySelectorProps {
   /** Selected services */
   selectedServices?: SelectedService[];
   /** Called when services change */
-  onServicesChange: (services: SelectedService[], configs?: Map<string, AdvancedServiceConfiguration>) => void;
+  onServicesChange: (services: SelectedService[], configs?: { [key: string]: AdvancedServiceConfiguration }) => void;
   /** Label for the selector */
   label?: string;
   /** Whether selector is disabled */

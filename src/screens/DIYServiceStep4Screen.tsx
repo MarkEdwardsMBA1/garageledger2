@@ -1,4 +1,4 @@
-// Shop Service Step 4: Notes & Summary
+// DIY Service Step 4: Review & Save
 import React, { useState, useLayoutEffect, useEffect } from 'react';
 import {
   View,
@@ -12,43 +12,60 @@ import { theme } from '../utils/theme';
 import { Typography } from '../components/common/Typography';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
-import { Input } from '../components/common/Input';
 import { Loading } from '../components/common/Loading';
 import { useAuth } from '../contexts/AuthContext';
 import { FirebaseMaintenanceLogRepository } from '../repositories/FirebaseMaintenanceLogRepository';
 import { vehicleRepository } from '../repositories/VehicleRepository';
 import { MaintenanceLog, Vehicle } from '../types';
-import { SelectedService } from '../types';
+import { SelectedService, AdvancedServiceConfiguration } from '../types';
 
-interface ShopServiceStep1SerializableData {
+interface DIYServiceStep1SerializableData {
   date: string; // ISO string from navigation
   mileage: string;
-  totalCost: string;
-  shopName: string;
-  shopAddress: string;
-  shopPhone: string;
-  shopEmail: string;
 }
 
-interface ShopServiceStep4Params {
+interface DIYServiceStep4Params {
   vehicleId: string;
-  step1Data: ShopServiceStep1SerializableData;
+  step1Data: DIYServiceStep1SerializableData;
   selectedServices: SelectedService[];
+  serviceConfigs?: { [key: string]: AdvancedServiceConfiguration };
   photos: string[];
   notes?: string;
 }
 
 const maintenanceLogRepository = new FirebaseMaintenanceLogRepository();
 
-export const ShopServiceStep4Screen: React.FC = () => {
+export const DIYServiceStep4Screen: React.FC = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const route = useRoute();
-  const params = route.params as ShopServiceStep4Params;
+  const params = route.params as DIYServiceStep4Params;
   const { user } = useAuth();
   
   const [saving, setSaving] = useState(false);
   const [currentVehicle, setCurrentVehicle] = useState<Vehicle | null>(null);
+
+  // Calculate total cost from service configurations
+  const calculateTotalCost = (): number => {
+    if (!params.serviceConfigs) return 0;
+    
+    let total = 0;
+    Object.values(params.serviceConfigs).forEach((config) => {
+      if (config.costEstimate) {
+        total += config.costEstimate;
+      }
+    });
+    
+    return total;
+  };
+
+  // Get cost for individual service
+  const getServiceCost = (service: SelectedService): number => {
+    if (!params.serviceConfigs) return 0;
+    
+    const config = params.serviceConfigs[service.serviceId];
+    return config?.costEstimate || 0;
+  };
 
   // Configure navigation header
   useLayoutEffect(() => {
@@ -98,14 +115,14 @@ export const ShopServiceStep4Screen: React.FC = () => {
       // Create maintenance log from collected data
       const maintenanceLog: Omit<MaintenanceLog, 'id'> = {
         vehicleId: params.vehicleId,
-        title: `Shop Service - ${params.selectedServices.map(s => s.serviceName).join(', ')}`,
+        title: `DIY Service - ${params.selectedServices.map(s => s.serviceName).join(', ')}`,
         date: new Date(params.step1Data.date), // Convert ISO string back to Date
         mileage: parseInt(params.step1Data.mileage),
         services: params.selectedServices,
-        totalCost: parseFloat(params.step1Data.totalCost),
+        totalCost: calculateTotalCost(),
         notes: (params.notes || '').trim(),
         photos: params.photos,
-        serviceType: 'shop',
+        serviceType: 'diy',
         tags: [],
         createdAt: new Date(),
       };
@@ -116,7 +133,7 @@ export const ShopServiceStep4Screen: React.FC = () => {
       // Success feedback - navigate back to Vehicle Details
       Alert.alert(
         '🔧 Service Logged Successfully!',
-        `Your ${params.selectedServices.length} service${params.selectedServices.length > 1 ? 's' : ''} have been recorded.`,
+        `Your ${params.selectedServices.length} DIY service${params.selectedServices.length > 1 ? 's' : ''} have been recorded.`,
         [
           {
             text: 'Done',
@@ -142,7 +159,7 @@ export const ShopServiceStep4Screen: React.FC = () => {
   };
 
   const handleBack = () => {
-    navigation.navigate('ShopServiceStep3', {
+    navigation.navigate('DIYServiceStep3', {
       vehicleId: params.vehicleId,
       step1Data: params.step1Data,
       selectedServices: params.selectedServices,
@@ -165,7 +182,7 @@ export const ShopServiceStep4Screen: React.FC = () => {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.content}>
-        {/* Program-style Service Summary Card */}
+        {/* DIY Service Summary Card */}
         <Card variant="elevated" style={styles.serviceCard}>
           <View style={styles.serviceHeader}>
             <Typography variant="heading" style={styles.serviceName}>
@@ -204,7 +221,7 @@ export const ShopServiceStep4Screen: React.FC = () => {
           <View style={styles.serviceRow}>
             <Typography variant="bodySmall" style={styles.serviceLabel}>Total Cost:</Typography>
             <Typography variant="body" style={styles.serviceValue}>
-              ${parseFloat(params.step1Data.totalCost).toFixed(2)}
+              ${calculateTotalCost().toFixed(2)}
             </Typography>
           </View>
 
@@ -212,18 +229,21 @@ export const ShopServiceStep4Screen: React.FC = () => {
           <View style={styles.serviceRow}>
             <Typography variant="bodySmall" style={styles.serviceLabel}>Services:</Typography>
             <View style={styles.servicesList}>
-              {params.selectedServices.map((service, index) => (
-                <View key={index} style={styles.serviceItem}>
-                  <Typography variant="body" style={styles.serviceValue}>
-                    • {service.serviceName}
-                    {service.cost && (
-                      <Typography variant="body" style={styles.serviceCost}>
-                        ${service.cost.toFixed(2)}
-                      </Typography>
-                    )}
-                  </Typography>
-                </View>
-              ))}
+              {params.selectedServices.map((service, index) => {
+                const serviceCost = getServiceCost(service);
+                return (
+                  <View key={index} style={styles.serviceItem}>
+                    <Typography variant="body" style={styles.serviceValue}>
+                      • {service.serviceName}
+                      {serviceCost > 0 && (
+                        <Typography variant="bodySmall" style={styles.serviceCost}>
+                          {' '}(${serviceCost.toFixed(2)})
+                        </Typography>
+                      )}
+                    </Typography>
+                  </View>
+                );
+              })}
             </View>
           </View>
 
@@ -290,13 +310,7 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     marginRight: theme.spacing.md,
   },
-  formSection: {
-    marginBottom: theme.spacing.lg,
-  },
-  notesInput: {
-    minHeight: 100,
-  },
-  // Program-style Service Card
+  // DIY Service Card
   serviceCard: {
     marginBottom: theme.spacing.lg,
   },
@@ -322,22 +336,15 @@ const styles = StyleSheet.create({
     flex: 1,
     fontWeight: theme.typography.fontWeight.medium,
   },
-  costValue: {
-    color: theme.colors.primary,
-    fontSize: theme.typography.fontSize.lg,
+  serviceCost: {
+    color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.normal,
   },
   servicesList: {
     flex: 1,
   },
   serviceItem: {
     marginBottom: theme.spacing.xs,
-  },
-  categoryText: {
-    color: theme.colors.textSecondary,
-  },
-  serviceCost: {
-    color: theme.colors.primary,
-    fontWeight: theme.typography.fontWeight.medium,
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -352,4 +359,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ShopServiceStep4Screen;
+export default DIYServiceStep4Screen;

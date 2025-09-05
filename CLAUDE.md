@@ -67,6 +67,144 @@ GarageLedger2 is a React Native mobile application for vehicle maintenance track
 
 **⚠️ Important**: Never use `npm update` or change dependency versions without testing. Use `npx` instead of global Expo CLI to avoid version conflicts.
 
+## Practical Design Principles
+
+GarageLedger looks simple on the surface (track the maintenance, modifications, and repairs over the life of the vehicles) but actually has hidden complexity in:
+
+- **Granular data capture** (vehicles → parts → service tasks → costs → schedules, etc.).
+- **Complex input hierarchies** (user, vehicle, subsystems, service items, vendors…).
+- **Analytical/reporting needs** (compliance, costs, predictions, ML later).
+
+The most important design principles for GarageLedger to help avoid painting ourselves into a corner are:
+
+### Data & Architecture
+
+- **Separation of Concerns**: Don't mix schema, business logic, and UI.
+  - Keep data model / storage separate from business rules and presentation/UI.
+  - GarageLedger's complexity lives in the schema and relationships — don't let UI shortcuts contaminate the core model.
+  - Example: a "maintenance interval" rule belongs in the domain logic, not buried inside a form component.
+  - ❌ **Anti-pattern**: Putting business rules in UI components (`if (service === 'oil-change') { setInterval(3000) }`)
+
+- **Single Source of Truth (SSOT/DRY)**: Keep definitions/data consistent across app layers.
+  - Every piece of knowledge (e.g., service interval, cost definition) should live in one canonical place.
+  - Prevents divergence in reports vs. reminders vs. UI displays.
+  - DRY is part of this principle, but SSOT extends it into data/knowledge management.
+  - ❌ **Anti-pattern**: Duplicating service interval logic across forms, reminders, and reports
+
+- **Loose Coupling & High Cohesion**
+  - Each module/service should do one well-defined job.
+  - Example: a Notification Service shouldn't know the details of how maintenance schedules are calculated — it should just consume an event.
+  - This makes it easier to extend (like adding SMS later without rewriting scheduling logic).
+  - ❌ **Anti-pattern**: Components that know too much about other components' internal workings
+
+### Future-Proofing
+
+- **Design for Change (Open-Closed Principle)**: Extend, don't rewrite.
+  - GarageLedger will evolve: new data types, new analysis layers, ML features.
+  - Structure code and schema so you can add without rewriting.
+  - ❌ **Anti-pattern**: Hard-coding maintenance schedules directly in React components
+
+- **Scalability Awareness**
+  - The app may not need massive scale at launch, but design schema & APIs with growth in mind:
+    - Use UUIDs instead of sequential IDs.
+    - Normalize where needed, but allow denormalized "reporting tables" later.
+    - Think about how new data sources (OBD-II devices, vendor APIs) might plug in.
+  - ❌ **Anti-pattern**: Using incremental IDs or tightly coupling to Firebase specifics
+
+- **Fail Fast & Validate Early**: Protect data quality now for future reporting/ML.
+  - Complex hierarchies = lots of possible user errors.
+  - Validate at the edge (mobile/web input) and again at the domain layer.
+  - Failing fast prevents corrupt data downstream that would cripple analytics and ML training later.
+  - ❌ **Anti-pattern**: Allowing invalid data to persist because "we'll clean it up later"
+
+### User-Centered Design
+
+- **User Mental Model Alignment**: Design flows that match how mechanics and car owners actually think about maintenance.
+  - Users think "Vehicle → System → Service" not "Database → Table → Record"
+  - Maintenance flows should mirror real-world repair shop processes
+  - Group related services logically (e.g., "Cooling System" not scattered across "Engine" and "Fluids")
+  - ❌ **Anti-pattern**: Organizing UI around database structure instead of user workflows
+
+### Development Philosophy
+
+- **Keep it Simple, Stupid (KISS)**
+  - Especially important in apps that look simple but have deep domain complexity.
+  - Don't add abstraction layers unless they solve a real problem.
+  - Avoid premature microservices — complexity belongs in the schema and domain model, not infrastructure.
+  - ❌ **Anti-pattern**: Over-engineering with unnecessary abstraction layers or premature optimization
+
+- **Observability**: Logs + history for debugging, trust, and analytics.
+  - Logs, traces, and event history are crucial for:
+    - Debugging user-reported issues ("Why didn't I get a reminder?")
+    - Compliance and trust ("Show me when this service was logged.")
+    - ML training ("Track how recommendations were made").
+  - ❌ **Anti-pattern**: "Silent failures" where operations fail without logging or user feedback
+
+## Design Patterns
+
+Key patterns apply to an enterprise-style system (mobile app + web + microservices + integrations). **Priority system prevents premature optimization** - implement patterns when they solve actual problems, not theoretical ones.
+
+### **🟢 Phase 1: MVP Patterns (Implement Now)**
+These solve current problems and provide immediate value without adding complexity.
+
+| **Pattern**            | **Current Relevance**                                                                  | **Immediate Benefit**                                    |
+| ---------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| **State**              | Vehicle status tracking: *In Compliance* → *Out of Compliance* → *Overdue*            | Clean status logic, consistent UI state management       |
+| **Observer (Simple)**  | Service logging triggers reminder updates, status recalculation                       | Real-time updates without complex event systems          |
+
+### **🟡 Phase 2: Growth Patterns (6-12 months)**
+Implement when user base grows and feature complexity increases.
+
+| **Pattern**                 | **Growth-Phase Relevance**                                                     | **Scaling Benefit**                                      |
+| --------------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| **Decorator**               | Optional features per vehicle: warranty tracking, emissions compliance, fleet  | Add features without rewriting core vehicle logic        |
+| **Chain of Responsibility** | Notification escalation: in-app → email → SMS for overdue maintenance         | Flexible notification flows, easier to extend later      |
+| **Saga**                    | Complex onboarding: account → payment → first vehicle → program setup         | Handles partial failures gracefully in multi-step flows |
+
+### **🔴 Phase 3: Scale Patterns (Enterprise/High-Volume)**
+Only implement when specific technical constraints emerge.
+
+| **Pattern**               | **Enterprise Relevance**                                                             | **Scale Benefit**                                        | **⚠️ When NOT to Use**                                |
+| ------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------- |
+| **CQRS**                  | Separate write (logging) from read (dashboards) when read queries become expensive   | Faster dashboards, optimized analytics                  | Until read/write performance becomes actual bottleneck |
+| **Event Sourcing**        | Full audit trail for enterprise customers, regulatory compliance                     | Complete history, audit trail, rollback capability      | Unless audit trails are legally required             |
+| **Circuit Breaker**       | Protect from external API failures (manufacturer data, payment processing)          | Reliability when dependent services fail                 | Until you have actual external dependencies failing   |
+| **Message Broker**        | Connect microservices for notifications, billing, analytics across team boundaries  | Decoupled services, easier team scaling                 | Until you have multiple teams/services to coordinate |
+
+### **Pattern Progression Examples**
+Start simple, evolve when needed:
+
+```typescript
+// Observer: Simple → Event-driven → Full pub/sub
+// Phase 1: Direct React state updates
+setVehicleStatus('overdue');
+setReminders(calculateReminders(vehicle));
+
+// Phase 2: Simple event emitter
+vehicleEvents.emit('statusChanged', { vehicleId, status: 'overdue' });
+
+// Phase 3: Message broker (only if needed)
+messageBroker.publish('vehicle.status.changed', payload);
+```
+
+```typescript
+// State: Enum → State machine → Complex orchestration  
+// Phase 1: Simple status enum
+type VehicleStatus = 'compliant' | 'due_soon' | 'overdue';
+
+// Phase 2: State machine with transitions
+const statusMachine = createMachine({
+  states: { compliant: { on: { SERVICE_DUE: 'due_soon' } } }
+});
+```
+
+### **Anti-Pattern Prevention**
+- **Don't implement patterns until you feel the pain** - complexity without benefit hurts maintainability
+- **Start with the simplest solution** that works, then evolve
+- **Measure before optimizing** - use patterns to solve actual performance/complexity issues
+- **One pattern at a time** - don't introduce multiple patterns simultaneously
+
+
 ## Architecture
 
 ### Tech Stack

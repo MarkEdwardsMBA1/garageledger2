@@ -60,15 +60,59 @@ export const MAINTENANCE_CATEGORIES: MaintenanceCategorySystem = {
     }
   },
 
+  'cooling-system': {
+    name: 'Cooling System',
+    subcategories: {
+      'thermostat': {
+        name: 'Thermostat',
+        components: {
+          parts: ['Thermostat']
+        }
+      },
+      'water-pump': {
+        name: 'Water Pump',
+        components: {
+          parts: ['Water Pump']
+        }
+      },
+      'radiator': {
+        name: 'Radiator',
+        components: {
+          parts: ['Radiator']
+        }
+      },
+      'antifreeze-coolant': {
+        name: 'Antifreeze & Coolant',
+        components: {
+          fluids: ['Antifreeze & Coolant']
+        }
+      }
+    }
+  },
+
+  'tires-wheels': {
+    name: 'Tires & Wheels',
+    subcategories: {
+      'tire-rotation': {
+        name: 'Tire Rotation',
+        description: 'Rotating tires to ensure even wear and extend tire life',
+        components: {
+          labor: ['Tire Rotation Service']
+        }
+      },
+      'balancing': {
+        name: 'Balancing',
+        description: 'Wheel balancing to eliminate vibration and improve ride quality',
+        components: {
+          labor: ['Wheel Balancing Service']
+        }
+      }
+    }
+  },
+
   'steering-suspension': {
     name: 'Steering & Suspension',
     subcategories: {
-      'alignment': {
-        name: 'Alignment',
-        components: {
-          labor: ['Wheel Alignment']
-        }
-      },
       'struts-shocks': {
         name: 'Struts/Shocks, Springs, Coilovers & Top Mounts',
         components: {
@@ -115,23 +159,6 @@ export const MAINTENANCE_CATEGORIES: MaintenanceCategorySystem = {
     }
   },
 
-  'tires-wheels': {
-    name: 'Tires & Wheels',
-    subcategories: {
-      'tire-rotation-balancing': {
-        name: 'Tire Rotation & Balancing',
-        components: {
-          labor: ['Tire Rotation', 'Wheel Balancing']
-        }
-      },
-      'tire-replacement': {
-        name: 'Tire Replacement',
-        components: {
-          parts: ['Tires']
-        }
-      }
-    }
-  },
 
   'electrical': {
     name: 'Electrical',
@@ -177,13 +204,6 @@ export const MAINTENANCE_CATEGORIES: MaintenanceCategorySystem = {
         name: 'Spark Plugs',
         components: {
           parts: ['Spark Plugs']
-        }
-      },
-      'cooling-system': {
-        name: 'Cooling System',
-        components: {
-          fluids: ['Antifreeze & Coolant'],
-          parts: ['Water Pump', 'Thermostat', 'Radiator']
         }
       },
       'drive-belts-pulleys': {
@@ -374,12 +394,6 @@ export const MAINTENANCE_CATEGORIES: MaintenanceCategorySystem = {
           fluids: ['Brake Cleaner', 'Penetrating Oil', 'Degreaser']
         }
       },
-      'shop-materials': {
-        name: 'Shop Materials',
-        components: {
-          parts: ['Shop Rags', 'Gloves', 'Filters', 'Gaskets']
-        }
-      }
     }
   },
 
@@ -414,4 +428,170 @@ export const getSubcategoryName = (categoryKey: string, subcategoryKey: string):
 
 export const getComponents = (categoryKey: string, subcategoryKey: string): MaintenanceComponents | undefined => {
   return MAINTENANCE_CATEGORIES[categoryKey]?.subcategories[subcategoryKey]?.components;
+};
+
+// Service configuration type for DIY bottom sheet variants
+export type ServiceConfigType = 'parts-fluids' | 'parts-only' | 'fluids-only' | 'labor-only';
+
+// Helper function to check if a service should be available in DIY mode
+export const isDIYService = (categoryKey: string, subcategoryKey: string): boolean => {
+  // Excluded from DIY mode: alignment, wheel balancing, shop materials
+  if (categoryKey === 'steering-suspension' && subcategoryKey === 'alignment') {
+    return false;
+  }
+  if (categoryKey === 'tires-wheels' && subcategoryKey === 'balancing') {
+    return false; // Balancing requires shop equipment
+  }
+  if (categoryKey === 'fluids-consumables' && subcategoryKey === 'shop-materials') {
+    return false;
+  }
+  
+  return true; // All other services are available in DIY mode
+};
+
+export const getServiceConfigType = (categoryKey: string, subcategoryKey: string): ServiceConfigType => {
+  // Labor-only services (no parts or fluids needed)
+  if (categoryKey === 'tires-wheels' && subcategoryKey === 'tire-rotation') {
+    return 'labor-only'; // Just labor for rotation
+  }
+  if (categoryKey === 'tires-wheels' && subcategoryKey === 'balancing') {
+    return 'labor-only'; // Just labor for balancing
+  }
+
+  // Parts + Fluids services (need both parts and fluids input)
+  if (categoryKey === 'engine-powertrain' && subcategoryKey === 'oil-filter-change') {
+    return 'parts-fluids'; // Oil filter + motor oil
+  }
+  if (categoryKey === 'transmission-drivetrain' && subcategoryKey === 'transmission-pdk') {
+    return 'parts-fluids'; // Filters + transmission fluid
+  }
+  if (categoryKey === 'transmission-drivetrain' && subcategoryKey === 'front-differential') {
+    return 'parts-fluids'; // Gaskets + differential fluid
+  }
+  if (categoryKey === 'transmission-drivetrain' && subcategoryKey === 'rear-differential') {
+    return 'parts-fluids'; // Gaskets + differential fluid
+  }
+  if (categoryKey === 'transmission-drivetrain' && subcategoryKey === 'center-differential') {
+    return 'parts-fluids'; // Gaskets + differential fluid
+  }
+  if (categoryKey === 'transmission-drivetrain' && subcategoryKey === 'transfer-case') {
+    return 'parts-fluids'; // Gaskets + transfer case fluid
+  }
+  if (categoryKey === 'transmission-drivetrain' && subcategoryKey === 'driveshaft') {
+    return 'parts-fluids'; // Parts + grease
+  }
+  if (categoryKey === 'transmission-drivetrain' && subcategoryKey === 'cv-joints-axles') {
+    return 'parts-fluids'; // CV joints/boots + grease
+  }
+  if (categoryKey === 'custom-service' && subcategoryKey === 'custom') {
+    return 'parts-fluids'; // Custom services can have both
+  }
+
+  // Fluids-only services (only need fluid input)
+  if (categoryKey === 'brake-system' && subcategoryKey === 'brake-fluid') {
+    return 'fluids-only'; // Just brake fluid
+  }
+  if (categoryKey === 'steering-suspension' && subcategoryKey === 'power-steering-fluid') {
+    return 'fluids-only'; // Just power steering fluid
+  }
+  if (categoryKey === 'hvac-climate' && subcategoryKey === 'ac-refrigerant') {
+    return 'fluids-only'; // Just A/C refrigerant
+  }
+  if (categoryKey === 'body-exterior' && subcategoryKey === 'paint-protection') {
+    return 'fluids-only'; // Paint/wax/sealant
+  }
+  if (categoryKey === 'fluids-consumables' && subcategoryKey === 'windshield-washer-fluid') {
+    return 'fluids-only'; // Just washer fluid
+  }
+  if (categoryKey === 'fluids-consumables' && subcategoryKey === 'cleaning-chemicals') {
+    return 'fluids-only'; // Brake cleaner, degreaser, etc.
+  }
+  if (categoryKey === 'cooling-system' && subcategoryKey === 'antifreeze-coolant') {
+    return 'fluids-only'; // Just coolant
+  }
+
+  // Parts-only services (only need parts input) - this is the most common
+  // Brake system
+  if (categoryKey === 'brake-system' && (
+    subcategoryKey === 'brake-pads-rotors' ||
+    subcategoryKey === 'caliper' ||
+    subcategoryKey === 'master-cylinder' ||
+    subcategoryKey === 'brake-lines'
+  )) {
+    return 'parts-only';
+  }
+  
+  // Engine & Powertrain
+  if (categoryKey === 'engine-powertrain' && (
+    subcategoryKey === 'engine-air-filter' ||
+    subcategoryKey === 'spark-plugs' ||
+    subcategoryKey === 'drive-belts-pulleys' ||
+    subcategoryKey === 'valve-cover-gasket' ||
+    subcategoryKey === 'pcv' ||
+    subcategoryKey === 'throttle-body-maf'
+  )) {
+    return 'parts-only';
+  }
+  
+  // Cooling System
+  if (categoryKey === 'cooling-system' && (
+    subcategoryKey === 'thermostat' ||
+    subcategoryKey === 'water-pump' ||
+    subcategoryKey === 'radiator'
+  )) {
+    return 'parts-only';
+  }
+  
+  // Steering & Suspension
+  if (categoryKey === 'steering-suspension' && (
+    subcategoryKey === 'struts-shocks' ||
+    subcategoryKey === 'control-arms' ||
+    subcategoryKey === 'sway-bars' ||
+    subcategoryKey === 'steering-rack'
+  )) {
+    return 'parts-only';
+  }
+  
+  // Electrical
+  if (categoryKey === 'electrical' && (
+    subcategoryKey === 'battery' ||
+    subcategoryKey === 'alternator' ||
+    subcategoryKey === 'starter'
+  )) {
+    return 'parts-only';
+  }
+  
+  // HVAC & Climate
+  if (categoryKey === 'hvac-climate' && (
+    subcategoryKey === 'ac-compressor' ||
+    subcategoryKey === 'heater-core'
+  )) {
+    return 'parts-only';
+  }
+  
+  // Body & Exterior
+  if (categoryKey === 'body-exterior' && (
+    subcategoryKey === 'weatherstripping' ||
+    subcategoryKey === 'windshield-wipers'
+  )) {
+    return 'parts-only';
+  }
+  
+  // Interior Comfort
+  if (categoryKey === 'interior-comfort' && subcategoryKey === 'cabin-air-filter') {
+    return 'parts-only';
+  }
+  
+  // Lighting
+  if (categoryKey === 'lighting' && (
+    subcategoryKey === 'headlight-bulbs' ||
+    subcategoryKey === 'taillight-bulbs' ||
+    subcategoryKey === 'interior-lighting'
+  )) {
+    return 'parts-only';
+  }
+
+  // Default fallback for any service we haven't categorized yet
+  // Most automotive services involve parts, so this is a safe default
+  return 'parts-only';
 };

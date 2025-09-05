@@ -195,9 +195,18 @@ export const AddServiceReminderModal: React.FC<AddServiceReminderModalProps> = (
             
             <MaintenanceCategorySelector
               label={t('programs.category', 'Category')}
-              categoryKey={formData.category ? formData.category.split(':')[0] : ''}
-              subcategoryKey={formData.category ? formData.category.split(':')[1] : ''}
-              onSelectionChange={handleCategorySelect}
+              selectedServices={formData.category ? [{
+                categoryKey: formData.category.split(':')[0],
+                subcategoryKey: formData.category.split(':')[1],
+                serviceName: getSubcategoryName(formData.category.split(':')[0], formData.category.split(':')[1]),
+                serviceId: formData.category.replace(':', '.')
+              }] : []}
+              onServicesChange={(services) => {
+                if (services.length > 0) {
+                  handleCategorySelect(services[0].categoryKey, services[0].subcategoryKey);
+                }
+              }}
+              allowMultiple={false}
               required
             />
           </Card>

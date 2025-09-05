@@ -11,12 +11,14 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { theme } from '../utils/theme';
-import { Card } from '../components/common/Card';
+// Card component now handled by VehicleCard and InfoCard
 import { Button } from '../components/common/Button';
 import { Loading } from '../components/common/Loading';
 import { EmptyState } from '../components/common/ErrorState';
 import { Typography } from '../components/common/Typography';
 import { ActivityIcon, SpannerIcon, CheckIcon, AlertTriangleIcon, MaintenanceIcon } from '../components/icons';
+import VehicleCard from '../components/common/VehicleCard';
+import InfoCard from '../components/common/InfoCard';
 import { maintenanceLogRepository } from '../repositories/FirebaseMaintenanceLogRepository';
 import { vehicleRepository } from '../repositories/VehicleRepository';
 import { programRepository } from '../repositories/SecureProgramRepository';
@@ -150,257 +152,165 @@ const VehicleHomeScreen: React.FC = () => {
     });
   };
 
+  // Get vehicle display info (similar to VehiclesScreen)
   const renderVehicleHeader = () => {
     if (!vehicle) return null;
 
+    // Additional info for VIN and notes
+    const additionalInfo = (
+      <>
+        {vehicle.vin && (
+          <Text style={styles.vinText}>
+            VIN: {vehicle.vin}
+          </Text>
+        )}
+        {vehicle.notes && (
+          <Text style={styles.notesText}>
+            {vehicle.notes}
+          </Text>
+        )}
+      </>
+    );
+
     return (
-      <TouchableOpacity
-        onPress={() => {
-          navigation.navigate('EditVehicle', { vehicleId: vehicle.id });
-        }}
-        activeOpacity={0.7}
-      >
-        <Card variant="elevated" style={styles.headerCard}>
-          <View style={styles.vehicleInfo}>
-            <Typography variant="title" style={styles.vehicleName}>
-              {(vehicle.nickname?.trim() && vehicle.nickname.trim().length > 0) ? vehicle.nickname.trim() : `${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-            </Typography>
-            
-            {/* Show vehicle info if nickname is present */}
-            {(vehicle.nickname?.trim() && vehicle.nickname.trim().length > 0) && (
-              <Typography variant="bodySmall" style={styles.vehicleInfoSubtitle}>
-                {vehicle.year} {vehicle.make} {vehicle.model}
-              </Typography>
-            )}
-            
-            {/* Show mileage under vehicle info when nickname is present, or normally when no nickname */}
-            {vehicle.mileage > 0 && (
-              <Typography variant="bodySmall" style={styles.mileageSubtitle}>
-                Current: {vehicle.mileage.toLocaleString()} {t('vehicles.miles', 'miles')}
-              </Typography>
-            )}
-            
-            {vehicle.vin && (
-              <View style={styles.detailContainer}>
-                <Typography variant="bodySmall" style={styles.detailLabel}>
-                  VIN:
-                </Typography>
-                <Typography variant="bodySmall" style={styles.detailValue}>
-                  {vehicle.vin}
-                </Typography>
-              </View>
-            )}
-            
-            {vehicle.notes && (
-              <View style={styles.detailContainer}>
-                <Typography variant="bodySmall" style={styles.detailLabel}>
-                  Notes:
-                </Typography>
-                <Typography variant="bodySmall" style={styles.vehicleNotes}>
-                  {vehicle.notes}
-                </Typography>
-              </View>
-            )}
-          </View>
-        </Card>
-      </TouchableOpacity>
+      <VehicleCard
+        vehicle={vehicle}
+        showImage={true}
+        onPress={() => navigation.navigate('EditVehicle', { vehicleId: vehicle.id })}
+        additionalInfo={additionalInfo}
+        style={styles.headerCard}
+      />
     );
   };
 
   const renderQuickActions = () => (
-    <Card variant="elevated" style={styles.sectionCard}>
-      <Typography variant="heading" style={styles.sectionTitle}>
-        {t('dashboard.quickActions', 'Quick Actions')}
-      </Typography>
-      
+    <InfoCard
+      title={t('dashboard.quickActions', 'Quick Actions')}
+      style={styles.sectionCard}
+    >
       <View style={styles.actionButtons}>
         <Button
           title={t('maintenance.logMaintenance', 'Log Maintenance')}
           variant="primary"
           style={styles.actionButton}
           onPress={() => {
-            navigation.navigate('Insights', { 
-              screen: 'AddMaintenanceLog',
-              params: { vehicleId: params.vehicleId }
-            });
+            navigation.navigate('AddMaintenanceLog', { vehicleId: params.vehicleId });
           }}
         />
         
         <Button
-          title={t('reminders.addNew', 'Add Reminder')}
+          title="Manage Programs"
           variant="outline"
           style={styles.actionButton}
           onPress={() => {
-            // TODO: Navigate to add reminder screen
-            console.log('Add reminder for vehicle:', params.vehicleId);
+            if (programs.length > 0) {
+              // Navigate to edit existing program
+              navigation.navigate('Programs', {
+                screen: 'EditProgram',
+                params: { programId: programs[0].id }
+              });
+            } else {
+              // Navigate to create new program
+              navigation.navigate('Programs', {
+                screen: 'CreateProgramVehicleSelection',
+                params: { preSelectedVehicleId: params.vehicleId }
+              });
+            }
           }}
         />
       </View>
-    </Card>
+    </InfoCard>
   );
 
   const renderVehicleStatus = () => {
+    // Empty state: No program assigned
+    if (programs.length === 0) {
+      return (
+        <InfoCard
+          title="Vehicle Status"
+          subtitle="Setup a maintenance program to track your vehicle's service schedule and see alerts for upcoming and past due services."
+          style={styles.sectionCard}
+        />
+      );
+    }
+
+    // Loading state: Program assigned but status calculating
     if (!vehicleStatus) {
       return (
-        <Card variant="elevated" style={styles.sectionCard}>
-          <Typography variant="heading" style={styles.sectionTitle}>
-            Vehicle Status
-          </Typography>
-          <Typography variant="body" style={styles.statusLoading}>
-            Calculating status...
-          </Typography>
-        </Card>
+        <InfoCard
+          title="Vehicle Status"
+          subtitle="Calculating status..."
+          style={styles.sectionCard}
+        />
       );
     }
 
-    const { nextService, overdueServices } = vehicleStatus;
+    const { overdueCount } = vehicleStatus;
+    const primaryProgram = programs[0]; // Show first program for simplicity
 
-    // Show all maintenance up to date
-    if (overdueServices.length === 0) {
-      return (
-        <Card variant="elevated" style={[styles.sectionCard, styles.statusCardUpToDate]}>
-          <Typography variant="heading" style={styles.sectionTitle}>
-            Vehicle Status
-          </Typography>
-          
-          <View style={styles.statusHeaderRow}>
-            <Typography variant="caption" style={styles.statusUpToDateText}>
-              All maintenance up to date
-            </Typography>
-          </View>
-          
-          {vehicleStatus.lastMaintenanceDate && (
-            <View style={[styles.statRow, styles.lastServiceRow]}>
-              <Typography variant="caption" style={styles.statLabel}>
-                Last service: {vehicleStatus.lastMaintenanceDate.toLocaleDateString()}
-              </Typography>
-            </View>
-          )}
-        </Card>
-      );
-    }
-
-    const getStatusColor = () => {
-      switch(nextService.status) {
-        case 'overdue': return theme.colors.error;     // Critical Red
-        case 'due': return theme.colors.warning;       // Signal Orange  
-        case 'upcoming': return theme.colors.info;     // Electric Blue
-        default: return theme.colors.success;          // Racing Green
-      }
-    };
-
-    const getStatusIcon = () => {
-      switch(nextService.status) {
-        case 'overdue': return <AlertTriangleIcon size={24} color={theme.colors.error} />;
-        case 'due': return <MaintenanceIcon size={24} color={theme.colors.warning} />;
-        case 'upcoming': return <MaintenanceIcon size={24} color={theme.colors.info} />;
-        default: return <CheckIcon size={24} color={theme.colors.success} />;
-      }
-    };
-
-    const getStatusMessage = () => {
-      switch(nextService.status) {
-        case 'overdue': return 'Service Overdue';
-        case 'due': return 'Service Due Soon';
-        case 'upcoming': return 'Next Service';
-        default: return 'Up to Date';
-      }
-    };
-
-    // Show overdue services 
     return (
-      <Card 
-        variant="elevated" 
-        style={[
-          styles.sectionCard, 
-          styles.statusCard,
-          { borderLeftColor: theme.colors.error, borderLeftWidth: 4 }
-        ]}
+      <InfoCard
+        title="Vehicle Status"
+        style={styles.sectionCard}
+        onPress={() => navigation.navigate('MaintenanceHistory', { vehicleId: params.vehicleId })}
       >
-        <Typography variant="heading" style={styles.sectionTitle}>
-          Vehicle Status
-        </Typography>
-        
-        {/* Services Overdue Header with Count */}
-        <View style={styles.statusHeaderRow}>
-          <Typography variant="caption" style={styles.overdueLabel}>
-            Services overdue: {overdueServices.length}
-          </Typography>
-        </View>
-
-        {/* Numbered Overdue Services List */}
-        <View style={styles.overdueServicesTable}>
-          {overdueServices.map((service, index) => (
-            <View key={index} style={styles.overdueServiceRow}>
-              <Typography variant="caption" style={styles.overdueServiceNumber}>
-                {index + 1}.
-              </Typography>
-              <Typography variant="caption" style={styles.overdueServiceName}>
-                {service.service} • {service.dueIn}
-              </Typography>
-            </View>
-          ))}
-        </View>
-        
-        {vehicleStatus.lastMaintenanceDate && (
-          <View style={[styles.statRow, styles.lastServiceRow]}>
-            <Typography variant="caption" style={styles.statLabel}>
-              Last service: {vehicleStatus.lastMaintenanceDate.toLocaleDateString()}
+        <View style={styles.statusContent}>
+          {/* Program Information */}
+          <View style={styles.programInfo}>
+            <Typography variant="body" style={styles.programLabel}>
+              Program: {primaryProgram.name}
             </Typography>
           </View>
-        )}
-      </Card>
+
+          {/* Services Overdue Count with Color Coding */}
+          <View style={styles.overdueInfo}>
+            <Typography variant="body" style={styles.overdueLabel}>
+              Services Overdue: 
+              <Typography 
+                variant="body" 
+                style={[
+                  styles.overdueCount,
+                  { color: overdueCount > 0 ? theme.colors.error : theme.colors.success }
+                ]}
+              > {overdueCount}</Typography>
+            </Typography>
+          </View>
+        </View>
+      </InfoCard>
     );
   };
 
   const renderActivePrograms = () => {
-    if (programs.length === 0) {
-      return (
-        <Card variant="filled" style={styles.sectionCard}>
-          <Typography variant="heading" style={styles.sectionTitle}>
-            📋 Assigned Maintenance Program
+    // Don't render the programs card - program info now shown in Vehicle Status
+    return null;
+
+    const headerSubtitle = (
+      <View style={styles.programsHeaderActions}>
+        <TouchableOpacity
+          onPress={handleAssignPrograms}
+          style={styles.assignButton}
+        >
+          <Typography variant="caption" style={styles.assignButtonText}>
+            + Assign
           </Typography>
-          
-          <EmptyState
-            title="No Programs Assigned"
-            message="Create and assign maintenance programs to automate service reminders for this vehicle"
-            icon="📋"
-            primaryAction={{
-              title: "Assign Programs",
-              onPress: handleAssignPrograms,
-            }}
-          />
-        </Card>
-      );
-    }
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Programs')}
+        >
+          <Typography variant="bodySmall" style={styles.viewAllLink}>
+            Manage
+          </Typography>
+        </TouchableOpacity>
+      </View>
+    );
 
     return (
-      <Card variant="elevated" style={styles.sectionCard}>
-        <View style={styles.programsHeader}>
-          <Typography variant="heading" style={styles.sectionTitle}>
-            📋 Assigned Maintenance Program ({programs.length})
-          </Typography>
-          
-          <View style={styles.programsHeaderActions}>
-            <TouchableOpacity
-              onPress={handleAssignPrograms}
-              style={styles.assignButton}
-            >
-              <Typography variant="caption" style={styles.assignButtonText}>
-                + Assign
-              </Typography>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Programs')}
-            >
-              <Typography variant="bodySmall" style={styles.viewAllLink}>
-                Manage
-              </Typography>
-            </TouchableOpacity>
-          </View>
-        </View>
-
+      <InfoCard
+        title={`📋 Assigned Maintenance Program (${programs.length})`}
+        subtitle={headerSubtitle}
+        style={styles.sectionCard}
+      >
         <View style={styles.programsList}>
           {programs.map((program) => (
             <View key={program.id} style={styles.programItem}>
@@ -453,57 +363,40 @@ const VehicleHomeScreen: React.FC = () => {
             </View>
           ))}
         </View>
-      </Card>
+      </InfoCard>
     );
   };
 
   const renderMaintenanceTimeline = () => {
     if (maintenanceLogs.length === 0) {
       return (
-        <Card variant="filled" style={styles.sectionCard}>
-          <Typography variant="heading" style={styles.sectionTitle}>
-            Maintenance Timeline
-          </Typography>
-          
-          <EmptyState
-            title="No Maintenance Logged"
-            message="Start logging maintenance to build this vehicle's timeline"
-            icon={<ActivityIcon size={48} color={theme.colors.textSecondary} />}
-            primaryAction={{
-              title: t('maintenance.logMaintenance', 'Log Maintenance'),
-              onPress: () => {
-                navigation.navigate('Insights', { 
-                  screen: 'AddMaintenanceLog',
-                  params: { vehicleId: params.vehicleId }
-                });
-              },
-            }}
-          />
-        </Card>
+        <InfoCard
+          title="Recent Maintenance"
+          subtitle="Log maintenance services to see a list of recent services performed."
+          style={styles.sectionCard}
+          onPress={() => navigation.navigate('MaintenanceHistory', { vehicleId: params.vehicleId })}
+        />
       );
     }
 
     // Show recent logs (limit to 5 for timeline view)
     const recentLogs = maintenanceLogs.slice(0, 5);
 
-    return (
-      <Card variant="elevated" style={styles.sectionCard}>
-        <View style={styles.timelineHeader}>
-          <Typography variant="heading" style={styles.sectionTitle}>
-            Recent Maintenance
-          </Typography>
-          
-          {maintenanceLogs.length > 5 && (
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Insights')}
-            >
-              <Typography variant="bodySmall" style={styles.viewAllLink}>
-                View All ({maintenanceLogs.length})
-              </Typography>
-            </TouchableOpacity>
-          )}
-        </View>
+    const headerSubtitle = maintenanceLogs.length > 5 ? (
+      <TouchableOpacity onPress={() => navigation.navigate('Insights')}>
+        <Typography variant="bodySmall" style={styles.viewAllLink}>
+          View All ({maintenanceLogs.length})
+        </Typography>
+      </TouchableOpacity>
+    ) : undefined;
 
+    return (
+      <InfoCard
+        title="Recent Maintenance"
+        subtitle={headerSubtitle}
+        style={styles.sectionCard}
+        onPress={() => navigation.navigate('MaintenanceHistory', { vehicleId: params.vehicleId })}
+      >
         <View style={styles.timeline}>
           {recentLogs.map((log, index) => {
             // Safely handle category parsing with fallback
@@ -521,7 +414,7 @@ const VehicleHomeScreen: React.FC = () => {
                 ]}
               >
                 <View style={styles.timelineContent}>
-                  <Typography variant="bodyLarge" style={styles.timelineTitle}>
+                  <Typography variant="body" style={styles.timelineTitle}>
                     {log.title}
                   </Typography>
                   
@@ -549,7 +442,7 @@ const VehicleHomeScreen: React.FC = () => {
             );
           })}
         </View>
-      </Card>
+      </InfoCard>
     );
   };
 
@@ -557,14 +450,11 @@ const VehicleHomeScreen: React.FC = () => {
     if (maintenanceLogs.length === 0) {
       // Show placeholder when no maintenance logs exist
       return (
-        <Card variant="elevated" style={styles.sectionCard}>
-          <Typography variant="heading" style={styles.sectionTitle}>
-            Cost & Analytics
-          </Typography>
-          <Typography variant="body" style={styles.statusLoading}>
-            Add maintenance records with costs to see analytics
-          </Typography>
-        </Card>
+        <InfoCard
+          title="Cost & Analytics"
+          subtitle="Add maintenance records with costs for analytics and insights."
+          style={styles.sectionCard}
+        />
       );
     }
     
@@ -578,30 +468,24 @@ const VehicleHomeScreen: React.FC = () => {
     // Show placeholder when no costs are recorded
     if (analytics.totalCost === 0) {
       return (
-        <Card variant="elevated" style={styles.sectionCard}>
-          <Typography variant="heading" style={styles.sectionTitle}>
-            Cost & Analytics
-          </Typography>
-          <Typography variant="body" style={styles.statusLoading}>
-            Add cost information to your maintenance records to see spending analytics
-          </Typography>
-          <Typography variant="caption" style={styles.statusLoading}>
-            Debug: Found {maintenanceLogs.length} logs, {maintenanceLogs.filter(log => (log.totalCost || 0) > 0).length} with costs
-          </Typography>
-        </Card>
+        <InfoCard
+          title="Cost & Analytics"
+          subtitle="Add cost information to your maintenance records to see spending analytics"
+          style={styles.sectionCard}
+        />
       );
     }
 
     return (
-      <Card variant="elevated" style={styles.sectionCard}>
-        <Typography variant="heading" style={styles.sectionTitle}>
-          Cost & Analytics
-        </Typography>
-        
+      <InfoCard
+        title="Cost & Analytics"
+        style={styles.sectionCard}
+        onPress={() => navigation.navigate('VehicleAnalytics', { vehicleId: vehicle?.id })}
+      >
         {/* Cost Metrics Grid */}
         <View style={styles.costMetricsGrid}>
           <View style={styles.costMetricItem}>
-            <Typography variant="bodyLarge" style={styles.costMetricValue}>
+            <Typography variant="body" style={styles.costMetricValue}>
               ${analytics.totalCost}
             </Typography>
             <Typography variant="caption" style={styles.costMetricLabel}>
@@ -610,7 +494,7 @@ const VehicleHomeScreen: React.FC = () => {
           </View>
           
           <View style={styles.costMetricItem}>
-            <Typography variant="bodyLarge" style={styles.costMetricValue}>
+            <Typography variant="body" style={styles.costMetricValue}>
               ${analytics.averagePerService}
             </Typography>
             <Typography variant="caption" style={styles.costMetricLabel}>
@@ -620,7 +504,7 @@ const VehicleHomeScreen: React.FC = () => {
           
           {analytics.recent30Days > 0 && (
             <View style={styles.costMetricItem}>
-              <Typography variant="bodyLarge" style={styles.costMetricValue}>
+              <Typography variant="body" style={styles.costMetricValue}>
                 ${analytics.recent30Days}
               </Typography>
               <Typography variant="caption" style={styles.costMetricLabel}>
@@ -631,7 +515,7 @@ const VehicleHomeScreen: React.FC = () => {
           
           {analytics.costPerMile && (
             <View style={styles.costMetricItem}>
-              <Typography variant="bodyLarge" style={styles.costMetricValue}>
+              <Typography variant="body" style={styles.costMetricValue}>
                 ${analytics.costPerMile}/mi
               </Typography>
               <Typography variant="caption" style={styles.costMetricLabel}>
@@ -640,28 +524,7 @@ const VehicleHomeScreen: React.FC = () => {
             </View>
           )}
         </View>
-
-        {/* Summary */}
-        <View style={[styles.statRow, styles.costSummaryRow]}>
-          <Typography variant="caption" style={styles.statLabel}>
-            {maintenanceLogs.length} maintenance {maintenanceLogs.length === 1 ? 'entry' : 'entries'} • {analytics.timespan}
-          </Typography>
-        </View>
-        
-        {analytics.trend && (
-          <View style={styles.statRow}>
-            <Typography variant="caption" style={[
-              styles.costTrendText,
-              { color: analytics.trend === 'increasing' ? theme.colors.warning : theme.colors.success }
-            ]}>
-              {analytics.trend === 'increasing' 
-                ? `📈 Spending trending up (${analytics.trendPercentage}%)`
-                : `📉 Spending trending down (${analytics.trendPercentage}%)`
-              }
-            </Typography>
-          </View>
-        )}
-      </Card>
+      </InfoCard>
     );
   };
 
@@ -795,8 +658,62 @@ const styles = StyleSheet.create({
   headerCard: {
     marginBottom: theme.spacing.lg,
   },
-  vehicleInfo: {
+  
+  // Vehicle Card Styles (matching VehiclesScreen)
+  subtitleContainer: {
     gap: theme.spacing.xs,
+  },
+  vehicleInfoText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  mileageText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
+  },
+  vinText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
+  },
+  notesText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
+    fontStyle: 'italic',
+  },
+  vehicleImage: {
+    width: '100%',
+    height: 120,
+    borderRadius: theme.borderRadius.md,
+    marginBottom: theme.spacing.sm,
+  },
+  vehicleImagePlaceholder: {
+    width: '100%',
+    height: 120,
+    backgroundColor: theme.colors.backgroundSecondary,
+    borderRadius: theme.borderRadius.md,
+    marginBottom: theme.spacing.sm,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  carSilhouetteBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    opacity: 0.25,
+  },
+  cameraOverlay: {
+    position: 'absolute',
+    bottom: theme.spacing.sm,
+    right: theme.spacing.sm,
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.borderRadius.full,
+    padding: theme.spacing.xs,
+    ...theme.shadows.sm,
   },
   vehicleName: {
     color: theme.colors.text,
@@ -887,6 +804,22 @@ const styles = StyleSheet.create({
   statusContent: {
     gap: theme.spacing.xs,
   },
+  programInfo: {
+    marginBottom: theme.spacing.xs,
+  },
+  programLabel: {
+    color: theme.colors.text,
+  },
+  overdueInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  overdueLabel: {
+    color: theme.colors.text,
+  },
+  overdueCount: {
+    fontWeight: theme.typography.fontWeight.semibold,
+  },
   statusLoading: {
     color: theme.colors.textSecondary,
     fontStyle: 'italic',
@@ -906,6 +839,56 @@ const styles = StyleSheet.create({
   statusServiceName: {
     color: theme.colors.text,
     fontWeight: theme.typography.fontWeight.medium,
+  },
+
+  // Enhanced Status Intelligence Styles
+  statusHelpText: {
+    color: theme.colors.textSecondary,
+    fontStyle: 'italic',
+    marginTop: theme.spacing.xs,
+  },
+  nextServicePreview: {
+    marginBottom: theme.spacing.sm,
+  },
+  nextServiceLabel: {
+    color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  lastServiceInfo: {
+    marginTop: theme.spacing.sm,
+    paddingTop: theme.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+  },
+  lastServiceLabel: {
+    color: theme.colors.textSecondary,
+  },
+  primaryServiceAlert: {
+    marginBottom: theme.spacing.sm,
+  },
+  primaryServiceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  primaryServiceName: {
+    flex: 1,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text,
+  },
+  primaryServiceDue: {
+    fontWeight: theme.typography.fontWeight.medium,
+    textAlign: 'right',
+  },
+  additionalServices: {
+    marginTop: theme.spacing.xs,
+    paddingTop: theme.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+  },
+  additionalServicesLabel: {
+    color: theme.colors.textSecondary,
+    fontStyle: 'italic',
   },
   statusDueIn: {
     color: theme.colors.textSecondary,

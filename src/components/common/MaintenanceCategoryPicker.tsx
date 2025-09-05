@@ -20,7 +20,7 @@ interface MaintenanceCategoryPickerProps {
   /** Previously selected services */
   selectedServices?: SelectedService[];
   /** Called when services are selected */
-  onSelectionComplete: (services: SelectedService[], configs?: Map<string, AdvancedServiceConfiguration>) => void;
+  onSelectionComplete: (services: SelectedService[], configs?: { [key: string]: AdvancedServiceConfiguration }) => void;
   /** Called when selection is cancelled */
   onCancel?: () => void;
   /** Whether picker is visible */
@@ -110,6 +110,7 @@ export const MaintenanceCategoryPicker: React.FC<MaintenanceCategoryPickerProps>
         categoryKey,
         subcategoryKey,
         serviceName,
+        serviceId: serviceKey, // categoryKey.subcategoryKey
       };
     });
   };
@@ -165,7 +166,8 @@ export const MaintenanceCategoryPicker: React.FC<MaintenanceCategoryPickerProps>
   // Handle save - convert selections and close
   const handleSave = () => {
     const services = convertToSelectedServices();
-    const configs = enableConfiguration ? serviceConfigs : undefined;
+    // Convert Map to plain object for navigation serialization
+    const configs = enableConfiguration ? Object.fromEntries(serviceConfigs) : undefined;
     onSelectionComplete(services, configs);
   };
 
@@ -276,7 +278,7 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.border,
   },
   headerButton: {
-    minWidth: 60,
+    width: 80, // Fixed width instead of minWidth for perfect centering
   },
   modalTitle: {
     color: theme.colors.surface,

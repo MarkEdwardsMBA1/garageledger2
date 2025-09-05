@@ -20,7 +20,7 @@ import { Input } from './Input';
 import { Card } from './Card';
 import { SettingsIcon, TrashIcon, CheckIcon } from '../icons';
 import { ServiceConfiguration, AdvancedServiceConfiguration } from '../../types';
-import { getComponents } from '../../types/MaintenanceCategories';
+import { getComponents, getServiceConfigType, ServiceConfigType } from '../../types/MaintenanceCategories';
 
 interface CuratedService {
   id: string;
@@ -102,6 +102,14 @@ export const ServiceConfigBottomSheet: React.FC<ServiceConfigBottomSheetProps> =
   const [fluids, setFluids] = useState<SimpleFluidItem[] | DetailedFluidItem[]>([]);
   const [laborCost, setLaborCost] = useState<string>('');
   const [shopNotes, setShopNotes] = useState<string>('');
+
+  // Get service configuration type
+  const getConfigType = (): ServiceConfigType => {
+    const [categoryKey, subcategoryKey] = service.id.includes('.') 
+      ? service.id.split('.') 
+      : [service.id, ''];
+    return getServiceConfigType(categoryKey, subcategoryKey);
+  };
 
   // Initialize form with existing config
   useEffect(() => {
@@ -281,229 +289,212 @@ export const ServiceConfigBottomSheet: React.FC<ServiceConfigBottomSheetProps> =
     </>
   );
 
-  // Render DIY Service Form (Advanced with detailed parts/fluids)
-  const renderDIYServiceForm = () => (
-    <>
-      {/* Parts Section - Detailed */}
-      <Card style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Typography variant="subheading" style={styles.sectionTitle}>
-            Parts Used
-          </Typography>
-          <TouchableOpacity onPress={addPart} style={styles.addButton}>
-            <CheckIcon size={20} color={theme.colors.primary} />
-          </TouchableOpacity>
-        </View>
-        
-        {parts.map((part, index) => {
-          const detailedPart = part as DetailedPartItem;
-          return (
-            <View key={index} style={styles.itemContainer}>
-              <View style={styles.itemHeader}>
-                <Typography variant="label" style={styles.itemNumber}>
-                  Part {index + 1}
-                </Typography>
-                <TouchableOpacity onPress={() => removePart(index)} style={styles.removeButton}>
-                  <TrashIcon size={16} color={theme.colors.error} />
-                </TouchableOpacity>
-              </View>
-              
-              <Input
-                label="Part Name"
-                value={detailedPart.name}
-                onChangeText={(text) => setParts(prev => (prev as DetailedPartItem[]).map((p, i) => 
-                  i === index ? { ...p, name: text } : p
-                ))}
-                placeholder="e.g., Oil Filter"
-              />
-              
-              <View style={styles.partFluidRow}>
-                <Input
-                  label="Brand"
-                  value={detailedPart.brand}
-                  onChangeText={(text) => setParts(prev => (prev as DetailedPartItem[]).map((p, i) => 
-                    i === index ? { ...p, brand: text } : p
-                  ))}
-                  placeholder="Mobil 1"
-                  style={styles.partFluidInput}
-                />
-                <Input
-                  label="Part Number"
-                  value={detailedPart.partNumber}
-                  onChangeText={(text) => setParts(prev => (prev as DetailedPartItem[]).map((p, i) => 
-                    i === index ? { ...p, partNumber: text } : p
-                  ))}
-                  placeholder="M1-110A"
-                  style={styles.partFluidInput}
-                />
-              </View>
-              
-              <View style={styles.partFluidRow}>
-                <Input
-                  label="Quantity"
-                  value={detailedPart.quantity}
-                  onChangeText={(text) => setParts(prev => (prev as DetailedPartItem[]).map((p, i) => 
-                    i === index ? { ...p, quantity: text } : p
-                  ))}
-                  placeholder="1"
-                  keyboardType="numeric"
-                  style={styles.partFluidInput}
-                />
-                <Input
-                  label="Unit Cost ($)"
-                  value={detailedPart.unitCost}
-                  onChangeText={(text) => setParts(prev => (prev as DetailedPartItem[]).map((p, i) => 
-                    i === index ? { ...p, unitCost: text } : p
-                  ))}
-                  placeholder="12.99"
-                  keyboardType="numeric"
-                  style={styles.partFluidInput}
-                />
-              </View>
-              
-              <Input
-                label="Supplier (Optional)"
-                value={detailedPart.supplier}
-                onChangeText={(text) => setParts(prev => (prev as DetailedPartItem[]).map((p, i) => 
-                  i === index ? { ...p, supplier: text } : p
-                ))}
-                placeholder="AutoZone, Amazon, etc."
-                style={styles.inputSpacing}
-              />
+  // Render DIY Service Form (Three variants based on service type)
+  const renderDIYServiceForm = () => {
+    const configType = getConfigType();
+    
+    return (
+      <>
+        {/* Parts Section - Show for parts-only and parts-fluids */}
+        {(configType === 'parts-only' || configType === 'parts-fluids') && (
+          <Card style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Typography variant="subheading" style={styles.sectionTitle}>
+                Parts Used
+              </Typography>
+              <TouchableOpacity onPress={addPart} style={styles.addButton}>
+                <CheckIcon size={20} color={theme.colors.primary} />
+              </TouchableOpacity>
             </View>
-          );
-        })}
-        
-        {parts.length === 0 && (
-          <Typography variant="body" style={styles.emptyText}>
-            No parts added. Tap + to add parts for this service.
-          </Typography>
+            
+            {parts.map((part, index) => {
+              const detailedPart = part as DetailedPartItem;
+              return (
+                <View key={index} style={styles.itemContainer}>
+                  <View style={styles.itemHeader}>
+                    <Typography variant="label" style={styles.itemNumber}>
+                      Part {index + 1}
+                    </Typography>
+                    <TouchableOpacity onPress={() => removePart(index)} style={styles.removeButton}>
+                      <TrashIcon size={16} color={theme.colors.error} />
+                    </TouchableOpacity>
+                  </View>
+                  
+                  <Input
+                    label="Part Name"
+                    value={detailedPart.name}
+                    onChangeText={(text) => setParts(prev => (prev as DetailedPartItem[]).map((p, i) => 
+                      i === index ? { ...p, name: text } : p
+                    ))}
+                    placeholder="e.g., Oil Filter"
+                  />
+                  
+                  <View style={styles.partFluidRow}>
+                    <Input
+                      label="Brand"
+                      value={detailedPart.brand}
+                      onChangeText={(text) => setParts(prev => (prev as DetailedPartItem[]).map((p, i) => 
+                        i === index ? { ...p, brand: text } : p
+                      ))}
+                      placeholder="Mobil 1"
+                      style={styles.partFluidInput}
+                    />
+                    <Input
+                      label="Part Number"
+                      value={detailedPart.partNumber}
+                      onChangeText={(text) => setParts(prev => (prev as DetailedPartItem[]).map((p, i) => 
+                        i === index ? { ...p, partNumber: text } : p
+                      ))}
+                      placeholder="M1-110A"
+                      style={styles.partFluidInput}
+                    />
+                  </View>
+                  
+                  <View style={styles.partFluidRow}>
+                    <Input
+                      label="Quantity"
+                      value={detailedPart.quantity}
+                      onChangeText={(text) => setParts(prev => (prev as DetailedPartItem[]).map((p, i) => 
+                        i === index ? { ...p, quantity: text } : p
+                      ))}
+                      placeholder="1"
+                      keyboardType="numeric"
+                      style={styles.partFluidInput}
+                    />
+                    <Input
+                      label="Unit Cost ($)"
+                      value={detailedPart.unitCost}
+                      onChangeText={(text) => setParts(prev => (prev as DetailedPartItem[]).map((p, i) => 
+                        i === index ? { ...p, unitCost: text } : p
+                      ))}
+                      placeholder="12.99"
+                      keyboardType="numeric"
+                      style={styles.partFluidInput}
+                    />
+                  </View>
+                  
+                  <Input
+                    label="Supplier (Optional)"
+                    value={detailedPart.supplier}
+                    onChangeText={(text) => setParts(prev => (prev as DetailedPartItem[]).map((p, i) => 
+                      i === index ? { ...p, supplier: text } : p
+                    ))}
+                    placeholder="AutoZone, Amazon, etc."
+                    style={styles.inputSpacing}
+                  />
+                </View>
+              );
+            })}
+            
+            {parts.length === 0 && (
+              <Typography variant="body" style={styles.emptyText}>
+                No parts added. Tap + to add parts for this service.
+              </Typography>
+            )}
+          </Card>
         )}
-      </Card>
 
-      {/* Fluids Section - Detailed */}
-      <Card style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Typography variant="subheading" style={styles.sectionTitle}>
-            Fluids Used
-          </Typography>
-          <TouchableOpacity onPress={addFluid} style={styles.addButton}>
-            <CheckIcon size={20} color={theme.colors.primary} />
-          </TouchableOpacity>
-        </View>
-        
-        {fluids.map((fluid, index) => {
-          const detailedFluid = fluid as DetailedFluidItem;
-          return (
-            <View key={index} style={styles.itemContainer}>
-              <View style={styles.itemHeader}>
-                <Typography variant="label" style={styles.itemNumber}>
-                  Fluid {index + 1}
-                </Typography>
-                <TouchableOpacity onPress={() => removeFluid(index)} style={styles.removeButton}>
-                  <TrashIcon size={16} color={theme.colors.error} />
-                </TouchableOpacity>
-              </View>
-              
-              <Input
-                label="Fluid Name"
-                value={detailedFluid.name}
-                onChangeText={(text) => setFluids(prev => (prev as DetailedFluidItem[]).map((f, i) => 
-                  i === index ? { ...f, name: text } : f
-                ))}
-                placeholder="e.g., Motor Oil"
-              />
-              
-              <View style={styles.partFluidRow}>
-                <Input
-                  label="Brand"
-                  value={detailedFluid.brand}
-                  onChangeText={(text) => setFluids(prev => (prev as DetailedFluidItem[]).map((f, i) => 
-                    i === index ? { ...f, brand: text } : f
-                  ))}
-                  placeholder="Mobil 1"
-                  style={styles.partFluidInput}
-                />
-                <Input
-                  label="Viscosity"
-                  value={detailedFluid.viscosity}
-                  onChangeText={(text) => setFluids(prev => (prev as DetailedFluidItem[]).map((f, i) => 
-                    i === index ? { ...f, viscosity: text } : f
-                  ))}
-                  placeholder="5W-30"
-                  style={styles.partFluidInput}
-                />
-              </View>
-              
-              <View style={styles.partFluidRow}>
-                <Input
-                  label="Capacity"
-                  value={detailedFluid.capacity}
-                  onChangeText={(text) => setFluids(prev => (prev as DetailedFluidItem[]).map((f, i) => 
-                    i === index ? { ...f, capacity: text } : f
-                  ))}
-                  placeholder="5"
-                  keyboardType="numeric"
-                  style={styles.partFluidInput}
-                />
-                <Input
-                  label="Unit"
-                  value={detailedFluid.unit}
-                  onChangeText={(text) => setFluids(prev => (prev as DetailedFluidItem[]).map((f, i) => 
-                    i === index ? { ...f, unit: text } : f
-                  ))}
-                  placeholder="quarts"
-                  style={styles.partFluidInput}
-                />
-              </View>
-              
-              <Input
-                label="Cost ($)"
-                value={detailedFluid.cost}
-                onChangeText={(text) => setFluids(prev => (prev as DetailedFluidItem[]).map((f, i) => 
-                  i === index ? { ...f, cost: text } : f
-                ))}
-                placeholder="24.99"
-                keyboardType="numeric"
-                style={styles.inputSpacing}
-              />
+        {/* Fluids Section - Show for fluids-only and parts-fluids */}
+        {(configType === 'fluids-only' || configType === 'parts-fluids') && (
+          <Card style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Typography variant="subheading" style={styles.sectionTitle}>
+                Fluids Used
+              </Typography>
+              <TouchableOpacity onPress={addFluid} style={styles.addButton}>
+                <CheckIcon size={20} color={theme.colors.primary} />
+              </TouchableOpacity>
             </View>
-          );
-        })}
-        
-        {fluids.length === 0 && (
-          <Typography variant="body" style={styles.emptyText}>
-            No fluids added. Tap + to add fluids for this service.
-          </Typography>
+            
+            {fluids.map((fluid, index) => {
+              const detailedFluid = fluid as DetailedFluidItem;
+              return (
+                <View key={index} style={styles.itemContainer}>
+                  <View style={styles.itemHeader}>
+                    <Typography variant="label" style={styles.itemNumber}>
+                      Fluid {index + 1}
+                    </Typography>
+                    <TouchableOpacity onPress={() => removeFluid(index)} style={styles.removeButton}>
+                      <TrashIcon size={16} color={theme.colors.error} />
+                    </TouchableOpacity>
+                  </View>
+                  
+                  <Input
+                    label="Fluid Name"
+                    value={detailedFluid.name}
+                    onChangeText={(text) => setFluids(prev => (prev as DetailedFluidItem[]).map((f, i) => 
+                      i === index ? { ...f, name: text } : f
+                    ))}
+                    placeholder="e.g., Motor Oil"
+                  />
+                  
+                  <View style={styles.partFluidRow}>
+                    <Input
+                      label="Brand"
+                      value={detailedFluid.brand}
+                      onChangeText={(text) => setFluids(prev => (prev as DetailedFluidItem[]).map((f, i) => 
+                        i === index ? { ...f, brand: text } : f
+                      ))}
+                      placeholder="Mobil 1"
+                      style={styles.partFluidInput}
+                    />
+                    <Input
+                      label="Viscosity"
+                      value={detailedFluid.viscosity}
+                      onChangeText={(text) => setFluids(prev => (prev as DetailedFluidItem[]).map((f, i) => 
+                        i === index ? { ...f, viscosity: text } : f
+                      ))}
+                      placeholder="5W-30"
+                      style={styles.partFluidInput}
+                    />
+                  </View>
+                  
+                  <View style={styles.partFluidRow}>
+                    <Input
+                      label="Capacity"
+                      value={detailedFluid.capacity}
+                      onChangeText={(text) => setFluids(prev => (prev as DetailedFluidItem[]).map((f, i) => 
+                        i === index ? { ...f, capacity: text } : f
+                      ))}
+                      placeholder="5"
+                      keyboardType="numeric"
+                      style={styles.partFluidInput}
+                    />
+                    <Input
+                      label="Unit"
+                      value={detailedFluid.unit}
+                      onChangeText={(text) => setFluids(prev => (prev as DetailedFluidItem[]).map((f, i) => 
+                        i === index ? { ...f, unit: text } : f
+                      ))}
+                      placeholder="quarts"
+                      style={styles.partFluidInput}
+                    />
+                  </View>
+                  
+                  <Input
+                    label="Cost ($)"
+                    value={detailedFluid.cost}
+                    onChangeText={(text) => setFluids(prev => (prev as DetailedFluidItem[]).map((f, i) => 
+                      i === index ? { ...f, cost: text } : f
+                    ))}
+                    placeholder="24.99"
+                    keyboardType="numeric"
+                    style={styles.inputSpacing}
+                  />
+                </View>
+              );
+            })}
+            
+            {fluids.length === 0 && (
+              <Typography variant="body" style={styles.emptyText}>
+                No fluids added. Tap + to add fluids for this service.
+              </Typography>
+            )}
+          </Card>
         )}
-      </Card>
-
-      {/* Labor Cost for DIY */}
-      <Card style={styles.section}>
-        <Typography variant="subheading" style={styles.sectionTitle}>
-          Labor & Tools
-        </Typography>
-        
-        <Input
-          label="Labor Cost ($) - Optional"
-          value={laborCost}
-          onChangeText={setLaborCost}
-          keyboardType="numeric"
-          placeholder="0.00"
-        />
-        
-        <Input
-          label="Shop/Tool Notes"
-          value={shopNotes}
-          onChangeText={setShopNotes}
-          placeholder="Tools used, shop recommendations, etc."
-          multiline
-          numberOfLines={3}
-          style={styles.inputSpacing}
-        />
-      </Card>
-    </>
-  );
+      </>
+    );
+  };
 
   // Calculate total cost
   const getTotalCost = (): number => {
@@ -606,24 +597,6 @@ export const ServiceConfigBottomSheet: React.FC<ServiceConfigBottomSheetProps> =
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Conditional Content Based on Service Type */}
           {serviceType === 'shop' ? renderShopServiceForm() : renderDIYServiceForm()}
-
-          {/* Service Notes - Only show for DIY mode */}
-          {serviceType === 'diy' && (
-            <Card style={styles.section}>
-              <Typography variant="subheading" style={styles.sectionTitle}>
-                Service Notes
-              </Typography>
-              
-              <Input
-                label="General Notes"
-                value={notes}
-                onChangeText={setNotes}
-                placeholder="Additional notes about this service..."
-                multiline
-                numberOfLines={3}
-              />
-            </Card>
-          )}
 
           {/* Total Cost Summary */}
           {getTotalCost() > 0 && (

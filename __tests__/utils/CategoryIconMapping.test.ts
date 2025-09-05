@@ -12,6 +12,7 @@ import {
   CategoryIconConfig,
   CategoryDisplayData,
 } from '../../src/utils/CategoryIconMapping';
+import { SettingsIcon } from '../../src/components/icons';
 
 // Mock the MaintenanceCategories module
 jest.mock('../../src/types/MaintenanceCategories', () => ({
@@ -88,13 +89,15 @@ describe('CategoryIconMapping', () => {
   describe('categoryIconMap', () => {
     it('should contain icon configurations for all main categories', () => {
       expect(categoryIconMap['brake-system']).toBeDefined();
+      expect(categoryIconMap['cooling-system']).toBeDefined(); // Added cooling system
       expect(categoryIconMap['engine-powertrain']).toBeDefined();
       expect(categoryIconMap['steering-suspension']).toBeDefined();
-      expect(categoryIconMap['tires-wheels']).toBeDefined();
+      // Removed 'tires-wheels' - intentionally removed from DIY mode
       expect(categoryIconMap['electrical']).toBeDefined();
-      expect(categoryIconMap['hvac']).toBeDefined();
-      expect(categoryIconMap['exterior']).toBeDefined();
-      expect(categoryIconMap['interior']).toBeDefined();
+      expect(categoryIconMap['transmission-drivetrain']).toBeDefined();
+      expect(categoryIconMap['hvac-climate']).toBeDefined();
+      expect(categoryIconMap['body-exterior']).toBeDefined();
+      expect(categoryIconMap['interior-comfort']).toBeDefined();
     });
 
     it('should have proper structure for icon configurations', () => {
@@ -174,7 +177,7 @@ describe('CategoryIconMapping', () => {
       const unmappedCategory = result.find(d => !categoryIconMap[d.key]);
       
       if (unmappedCategory) {
-        expect(unmappedCategory.config.icon).toBe('MaintenanceIcon');
+        expect(unmappedCategory.config.icon).toBe(SettingsIcon);
       }
     });
   });
@@ -342,7 +345,7 @@ describe('CategoryIconMapping', () => {
           expect(data.config).toEqual(explicitMapping);
         } else {
           // Should use fallback values
-          expect(data.config.icon).toBe('MaintenanceIcon');
+          expect(data.config.icon).toBe(SettingsIcon);
         }
       });
     });

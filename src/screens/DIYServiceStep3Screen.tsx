@@ -1,4 +1,4 @@
-// Shop Service Step 3: Photos & Receipts
+// DIY Service Step 3: Photos & Receipts
 import React, { useState, useLayoutEffect } from 'react';
 import {
   View,
@@ -13,31 +13,27 @@ import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { PhotoPicker } from '../components/common/PhotoPicker';
 import { LockIcon } from '../components/icons';
-import { SelectedService } from '../types';
+import { SelectedService, AdvancedServiceConfiguration } from '../types';
 
-interface ShopServiceStep1SerializableData {
+interface DIYServiceStep1SerializableData {
   date: string; // ISO string from navigation
   mileage: string;
-  totalCost: string;
-  shopName: string;
-  shopAddress: string;
-  shopPhone: string;
-  shopEmail: string;
 }
 
-interface ShopServiceStep3Params {
+interface DIYServiceStep3Params {
   vehicleId: string;
-  step1Data: ShopServiceStep1SerializableData;
+  step1Data: DIYServiceStep1SerializableData;
   selectedServices: SelectedService[];
+  serviceConfigs?: { [key: string]: AdvancedServiceConfiguration };
   photos?: string[];
   notes?: string;
 }
 
-export const ShopServiceStep3Screen: React.FC = () => {
+export const DIYServiceStep3Screen: React.FC = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const route = useRoute();
-  const params = route.params as ShopServiceStep3Params;
+  const params = route.params as DIYServiceStep3Params;
   const userTier = 'free'; // TODO: Get from user context
   
   const [photos, setPhotos] = useState<string[]>(params?.photos || []);
@@ -63,20 +59,22 @@ export const ShopServiceStep3Screen: React.FC = () => {
   };
 
   const handleNext = () => {
-    navigation.navigate('ShopServiceStep4', {
+    navigation.navigate('DIYServiceStep4', {
       vehicleId: params.vehicleId,
       step1Data: params.step1Data,
       selectedServices: params.selectedServices,
+      serviceConfigs: params.serviceConfigs,
       photos: photos,
       notes: params.notes,
     });
   };
 
   const handleBack = () => {
-    navigation.navigate('ShopServiceStep2', {
+    navigation.navigate('DIYServiceStep2', {
       vehicleId: params.vehicleId,
       step1Data: params.step1Data,
       selectedServices: params.selectedServices,
+      serviceConfigs: params.serviceConfigs,
       notes: params.notes,
     });
   };
@@ -277,4 +275,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ShopServiceStep3Screen;
+export default DIYServiceStep3Screen;
