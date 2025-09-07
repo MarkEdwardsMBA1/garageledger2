@@ -25,7 +25,7 @@ import { programRepository } from '../repositories/SecureProgramRepository';
 import { getCategoryName, getSubcategoryName } from '../types/MaintenanceCategories';
 import { Vehicle, MaintenanceLog, MaintenanceProgram } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { calculateVehicleStatusSummary, VehicleStatusSummary } from '../services/VehicleStatusService';
+import { VehicleStatusService, VehicleStatusSummary } from '../services/VehicleStatusService';
 
 interface VehicleHomeParams {
   vehicleId: string;
@@ -74,7 +74,7 @@ const VehicleHomeScreen: React.FC = () => {
       setPrograms(vehiclePrograms);
       
       // Calculate vehicle status after data is loaded
-      const statusSummary = calculateVehicleStatusSummary(vehicleData, vehiclePrograms, logs);
+      const statusSummary = VehicleStatusService.calculateVehicleStatus(vehicleData, vehiclePrograms, logs);
       setVehicleStatus(statusSummary);
     } catch (err: any) {
       console.error('Error loading vehicle data:', err);
@@ -245,7 +245,8 @@ const VehicleHomeScreen: React.FC = () => {
       );
     }
 
-    const { overdueCount } = vehicleStatus;
+    const statusMessage = VehicleStatusService.getStatusMessage(vehicleStatus);
+    const statusColor = VehicleStatusService.getStatusColor(vehicleStatus.overallStatus);
     const primaryProgram = programs[0]; // Show first program for simplicity
 
     return (
@@ -262,18 +263,34 @@ const VehicleHomeScreen: React.FC = () => {
             </Typography>
           </View>
 
-          {/* Services Overdue Count with Color Coding */}
-          <View style={styles.overdueInfo}>
-            <Typography variant="body" style={styles.overdueLabel}>
-              Services Overdue: 
-              <Typography 
-                variant="body" 
-                style={[
-                  styles.overdueCount,
-                  { color: overdueCount > 0 ? theme.colors.error : theme.colors.success }
-                ]}
-              > {overdueCount}</Typography>
-            </Typography>
+          {/* Status Indicator with Visual Cues */}
+          <View style={[styles.statusIndicator, { borderLeftColor: statusColor }]}>
+            <View style={styles.statusIconContainer}>
+              {vehicleStatus.overallStatus === 'overdue' && (
+                <AlertTriangleIcon size={20} color={statusColor} />
+              )}
+              {vehicleStatus.overallStatus === 'due' && (
+                <ActivityIcon size={20} color={statusColor} />
+              )}
+              {vehicleStatus.overallStatus === 'upcoming' && (
+                <SpannerIcon size={20} color={statusColor} />
+              )}
+              {vehicleStatus.overallStatus === 'up_to_date' && (
+                <CheckIcon size={20} color={statusColor} />
+              )}
+            </View>
+            
+            <View style={styles.statusTextContainer}>
+              <Typography variant="body" style={[styles.statusMessage, { color: statusColor }]}>
+                {statusMessage}
+              </Typography>
+              
+              {vehicleStatus.nextServiceDue && (
+                <Typography variant="caption" style={styles.statusProgramName}>
+                  From: {vehicleStatus.nextServiceDue.programName}
+                </Typography>
+              )}
+            </View>
           </View>
         </View>
       </InfoCard>
@@ -399,11 +416,10 @@ const VehicleHomeScreen: React.FC = () => {
       >
         <View style={styles.timeline}>
           {recentLogs.map((log, index) => {
-            // Safely handle category parsing with fallback
-            const categoryParts = log.category?.split(':') || ['general', 'maintenance'];
-            const [categoryKey, subcategoryKey] = categoryParts;
-            const subcategoryName = getSubcategoryName(categoryKey, subcategoryKey);
-            const categoryName = getCategoryName(categoryKey);
+            // Use services for display or fall back to title
+            const displayText = log.services && log.services.length > 0 
+              ? log.services.map(s => s.serviceName).join(', ')
+              : log.title;
             
             return (
               <View 
@@ -435,7 +451,7 @@ const VehicleHomeScreen: React.FC = () => {
                   </View>
                   
                   <Typography variant="caption" style={styles.timelineCategory}>
-                    {subcategoryName || categoryName}
+                    {displayText}
                   </Typography>
                 </View>
               </View>
@@ -502,7 +518,7 @@ const VehicleHomeScreen: React.FC = () => {
             </Typography>
           </View>
           
-          {analytics.recent30Days > 0 && (
+          {parseFloat(String(analytics.recent30Days)) > 0 && (
             <View style={styles.costMetricItem}>
               <Typography variant="body" style={styles.costMetricValue}>
                 ${analytics.recent30Days}
@@ -820,6 +836,33 @@ const styles = StyleSheet.create({
   overdueCount: {
     fontWeight: theme.typography.fontWeight.semibold,
   },
+  
+  // New Status Indicator Styles
+  statusIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderLeftWidth: 4,
+    borderLeftColor: theme.colors.border,
+    gap: theme.spacing.sm,
+  },
+  statusIconContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusTextContainer: {
+    flex: 1,
+    gap: theme.spacing.xs / 2,
+  },
+  statusMessage: {
+    fontWeight: theme.typography.fontWeight.medium,
+    fontSize: theme.typography.fontSize.base,
+  },
+  statusProgramName: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.fontSize.sm,
+  },
   statusLoading: {
     color: theme.colors.textSecondary,
     fontStyle: 'italic',
@@ -831,10 +874,6 @@ const styles = StyleSheet.create({
   statusLastMaintenance: {
     color: theme.colors.textSecondary,
     marginTop: theme.spacing.xs,
-  },
-  statusMessage: {
-    fontWeight: theme.typography.fontWeight.semibold,
-    marginBottom: theme.spacing.xs,
   },
   statusServiceName: {
     color: theme.colors.text,
@@ -918,11 +957,6 @@ const styles = StyleSheet.create({
   },
   
   // Clean Numbered List Overdue Services Formatting
-  overdueLabel: {
-    color: theme.colors.error,
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-  },
   overdueServicesTable: {
     marginLeft: theme.spacing.sm,
     marginBottom: theme.spacing.sm,

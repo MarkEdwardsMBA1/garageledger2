@@ -75,6 +75,10 @@ const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
       <InfoCard
         title="Service Information"
         variant="elevated"
+        onPress={() => navigation.navigate('EditBasicServiceInfo', { 
+          serviceLogId: serviceLog.id,
+          vehicleId: vehicle.id
+        })}
       >
         <View style={styles.basicInfoContent}>
           <View style={styles.infoRow}>
@@ -128,6 +132,10 @@ const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
       <InfoCard
         title="Services Performed"
         variant="elevated"
+        onPress={() => navigation.navigate('EditServicesPerformed', { 
+          serviceLogId: serviceLog.id,
+          vehicleId: vehicle.id
+        })}
       >
         <View style={styles.servicesContent}>
           {serviceLog.services.map((service: SelectedService, index: number) => (
@@ -306,6 +314,7 @@ const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
           onPress={() => navigation.goBack()}
         />
       </View>
+
     </View>
   );
 };

@@ -190,11 +190,7 @@ const FleetInsightsScreen: React.FC = () => {
           console.log('Navigate to reminders screen');
         }}
       >
-        <UpcomingRemindersPreview 
-          reminders={fleetOverview.upcomingReminders}
-          onReminderPress={handleReminderPress}
-          maxItems={3}
-        />
+{/* TODO: Implement UpcomingRemindersPreview component */}
       </InfoCard>
     );
   };

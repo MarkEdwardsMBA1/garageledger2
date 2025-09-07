@@ -21,7 +21,7 @@ import { Vehicle, MaintenanceLog, MaintenanceProgram } from '../types';
 import { vehicleRepository } from '../repositories/VehicleRepository';
 import { maintenanceLogRepository } from '../repositories/FirebaseMaintenanceLogRepository';
 import { programRepository } from '../repositories/SecureProgramRepository';
-import { calculateVehicleStatusSummary, NextServiceDue } from '../services/VehicleStatusService';
+import { VehicleStatusService, NextServiceDue } from '../services/VehicleStatusService';
 
 // Navigation types
 type MaintenanceHistoryScreenNavigationProp = StackNavigationProp<any, 'MaintenanceHistory'>;
@@ -73,7 +73,7 @@ const MaintenanceHistoryScreen: React.FC<MaintenanceHistoryScreenProps> = ({
         setPrograms(vehiclePrograms);
 
         // Calculate overdue services
-        const statusSummary = calculateVehicleStatusSummary(vehicleData, vehiclePrograms, logs);
+        const statusSummary = VehicleStatusService.calculateVehicleStatus(vehicleData, vehiclePrograms, logs);
         setOverdueServices(statusSummary.overdueServices);
       }
     } catch (error) {

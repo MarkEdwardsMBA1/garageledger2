@@ -1,21 +1,6 @@
-// Vehicle Status Service - Calculate service due dates and status
-import { Vehicle, MaintenanceLog, MaintenanceProgram } from '../types';
-
-/**
- * Service name mapping for legacy service names
- * Maps old service names to current standardized names
- */
-const SERVICE_NAME_MAPPING: { [oldName: string]: string } = {
-  'Brake Pads, Rotors & Anti-Rattle Clips': 'Brake Pads & Rotors',
-  // Add more mappings here as needed
-};
-
-/**
- * Normalize service name to current standard
- */
-const normalizeServiceName = (serviceName: string): string => {
-  return SERVICE_NAME_MAPPING[serviceName] || serviceName;
-};
+// Vehicle Status Service - Phase 2A: Service Due Calculations
+// Calculates specific service intervals based on assigned programs vs maintenance history
+import { Vehicle, MaintenanceProgram, MaintenanceLog, ProgramTask } from '../types';
 
 export interface NextServiceDue {
   service: string;           // "Oil Change"
@@ -24,312 +9,353 @@ export interface NextServiceDue {
   type: 'mileage' | 'time' | 'both';
   dueDate?: Date;
   dueMileage?: number;
-  priority: number;         // For sorting (higher = more urgent)
+  overdueBy?: string;       // "200 miles overdue" or "1 month overdue"
+  taskId: string;           // Reference to ProgramTask
+  programName: string;      // Which program this service comes from
 }
 
 export interface VehicleStatusSummary {
-  nextService: NextServiceDue | null;
+  nextServiceDue: NextServiceDue | null;
   overdueServices: NextServiceDue[];
-  overdueCount: number;
-  dueCount: number;
-  upcomingCount: number;
-  lastMaintenanceDate?: Date;
+  upcomingServices: NextServiceDue[];
+  totalOverdueCount: number;
+  overallStatus: 'up_to_date' | 'upcoming' | 'due' | 'overdue';
 }
 
-/**
- * Calculate the next service due for a vehicle based on its programs and maintenance history
- */
-export const calculateNextServiceDue = (
-  vehicle: Vehicle,
-  programs: MaintenanceProgram[],
-  maintenanceLogs: MaintenanceLog[]
-): NextServiceDue | null => {
-  if (!vehicle || programs.length === 0) {
-    return null;
-  }
+export class VehicleStatusService {
+  /**
+   * Calculate comprehensive vehicle status based on assigned programs and maintenance history
+   */
+  static calculateVehicleStatus(
+    vehicle: Vehicle,
+    assignedPrograms: MaintenanceProgram[],
+    maintenanceLogs: MaintenanceLog[]
+  ): VehicleStatusSummary {
+    if (!assignedPrograms || assignedPrograms.length === 0) {
+      return {
+        nextServiceDue: null,
+        overdueServices: [],
+        upcomingServices: [],
+        totalOverdueCount: 0,
+        overallStatus: 'up_to_date'
+      };
+    }
 
-  const allServiceDues: NextServiceDue[] = [];
-  const currentDate = new Date();
-  const currentMileage = vehicle.mileage;
-
-  // Process each program's tasks
-  programs.forEach(program => {
-    if (!program.isActive) return;
-
-    program.tasks.forEach(task => {
-      const lastServiceLog = findLastServiceLog(task.name, maintenanceLogs);
-      const nextDue = calculateTaskDueDate(task, lastServiceLog, currentDate, currentMileage);
-      
-      if (nextDue) {
-        allServiceDues.push(nextDue);
+    // Collect all active tasks from assigned programs
+    const allTasks: Array<{ task: ProgramTask; programName: string }> = [];
+    assignedPrograms.forEach(program => {
+      if (program.isActive && program.tasks) {
+        program.tasks
+          .filter(task => task.isActive)
+          .forEach(task => {
+            allTasks.push({ task, programName: program.name });
+          });
       }
     });
-  });
 
-  // Sort by priority (most urgent first) and return the top priority service
-  allServiceDues.sort((a, b) => b.priority - a.priority);
-  
-  return allServiceDues.length > 0 ? allServiceDues[0] : null;
-};
-
-/**
- * Calculate when a specific program task is due
- */
-const calculateTaskDueDate = (
-  task: any, // ProgramTask type
-  lastServiceLog: MaintenanceLog | null,
-  currentDate: Date,
-  currentMileage: number
-): NextServiceDue | null => {
-  const baseDateForCalculation = lastServiceLog?.date || new Date(0); // Unix epoch if no service logged
-  const baseMileageForCalculation = lastServiceLog?.mileage || 0;
-
-  let dueDate: Date | undefined;
-  let dueMileage: number | undefined;
-  let status: NextServiceDue['status'] = 'upcoming';
-  let priority = 0;
-
-  // Calculate due dates based on interval type
-  if (task.intervalType === 'time' || task.intervalType === 'dual') {
-    dueDate = new Date(baseDateForCalculation);
-    
-    switch (task.timeIntervalUnit) {
-      case 'days':
-        dueDate.setDate(dueDate.getDate() + (task.timeIntervalValue || 0));
-        break;
-      case 'weeks':
-        dueDate.setDate(dueDate.getDate() + ((task.timeIntervalValue || 0) * 7));
-        break;
-      case 'months':
-        dueDate.setMonth(dueDate.getMonth() + (task.timeIntervalValue || 0));
-        break;
-      case 'years':
-        dueDate.setFullYear(dueDate.getFullYear() + (task.timeIntervalValue || 0));
-        break;
+    if (allTasks.length === 0) {
+      return {
+        nextServiceDue: null,
+        overdueServices: [],
+        upcomingServices: [],
+        totalOverdueCount: 0,
+        overallStatus: 'up_to_date'
+      };
     }
-  }
 
-  if (task.intervalType === 'mileage' || task.intervalType === 'dual') {
-    dueMileage = baseMileageForCalculation + (task.intervalValue || 0);
-  }
+    // Calculate due dates for each task
+    const serviceDueItems: NextServiceDue[] = allTasks
+      .map(({ task, programName }) => 
+        this.calculateTaskDueStatus(vehicle, task, programName, maintenanceLogs)
+      )
+      .filter(item => item !== null) as NextServiceDue[];
 
-  // Determine status based on current date/mileage vs due date/mileage
-  const isOverdueByTime = dueDate && currentDate > dueDate;
-  const isOverdueByMileage = dueMileage && currentMileage >= dueMileage;
-  
-  if (task.intervalType === 'dual') {
-    // For dual intervals, overdue if either condition is met (whichever comes first)
-    if (isOverdueByTime || isOverdueByMileage) {
-      status = 'overdue';
-      priority = 100;
+    // Categorize services by status
+    const overdueServices = serviceDueItems.filter(item => item.status === 'overdue');
+    const dueServices = serviceDueItems.filter(item => item.status === 'due');
+    const upcomingServices = serviceDueItems.filter(item => item.status === 'upcoming');
+
+    // Find the most urgent service (overdue > due > upcoming)
+    let nextServiceDue: NextServiceDue | null = null;
+    if (overdueServices.length > 0) {
+      nextServiceDue = overdueServices[0]; // Most overdue
+    } else if (dueServices.length > 0) {
+      nextServiceDue = dueServices[0]; // Most due
+    } else if (upcomingServices.length > 0) {
+      nextServiceDue = upcomingServices[0]; // Next upcoming
     }
-  } else if (task.intervalType === 'time' && isOverdueByTime) {
-    status = 'overdue';
-    priority = 100;
-  } else if (task.intervalType === 'mileage' && isOverdueByMileage) {
-    status = 'overdue';
-    priority = 100;
-  }
 
-  // Check if due soon (within 30 days or 1000 miles)
-  if (status === 'upcoming') {
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-    
-    const isDueSoonByTime = dueDate && dueDate <= thirtyDaysFromNow;
-    const isDueSoonByMileage = dueMileage && (dueMileage - currentMileage) <= 1000;
-    
-    if (isDueSoonByTime || isDueSoonByMileage) {
-      status = 'due';
-      priority = 75;
-    } else {
-      priority = 50;
+    // Determine overall status
+    let overallStatus: 'up_to_date' | 'upcoming' | 'due' | 'overdue' = 'up_to_date';
+    if (overdueServices.length > 0) {
+      overallStatus = 'overdue';
+    } else if (dueServices.length > 0) {
+      overallStatus = 'due';
+    } else if (upcomingServices.length > 0) {
+      overallStatus = 'upcoming';
     }
-  }
 
-  // Calculate "due in" string
-  const dueIn = calculateDueInString(task.intervalType, dueDate, dueMileage, currentDate, currentMileage);
-
-  return {
-    service: normalizeServiceName(task.name),
-    dueIn,
-    status,
-    type: task.intervalType,
-    dueDate,
-    dueMileage,
-    priority
-  };
-};
-
-/**
- * Find the most recent maintenance log for a specific service
- */
-const findLastServiceLog = (serviceName: string, logs: MaintenanceLog[]): MaintenanceLog | null => {
-  // Sort logs by date (most recent first) and find matching service
-  const sortedLogs = logs
-    .filter(log => log.title?.toLowerCase().includes(serviceName.toLowerCase()))
-    .sort((a, b) => b.date.getTime() - a.date.getTime());
-  
-  return sortedLogs.length > 0 ? sortedLogs[0] : null;
-};
-
-/**
- * Generate abbreviated overdue string for table display with "+" prefix
- */
-const calculateAbbreviatedDueInString = (
-  intervalType: string,
-  dueDate?: Date,
-  dueMileage?: number,
-  currentDate?: Date,
-  currentMileage?: number
-): string => {
-  if (intervalType === 'mileage' && dueMileage && currentMileage !== undefined) {
-    const milesDifference = dueMileage - currentMileage;
-    if (milesDifference <= 0) {
-      return `+${Math.abs(milesDifference).toLocaleString()} mi`;
-    }
-    return `${milesDifference.toLocaleString()} mi`;
-  }
-  
-  if (intervalType === 'time' && dueDate && currentDate) {
-    const timeDifference = dueDate.getTime() - currentDate.getTime();
-    const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-    
-    if (daysDifference <= 0) {
-      const absDays = Math.abs(daysDifference);
-      if (absDays <= 30) {
-        return `+${absDays} days`;
-      } else if (absDays <= 365) {
-        const months = Math.ceil(absDays / 30);
-        return `+${months} mo`;
-      } else {
-        const years = Math.ceil(absDays / 365);
-        return `+${years} yr`;
-      }
-    } else if (daysDifference <= 30) {
-      return `${daysDifference} days`;
-    } else if (daysDifference <= 365) {
-      const months = Math.ceil(daysDifference / 30);
-      return `${months} mo`;
-    } else {
-      const years = Math.ceil(daysDifference / 365);
-      return `${years} yr`;
-    }
-  }
-  
-  if (intervalType === 'dual' && dueDate && dueMileage && currentDate && currentMileage !== undefined) {
-    const milesDifference = dueMileage - currentMileage;
-    const timeDifference = dueDate.getTime() - currentDate.getTime();
-    const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-    
-    // Return whichever comes first (most overdue)
-    if (milesDifference <= 0 && daysDifference <= 0) {
-      // Both overdue, return the more critical one
-      if (Math.abs(milesDifference) > Math.abs(daysDifference) * 10) {
-        return `+${Math.abs(milesDifference).toLocaleString()} mi`;
-      } else {
-        const absDays = Math.abs(daysDifference);
-        return absDays <= 30 
-          ? `+${absDays} days`
-          : `+${Math.ceil(absDays / 30)} mo`;
-      }
-    } else if (milesDifference <= 0) {
-      return `+${Math.abs(milesDifference).toLocaleString()} mi`;
-    } else if (daysDifference <= 0) {
-      const absDays = Math.abs(daysDifference);
-      return absDays <= 30 
-        ? `+${absDays} days`
-        : `+${Math.ceil(absDays / 30)} mo`;
-    } else {
-      // Return whichever comes sooner
-      if (milesDifference <= daysDifference * 10) {
-        return `${milesDifference.toLocaleString()} mi`;
-      } else {
-        return daysDifference <= 30 
-          ? `${daysDifference} days`
-          : `${Math.ceil(daysDifference / 30)} mo`;
-      }
-    }
-  }
-  
-  return 'Soon';
-};
-
-/**
- * Generate human-readable "due in" string (for backward compatibility)
- */
-const calculateDueInString = (
-  intervalType: string,
-  dueDate?: Date,
-  dueMileage?: number,
-  currentDate?: Date,
-  currentMileage?: number
-): string => {
-  return calculateAbbreviatedDueInString(intervalType, dueDate, dueMileage, currentDate, currentMileage);
-};
-
-/**
- * Calculate comprehensive vehicle status summary
- */
-export const calculateVehicleStatusSummary = (
-  vehicle: Vehicle,
-  programs: MaintenanceProgram[],
-  maintenanceLogs: MaintenanceLog[]
-): VehicleStatusSummary => {
-  if (!vehicle || programs.length === 0) {
     return {
-      nextService: null,
-      overdueServices: [],
-      overdueCount: 0,
-      dueCount: 0,
-      upcomingCount: 0,
-      lastMaintenanceDate: maintenanceLogs.length > 0 
-        ? maintenanceLogs.sort((a, b) => b.date.getTime() - a.date.getTime())[0].date
-        : undefined
+      nextServiceDue,
+      overdueServices,
+      upcomingServices,
+      totalOverdueCount: overdueServices.length,
+      overallStatus
     };
   }
 
-  const allServiceDues: NextServiceDue[] = [];
-  const currentDate = new Date();
-  const currentMileage = vehicle.mileage;
+  /**
+   * Calculate due status for a specific program task
+   */
+  private static calculateTaskDueStatus(
+    vehicle: Vehicle,
+    task: ProgramTask,
+    programName: string,
+    maintenanceLogs: MaintenanceLog[]
+  ): NextServiceDue | null {
+    // Find the most recent maintenance log that matches this task
+    const lastServiceLog = this.findLastServiceForTask(task, maintenanceLogs);
+    
+    const currentMileage = vehicle.mileage;
+    const currentDate = new Date();
 
-  // Process each program's tasks
-  programs.forEach(program => {
-    if (!program.isActive) return;
+    // Calculate next due based on interval type
+    let dueMileage: number | undefined;
+    let dueDate: Date | undefined;
+    let baseMileage: number;
+    let baseDate: Date;
 
-    program.tasks.forEach(task => {
-      const lastServiceLog = findLastServiceLog(task.name, maintenanceLogs);
-      const nextDue = calculateTaskDueDate(task, lastServiceLog, currentDate, currentMileage);
+    if (lastServiceLog) {
+      baseMileage = lastServiceLog.mileage;
+      baseDate = lastServiceLog.date;
+    } else {
+      // No previous service - use vehicle creation date as baseline
+      baseMileage = Math.max(0, currentMileage - 5000); // Assume some baseline mileage
+      baseDate = vehicle.createdAt;
+    }
+
+    // Calculate due dates based on interval type
+    switch (task.intervalType) {
+      case 'mileage':
+        dueMileage = baseMileage + task.intervalValue;
+        break;
       
-      if (nextDue) {
-        allServiceDues.push(nextDue);
-      }
-    });
-  });
+      case 'time':
+        if (task.timeIntervalUnit && task.intervalValue) {
+          dueDate = this.addTimeInterval(baseDate, task.intervalValue, task.timeIntervalUnit);
+        }
+        break;
+      
+      case 'dual':
+        dueMileage = baseMileage + task.intervalValue;
+        if (task.timeIntervalUnit && task.timeIntervalValue) {
+          dueDate = this.addTimeInterval(baseDate, task.timeIntervalValue, task.timeIntervalUnit);
+        }
+        break;
+    }
 
-  // Sort by priority (most urgent first)
-  allServiceDues.sort((a, b) => b.priority - a.priority);
-  
-  // Separate overdue services
-  const overdueServices = allServiceDues.filter(service => service.status === 'overdue');
-  const nextService = allServiceDues.length > 0 ? allServiceDues[0] : null;
-  
-  // Count services by status
-  const overdueCount = allServiceDues.filter(s => s.status === 'overdue').length;
-  const dueCount = allServiceDues.filter(s => s.status === 'due').length;
-  const upcomingCount = allServiceDues.filter(s => s.status === 'upcoming').length;
-  
-  // Find last maintenance date
-  const lastMaintenanceDate = maintenanceLogs.length > 0 
-    ? maintenanceLogs.sort((a, b) => b.date.getTime() - a.date.getTime())[0].date
-    : undefined;
-  
-  return {
-    nextService,
-    overdueServices,
-    overdueCount,
-    dueCount,
-    upcomingCount,
-    lastMaintenanceDate
-  };
-};
+    // Determine status and format due information
+    return this.determineServiceStatus(
+      task,
+      programName,
+      currentMileage,
+      currentDate,
+      dueMileage,
+      dueDate
+    );
+  }
+
+  /**
+   * Find the most recent maintenance log that corresponds to this task
+   */
+  private static findLastServiceForTask(
+    task: ProgramTask,
+    maintenanceLogs: MaintenanceLog[]
+  ): MaintenanceLog | null {
+    // Sort logs by date (most recent first)
+    const sortedLogs = maintenanceLogs
+      .slice()
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    // For now, use simple name matching - in the future this could be more sophisticated
+    // matching based on service categories or task IDs
+    return sortedLogs.find(log => {
+      const taskNameLower = task.name.toLowerCase();
+      const logTitleLower = log.title.toLowerCase();
+      
+      // Simple keyword matching
+      if (taskNameLower.includes('oil') && logTitleLower.includes('oil')) return true;
+      if (taskNameLower.includes('brake') && logTitleLower.includes('brake')) return true;
+      if (taskNameLower.includes('tire') && (logTitleLower.includes('tire') || logTitleLower.includes('wheel'))) return true;
+      if (taskNameLower.includes('filter') && logTitleLower.includes('filter')) return true;
+      
+      return false;
+    }) || null;
+  }
+
+  /**
+   * Add time interval to a base date
+   */
+  private static addTimeInterval(
+    baseDate: Date,
+    value: number,
+    unit: 'days' | 'weeks' | 'months' | 'years'
+  ): Date {
+    const result = new Date(baseDate);
+    
+    switch (unit) {
+      case 'days':
+        result.setDate(result.getDate() + value);
+        break;
+      case 'weeks':
+        result.setDate(result.getDate() + (value * 7));
+        break;
+      case 'months':
+        result.setMonth(result.getMonth() + value);
+        break;
+      case 'years':
+        result.setFullYear(result.getFullYear() + value);
+        break;
+    }
+    
+    return result;
+  }
+
+  /**
+   * Determine service status and format display information
+   */
+  private static determineServiceStatus(
+    task: ProgramTask,
+    programName: string,
+    currentMileage: number,
+    currentDate: Date,
+    dueMileage?: number,
+    dueDate?: Date
+  ): NextServiceDue | null {
+    let status: 'upcoming' | 'due' | 'overdue' = 'upcoming';
+    let dueIn = '';
+    let overdueBy: string | undefined;
+    let type: 'mileage' | 'time' | 'both' = 'mileage';
+
+    // Mileage-based calculation
+    if (dueMileage !== undefined) {
+      const mileageDifference = dueMileage - currentMileage;
+      
+      if (mileageDifference <= 0) {
+        status = 'overdue';
+        overdueBy = `${Math.abs(mileageDifference).toLocaleString()} miles overdue`;
+        dueIn = overdueBy;
+      } else if (mileageDifference <= 500) {
+        status = 'due';
+        dueIn = `${mileageDifference.toLocaleString()} miles`;
+      } else {
+        status = 'upcoming';
+        dueIn = `${mileageDifference.toLocaleString()} miles`;
+      }
+      
+      type = 'mileage';
+    }
+
+    // Time-based calculation
+    if (dueDate !== undefined) {
+      const timeDifference = dueDate.getTime() - currentDate.getTime();
+      const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+      
+      let timeStatus: 'upcoming' | 'due' | 'overdue' = 'upcoming';
+      let timeDueIn = '';
+      let timeOverdueBy: string | undefined;
+      
+      if (daysDifference <= 0) {
+        timeStatus = 'overdue';
+        const overdueDays = Math.abs(daysDifference);
+        if (overdueDays < 30) {
+          timeOverdueBy = `${overdueDays} days overdue`;
+        } else if (overdueDays < 365) {
+          timeOverdueBy = `${Math.floor(overdueDays / 30)} months overdue`;
+        } else {
+          timeOverdueBy = `${Math.floor(overdueDays / 365)} years overdue`;
+        }
+        timeDueIn = timeOverdueBy;
+      } else if (daysDifference <= 30) {
+        timeStatus = 'due';
+        timeDueIn = daysDifference === 1 ? '1 day' : `${daysDifference} days`;
+      } else if (daysDifference <= 365) {
+        timeStatus = 'upcoming';
+        const months = Math.floor(daysDifference / 30);
+        timeDueIn = months === 1 ? '1 month' : `${months} months`;
+      } else {
+        timeStatus = 'upcoming';
+        const years = Math.floor(daysDifference / 365);
+        timeDueIn = years === 1 ? '1 year' : `${years} years`;
+      }
+
+      // For dual intervals, use the more urgent status
+      if (task.intervalType === 'dual' && dueMileage !== undefined) {
+        if (timeStatus === 'overdue' || status === 'overdue') {
+          status = 'overdue';
+          // Use whichever is more overdue
+          overdueBy = timeStatus === 'overdue' && status !== 'overdue' ? timeOverdueBy : overdueBy;
+          dueIn = overdueBy || dueIn;
+        } else if (timeStatus === 'due' || status === 'due') {
+          status = 'due';
+          // Use whichever is due sooner
+          dueIn = timeStatus === 'due' && status !== 'due' ? timeDueIn : dueIn;
+        }
+        type = 'both';
+      } else if (task.intervalType === 'time') {
+        status = timeStatus;
+        dueIn = timeDueIn;
+        overdueBy = timeOverdueBy;
+        type = 'time';
+      }
+    }
+
+    return {
+      service: task.name,
+      dueIn,
+      status,
+      type,
+      dueDate,
+      dueMileage,
+      overdueBy,
+      taskId: task.id,
+      programName
+    };
+  }
+
+  /**
+   * Get display-friendly status message for the status card
+   */
+  static getStatusMessage(vehicleStatus: VehicleStatusSummary): string {
+    if (vehicleStatus.totalOverdueCount > 0) {
+      if (vehicleStatus.nextServiceDue) {
+        return `${vehicleStatus.nextServiceDue.service} ${vehicleStatus.nextServiceDue.dueIn}`;
+      }
+      return `${vehicleStatus.totalOverdueCount} services overdue`;
+    }
+    
+    if (vehicleStatus.nextServiceDue) {
+      const service = vehicleStatus.nextServiceDue;
+      if (service.status === 'due') {
+        return `${service.service} due in ${service.dueIn}`;
+      } else if (service.status === 'upcoming') {
+        return `${service.service} in ${service.dueIn}`;
+      }
+    }
+    
+    return 'All maintenance up to date';
+  }
+
+  /**
+   * Get status color for UI display
+   */
+  static getStatusColor(status: 'up_to_date' | 'upcoming' | 'due' | 'overdue'): string {
+    switch (status) {
+      case 'overdue': return '#b91c1c'; // Critical Red
+      case 'due': return '#ea580c';     // Signal Orange
+      case 'upcoming': return '#0284c7'; // Electric Blue
+      case 'up_to_date': return '#166534'; // Racing Green
+      default: return '#9ca3af'; // Chrome Silver
+    }
+  }
+}

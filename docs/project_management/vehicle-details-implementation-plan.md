@@ -350,6 +350,12 @@ interface EnhancedCostAnalytics {
 | **Phase 2C**: Action Navigation | MEDIUM | LOW | LOW | 🟡 **NEXT** | 0.25 sessions |
 | **Phase 2D**: Enhanced Cost Analytics | MEDIUM | LOW | LOW | 🟡 **FINAL** | 0.5 sessions |
 
+### **Immediate Next Priority (Phase 3+)**
+| Task | Priority | Dependencies | Estimated Timeline |
+|------|----------|--------------|-------------------|
+| **Edit Service from Service Details** | 🟢 **HIGH** | ServiceDetailScreen (✅ complete) | 0.75 sessions |
+| Enhanced Cost Analytics (Phase 2D) | 🟡 **MEDIUM** | Current analytics foundation | 0.5 sessions |
+
 ### **Backlog Items (Future Implementation)**
 | Task | Dependencies | Estimated Timeline |
 |------|--------------|-------------------|
@@ -373,6 +379,192 @@ interface EnhancedCostAnalytics {
 - [x] Maintenance timeline has enhanced visual hierarchy
 - [x] All cards follow consistent automotive design system
 - [x] Interface feels proactive and informative rather than static
+
+---
+
+## 🔧 **Next Priority: Edit Service from Service Details**
+
+**User Story**: *"As a user viewing service details, I want to edit the service information (date, mileage, cost, services performed, notes) so I can correct errors or add missing information without navigating back to the main screen."*
+
+### **Implementation Approach**
+
+#### **Option A: Modal Edit Form** ⭐ **(Recommended)**
+```typescript
+// Add edit button to ServiceDetailScreen header
+const ServiceDetailScreen = () => {
+  const [isEditing, setIsEditing] = useState(false);
+  
+  return (
+    <>
+      {/* Header with Edit Button */}
+      <NavigationHeader 
+        title="Service Details"
+        rightButton={{
+          title: "Edit",
+          onPress: () => setIsEditing(true)
+        }}
+      />
+      
+      {/* Service Details Content */}
+      {renderServiceDetails()}
+      
+      {/* Edit Modal */}
+      <EditServiceModal 
+        visible={isEditing}
+        service={maintenanceLog}
+        onSave={handleSaveService}
+        onCancel={() => setIsEditing(false)}
+      />
+    </>
+  );
+};
+```
+
+**Advantages:**
+- ✅ **Consistent with app patterns** - Uses modal pattern like Shop Service Wizard
+- ✅ **Preserves context** - User stays on Service Details screen
+- ✅ **Clean UX** - Clear edit mode vs view mode separation
+- ✅ **Reusable component** - EditServiceModal can be used elsewhere
+
+#### **Option B: In-Place Editing**
+Toggle between read-only and editable states on the same screen.
+
+**Disadvantages:**
+- ❌ **Complex state management** - Toggle between view/edit modes
+- ❌ **Visual clutter** - Edit controls mixed with display content
+- ❌ **Validation complexity** - Harder to handle errors gracefully
+
+### **Technical Implementation**
+
+#### **Step 1: Create EditServiceModal Component**
+```typescript
+// src/components/maintenance/EditServiceModal.tsx
+interface EditServiceModalProps {
+  visible: boolean;
+  service: MaintenanceLog;
+  onSave: (updatedService: MaintenanceLog) => void;
+  onCancel: () => void;
+}
+
+const EditServiceModal: React.FC<EditServiceModalProps> = ({
+  visible, service, onSave, onCancel
+}) => {
+  // Reuse logic from Shop Service Wizard but pre-populate with existing data
+  const [formData, setFormData] = useState({
+    date: service.date,
+    mileage: service.mileage.toString(),
+    totalCost: service.totalCost?.toString() || '',
+    services: service.services,
+    notes: service.notes || '',
+    photos: service.photos || []
+  });
+  
+  const handleSave = async () => {
+    // Validate and save
+    const updatedService = {
+      ...service,
+      ...formData,
+      mileage: parseInt(formData.mileage),
+      totalCost: parseFloat(formData.totalCost) || undefined,
+      updatedAt: new Date()
+    };
+    
+    await onSave(updatedService);
+  };
+  
+  return (
+    <Modal visible={visible} animationType="slide">
+      {/* Form fields matching Shop Service Wizard */}
+      <BasicInfoForm data={formData} onChange={setFormData} />
+      <ServicesForm services={formData.services} onChange={updateServices} />
+      <NotesForm notes={formData.notes} onChange={updateNotes} />
+      
+      <SaveCancelButtons onSave={handleSave} onCancel={onCancel} />
+    </Modal>
+  );
+};
+```
+
+#### **Step 2: Add Edit Button to ServiceDetailScreen**
+```typescript
+// Update src/screens/ServiceDetailScreen.tsx
+const ServiceDetailScreen = () => {
+  // Add to existing component
+  const [isEditing, setIsEditing] = useState(false);
+  
+  // Add to header
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity 
+          onPress={() => setIsEditing(true)}
+          style={styles.editButton}
+        >
+          <Typography variant="button" style={styles.editButtonText}>
+            Edit
+          </Typography>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
+  
+  const handleSaveService = async (updatedService: MaintenanceLog) => {
+    try {
+      await maintenanceLogRepository.update(updatedService.id, updatedService);
+      setMaintenanceLog(updatedService); // Update local state
+      setIsEditing(false);
+      // Show success message
+    } catch (error) {
+      // Handle error
+    }
+  };
+};
+```
+
+#### **Step 3: Repository Integration**
+The `maintenanceLogRepository.update()` method already exists, so no backend changes needed.
+
+### **User Experience Flow**
+1. **User navigates to Service Details** from maintenance history
+2. **User sees "Edit" button** in header (consistent with other screens)
+3. **User taps Edit** → Modal opens with pre-populated form
+4. **User modifies information** → Form validates in real-time
+5. **User saves changes** → Modal closes, Service Details updates
+6. **Success feedback** → Brief success message or visual confirmation
+
+### **Validation & Error Handling**
+```typescript
+const validateServiceForm = (formData: ServiceFormData): ValidationResult => {
+  const errors: string[] = [];
+  
+  if (!formData.date) errors.push('Date is required');
+  if (!formData.mileage || parseInt(formData.mileage) < 0) {
+    errors.push('Valid mileage is required');
+  }
+  if (formData.totalCost && parseFloat(formData.totalCost) < 0) {
+    errors.push('Cost cannot be negative');
+  }
+  if (formData.services.length === 0) {
+    errors.push('At least one service must be selected');
+  }
+  
+  return { isValid: errors.length === 0, errors };
+};
+```
+
+### **Success Criteria**
+- [ ] Users can access edit functionality from Service Details screen
+- [ ] All service fields are editable (date, mileage, cost, services, notes, photos)
+- [ ] Form validation prevents invalid data entry
+- [ ] Changes are saved to database and reflected immediately
+- [ ] Modal follows app design patterns (automotive colors, typography)
+- [ ] Error states are handled gracefully
+- [ ] Success feedback confirms changes were saved
+
+### **Estimated Timeline: 0.75 sessions**
+- **0.25 sessions**: Create EditServiceModal component with form fields
+- **0.25 sessions**: Add edit button and modal integration to ServiceDetailScreen  
+- **0.25 sessions**: Testing, validation, and polish
 
 ---
 

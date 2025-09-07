@@ -38,6 +38,8 @@ import CreateProgramServicesScreen from '../screens/CreateProgramServicesScreen'
 import AssignProgramsScreen from '../screens/AssignProgramsScreen';
 import AssignProgramToVehiclesScreen from '../screens/AssignProgramToVehiclesScreen';
 import EditProgramScreen from '../screens/EditProgramScreen';
+import EditBasicServiceInfoScreen from '../screens/EditBasicServiceInfoScreen';
+import EditServicesPerformedScreen from '../screens/EditServicesPerformedScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import AddVehicleScreen from '../screens/AddVehicleScreen';
 import EditVehicleScreen from '../screens/EditVehicleScreen';
@@ -259,6 +261,24 @@ const VehiclesStack: React.FC = () => {
         options={{
           title: 'DIY Service',
           headerBackTitle: 'Back',
+          headerLeft: undefined,
+        }}
+      />
+      <Stack.Screen
+        name="EditBasicServiceInfo"
+        component={EditBasicServiceInfoScreen}
+        options={{
+          title: 'Edit Service Information',
+          headerBackTitle: 'Service Details',
+          headerLeft: undefined,
+        }}
+      />
+      <Stack.Screen
+        name="EditServicesPerformed"
+        component={EditServicesPerformedScreen}
+        options={{
+          title: 'Edit Services Performed',
+          headerBackTitle: 'Service Details',
           headerLeft: undefined,
         }}
       />
