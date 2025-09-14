@@ -23,6 +23,7 @@ export const colors = {
   surface: '#ffffff',           // Pure White
   text: '#111827',              // Oil Black (deep, premium)
   textSecondary: '#374151',     // Titanium Gray
+  textTertiary: '#9ca3af',      // Chrome Silver (subtle text)
   textLight: '#9ca3af',         // Chrome Silver
   primaryText: '#111827',       // Alias for main text color
   

@@ -659,6 +659,73 @@ Users receive a polished, performant app with complete Spanish support and smoot
   - **Story Points**: 12 completed
   - **Status**: ✅ COMPLETE - Strategic UX foundation ready for monetization
 
+### Maintenance History Enhancements - Future Backlog 📝
+- **BACKLOG-MH001**: As a user, I want visual service type indicators so that I can quickly distinguish between Shop and DIY services at a glance
+  - **Context**: Current simple list shows "Shop Service" / "DIY Service" text only
+  - **Enhancement Options**: 
+    - Colored dots/icons (Engine Blue for Shop, Racing Green for DIY)
+    - Small automotive icons (wrench for DIY, shop building for Shop)
+    - Left border color coding (already in complex version, could add subtly)
+  - **Priority**: Low (polish enhancement)
+  - **Story Points**: 3-5
+  - **Status**: 📋 Backlog - Visual polish when foundation is stable
+
+- **BACKLOG-MH002**: As a user, I want smart sorting and filtering so that I can find specific maintenance records quickly
+  - **Context**: Current implementation shows chronological list with basic pagination
+  - **Enhancement Options**:
+    - **Sort Options**: Recent first, oldest first, by cost (high/low), by service type
+    - **Filter Options**: Date ranges, service type (Shop/DIY), cost ranges, specific services
+    - **Search**: Find by service name, shop name, notes content
+  - **Implementation**: Filter/sort controls above the list, preserves pagination
+  - **Priority**: Medium (useful for power users)
+  - **Story Points**: 8-13
+  - **Status**: 📋 Backlog - Power user enhancement
+
+- **BACKLOG-MH003**: As a user, I want quick action capabilities so that I can efficiently manage my maintenance records
+  - **Context**: Current tap-to-edit flow requires full navigation to ServiceDetail screen
+  - **Enhancement Options**:
+    - **Swipe Actions**: Swipe left for edit, swipe right for duplicate service
+    - **Long Press Menu**: Edit, duplicate, delete options in context menu
+    - **Quick Duplicate**: "Log Similar Service" button for repeated maintenance
+  - **Implementation**: iOS-style swipe actions or Android-style long press with action sheet
+  - **Priority**: Medium (productivity enhancement)
+  - **Story Points**: 8-13
+  - **Status**: 📋 Backlog - Workflow efficiency improvement
+
+- **BACKLOG-MH004**: As a user, I want rich maintenance details so that I can track comprehensive service information
+  - **Context**: Current minimal display shows only date and cost 
+  - **Enhancement Options**:
+    - **Mileage Display**: Show mileage when available ("Jan 15, 2024 • 45,230 mi • $127.50")
+    - **Service Count**: "3 services performed" for multi-service logs
+    - **Shop/Location**: Display shop name or location when logged
+    - **Service Preview**: Top 2-3 services performed with "+2 more" indicator
+  - **Implementation**: Expandable details or condensed multi-line format
+  - **Priority**: Medium (informational value)
+  - **Story Points**: 5-8
+  - **Status**: 📋 Backlog - Information density enhancement
+
+- **BACKLOG-MH005**: As a user, I want search and filtering so that I can find specific maintenance records instantly
+  - **Context**: As maintenance history grows, finding specific services becomes difficult
+  - **Enhancement Options**:
+    - **Quick Search Bar**: Search by service name, shop, notes content
+    - **Filter Chips**: Recent, This Year, Shop Services, DIY, High Cost ($100+)
+    - **Advanced Filters**: Date range picker, cost range slider, multi-select service types
+  - **Implementation**: Collapsible search/filter section above service list
+  - **Priority**: Medium (scales with usage)
+  - **Story Points**: 8-13
+  - **Status**: 📋 Backlog - Findability improvement
+
+- **BACKLOG-MH006**: As a user, I want enhanced offline reliability so that I can access my maintenance history anywhere
+  - **Context**: Current implementation relies on real-time Firebase data
+  - **Enhancement Options**:
+    - **Local Caching**: Store recent maintenance history locally for offline viewing
+    - **Optimistic Updates**: Show changes immediately, sync when connection restored
+    - **Offline Indicators**: Show which records are synced vs. pending upload
+  - **Implementation**: Enhanced local storage with sync queue management
+  - **Priority**: High (core functionality reliability)
+  - **Story Points**: 8-13
+  - **Status**: 📋 Backlog - Reliability enhancement
+
 ### TypeScript Error Cleanup
 - **BACKLOG-TS001**: As a developer, I want proper error handling in ImageUploadService so that image upload failures provide clear feedback
   - **Context**: 3 TypeScript errors in `src/services/ImageUploadService.ts` - unknown error types not properly typed

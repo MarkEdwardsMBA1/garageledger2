@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/core';
+import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 
 import { Typography } from '../components/common/Typography';
@@ -44,10 +45,12 @@ const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
   const [serviceLog, setServiceLog] = useState<MaintenanceLog | null>(null);
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
 
-  // Load data on mount
-  useEffect(() => {
-    loadData();
-  }, [serviceLogId, vehicleId]);
+  // Load data on mount and when screen comes back into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      loadData();
+    }, [serviceLogId, vehicleId])
+  );
 
   const loadData = async () => {
     try {
@@ -142,16 +145,16 @@ const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
             <View key={`${service.serviceId}-${index}`} style={styles.serviceItem}>
               <View style={styles.serviceHeader}>
                 <Typography variant="body" style={styles.serviceName}>
-                  {service.serviceName}
+                  {service.serviceName || 'Unknown Service'}
                 </Typography>
                 {service.cost && service.cost > 0 && (
                   <Typography variant="body" style={styles.serviceCost}>
-                    ${service.cost.toFixed(2)}
+                    ${Number(service.cost).toFixed(2)}
                   </Typography>
                 )}
               </View>
               <Typography variant="bodySmall" style={styles.serviceCategory}>
-                {service.categoryKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                {service.categoryKey?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'General'}
               </Typography>
             </View>
           ))}
@@ -311,7 +314,7 @@ const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
           title="Back to History"
           variant="outline"
           fullWidth
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.navigate('MaintenanceHistory', { vehicleId })}
         />
       </View>
 

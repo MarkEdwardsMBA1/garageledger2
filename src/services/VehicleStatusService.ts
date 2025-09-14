@@ -310,8 +310,28 @@ export class VehicleStatusService {
       }
     }
 
+    // Ensure dueIn is never empty
+    if (!dueIn || dueIn.trim() === '') {
+      if (dueMileage !== undefined) {
+        const mileageDifference = dueMileage - currentMileage;
+        dueIn = `${Math.abs(mileageDifference).toLocaleString()} miles`;
+      } else if (dueDate !== undefined) {
+        const timeDifference = dueDate.getTime() - currentDate.getTime();
+        const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+        if (Math.abs(daysDifference) < 30) {
+          dueIn = `${Math.abs(daysDifference)} days`;
+        } else if (Math.abs(daysDifference) < 365) {
+          dueIn = `${Math.floor(Math.abs(daysDifference) / 30)} months`;
+        } else {
+          dueIn = `${Math.floor(Math.abs(daysDifference) / 365)} years`;
+        }
+      } else {
+        dueIn = 'pending calculation';
+      }
+    }
+
     return {
-      service: task.name,
+      service: this.normalizeServiceName(task.name),
       dueIn,
       status,
       type,
@@ -321,6 +341,24 @@ export class VehicleStatusService {
       taskId: task.id,
       programName
     };
+  }
+
+  /**
+   * Normalize service names to handle legacy data with incorrect names
+   */
+  private static normalizeServiceName(serviceName: string): string {
+    // Handle brake service names that might include full parts list
+    if (serviceName.includes('Brake Pads') && serviceName.includes('Rotors') && serviceName.includes('Anti-Rattle')) {
+      return 'Brake Pads & Rotors';
+    }
+    
+    // Handle other common naming variations
+    if (serviceName.includes('Oil') && serviceName.includes('Filter')) {
+      return 'Oil & Filter Change';
+    }
+    
+    // Return original name if no normalization needed
+    return serviceName;
   }
 
   /**

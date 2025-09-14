@@ -23,14 +23,8 @@ import ServiceDetailScreen from '../screens/ServiceDetailScreen';
 import VehicleAnalyticsScreen from '../screens/VehicleAnalyticsScreen';
 import FleetInsightsScreen from '../screens/FleetInsightsScreen';
 import AddMaintenanceLogScreen from '../screens/AddMaintenanceLogScreen';
-import ShopServiceStep1Screen from '../screens/ShopServiceStep1Screen';
-import ShopServiceStep2Screen from '../screens/ShopServiceStep2Screen';
-import ShopServiceStep3Screen from '../screens/ShopServiceStep3Screen';
-import ShopServiceStep4Screen from '../screens/ShopServiceStep4Screen';
-import DIYServiceStep1Screen from '../screens/DIYServiceStep1Screen';
-import DIYServiceStep2Screen from '../screens/DIYServiceStep2Screen';
-import DIYServiceStep3Screen from '../screens/DIYServiceStep3Screen';
-import DIYServiceStep4Screen from '../screens/DIYServiceStep4Screen';
+import ShopServiceWizardScreen from '../screens/ShopServiceWizardScreen';
+import { DIYServiceWizardScreen } from '../screens/DIYServiceWizardScreen';
 import ProgramsScreen from '../screens/ProgramsScreen';
 import CreateProgramVehicleSelectionScreen from '../screens/CreateProgramVehicleSelectionScreen';
 import CreateProgramDetailsScreen from '../screens/CreateProgramDetailsScreen';
@@ -193,8 +187,8 @@ const VehiclesStack: React.FC = () => {
         }}
       />
       <Stack.Screen
-        name="ShopServiceStep1"
-        component={ShopServiceStep1Screen}
+        name="ShopServiceWizard"
+        component={ShopServiceWizardScreen}
         options={{
           title: 'Shop Service',
           headerBackTitle: 'Back',
@@ -202,62 +196,8 @@ const VehiclesStack: React.FC = () => {
         }}
       />
       <Stack.Screen
-        name="ShopServiceStep2"
-        component={ShopServiceStep2Screen}
-        options={{
-          title: 'Shop Service',
-          headerBackTitle: 'Back',
-          headerLeft: undefined,
-        }}
-      />
-      <Stack.Screen
-        name="ShopServiceStep3"
-        component={ShopServiceStep3Screen}
-        options={{
-          title: 'Shop Service',
-          headerBackTitle: 'Back',
-          headerLeft: undefined,
-        }}
-      />
-      <Stack.Screen
-        name="ShopServiceStep4"
-        component={ShopServiceStep4Screen}
-        options={{
-          title: 'Shop Service',
-          headerBackTitle: 'Back',
-          headerLeft: undefined,
-        }}
-      />
-      <Stack.Screen
-        name="DIYServiceStep1"
-        component={DIYServiceStep1Screen}
-        options={{
-          title: 'DIY Service',
-          headerBackTitle: 'Back',
-          headerLeft: undefined,
-        }}
-      />
-      <Stack.Screen
-        name="DIYServiceStep2"
-        component={DIYServiceStep2Screen}
-        options={{
-          title: 'DIY Service',
-          headerBackTitle: 'Back',
-          headerLeft: undefined,
-        }}
-      />
-      <Stack.Screen
-        name="DIYServiceStep3"
-        component={DIYServiceStep3Screen}
-        options={{
-          title: 'DIY Service',
-          headerBackTitle: 'Back',
-          headerLeft: undefined,
-        }}
-      />
-      <Stack.Screen
-        name="DIYServiceStep4"
-        component={DIYServiceStep4Screen}
+        name="DIYServiceWizard"
+        component={DIYServiceWizardScreen}
         options={{
           title: 'DIY Service',
           headerBackTitle: 'Back',
@@ -327,8 +267,8 @@ const MaintenanceStackNavigator: React.FC = () => {
         }}
       />
       <Stack.Screen
-        name="ShopServiceStep1"
-        component={ShopServiceStep1Screen}
+        name="ShopServiceWizard"
+        component={ShopServiceWizardScreen}
         options={{
           title: 'Shop Service',
           headerBackTitle: 'Back',
@@ -336,62 +276,8 @@ const MaintenanceStackNavigator: React.FC = () => {
         }}
       />
       <Stack.Screen
-        name="ShopServiceStep2"
-        component={ShopServiceStep2Screen}
-        options={{
-          title: 'Shop Service',
-          headerBackTitle: 'Back',
-          headerLeft: undefined,
-        }}
-      />
-      <Stack.Screen
-        name="ShopServiceStep3"
-        component={ShopServiceStep3Screen}
-        options={{
-          title: 'Shop Service',
-          headerBackTitle: 'Back',
-          headerLeft: undefined,
-        }}
-      />
-      <Stack.Screen
-        name="ShopServiceStep4"
-        component={ShopServiceStep4Screen}
-        options={{
-          title: 'Shop Service',
-          headerBackTitle: 'Back',
-          headerLeft: undefined,
-        }}
-      />
-      <Stack.Screen
-        name="DIYServiceStep1"
-        component={DIYServiceStep1Screen}
-        options={{
-          title: 'DIY Service',
-          headerBackTitle: 'Back',
-          headerLeft: undefined,
-        }}
-      />
-      <Stack.Screen
-        name="DIYServiceStep2"
-        component={DIYServiceStep2Screen}
-        options={{
-          title: 'DIY Service',
-          headerBackTitle: 'Back',
-          headerLeft: undefined,
-        }}
-      />
-      <Stack.Screen
-        name="DIYServiceStep3"
-        component={DIYServiceStep3Screen}
-        options={{
-          title: 'DIY Service',
-          headerBackTitle: 'Back',
-          headerLeft: undefined,
-        }}
-      />
-      <Stack.Screen
-        name="DIYServiceStep4"
-        component={DIYServiceStep4Screen}
+        name="DIYServiceWizard"
+        component={DIYServiceWizardScreen}
         options={{
           title: 'DIY Service',
           headerBackTitle: 'Back',
@@ -412,7 +298,7 @@ const OnboardingStack: React.FC = () => {
       screenOptions={{
         headerShown: false,
       }}
-      initialRouteName="Login" // Skip onboarding for returning users, go directly to Login
+      initialRouteName="Welcome" // Start with Welcome screen to determine user journey
     >
       <Stack.Screen name="Welcome" component={WelcomeScreen} />
       <Stack.Screen name="OnboardingFlow" component={OnboardingFlowScreen} />
@@ -597,7 +483,7 @@ const MainAppNavigator: React.FC = () => {
           name="Insights"
           component={FleetInsightsStack}
           options={{
-            title: t('navigation.insights', 'Fleet Insights'),
+            title: t('navigation.insights', 'Insights'),
             tabBarIcon: ({ color, size }) => (
               <TabIcon name="insights" color={color} size={size} />
             ),

@@ -43,8 +43,8 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
 const styles = StyleSheet.create({
   progressContainer: {
     alignItems: 'center',
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.xl,
+    marginTop: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
   },
   
   progressBar: {

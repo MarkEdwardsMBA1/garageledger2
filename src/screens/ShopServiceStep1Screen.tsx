@@ -76,19 +76,22 @@ export const ShopServiceStep1Screen: React.FC = () => {
   }, [navigation]);
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
-    // Handle different picker behaviors
-    if (Platform.OS === 'ios') {
-      if (selectedDate) {
-        setFormData(prev => ({ ...prev, date: selectedDate }));
-      }
-      setShowDatePicker(false);
-    } else {
-      // Android
-      setShowDatePicker(false);
-      if (selectedDate) {
-        setFormData(prev => ({ ...prev, date: selectedDate }));
-      }
+    if (selectedDate) {
+      setFormData(prev => ({ ...prev, date: selectedDate }));
     }
+
+    // Handle picker dismissal properly - don't close on scroll events
+    if (Platform.OS === 'android') {
+      // Android: picker closes automatically after selection/cancel
+      setShowDatePicker(false);
+    } else if (Platform.OS === 'ios' && event.type === 'set') {
+      // iOS: only close when user taps "Done"
+      setShowDatePicker(false);
+    } else if (Platform.OS === 'ios' && event.type === 'dismissed') {
+      // iOS: user tapped "Cancel"
+      setShowDatePicker(false);
+    }
+    // On iOS, if event.type is undefined (scroll/interaction), keep picker open
   };
 
   const formatDate = (date: Date): string => {

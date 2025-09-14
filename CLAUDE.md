@@ -67,7 +67,7 @@ GarageLedger2 is a React Native mobile application for vehicle maintenance track
 
 **⚠️ Important**: Never use `npm update` or change dependency versions without testing. Use `npx` instead of global Expo CLI to avoid version conflicts.
 
-## Practical Design Principles
+## Practical Design & Development Principles
 
 GarageLedger looks simple on the surface (track the maintenance, modifications, and repairs over the life of the vehicles) but actually has hidden complexity in:
 

@@ -124,7 +124,13 @@ export const Card: React.FC<CardProps> = ({
         <View style={styles.headerContainer}>
           <View style={styles.titleContainer}>
             {title && <Text style={titleStyles}>{title}</Text>}
-            {subtitle && <Text style={subtitleStyles}>{subtitle}</Text>}
+            {subtitle && (
+              typeof subtitle === 'string' ? (
+                <Text style={subtitleStyles}>{subtitle}</Text>
+              ) : (
+                <View style={styles.subtitleContainer}>{subtitle}</View>
+              )
+            )}
           </View>
           {rightContent && (
             <View style={styles.rightContentContainer}>
@@ -279,6 +285,11 @@ const styles = StyleSheet.create({
 
   disabledText: {
     color: theme.colors.textLight,
+  },
+  
+  // Subtitle container for React nodes
+  subtitleContainer: {
+    // Ensure proper layout for React node subtitles
   },
 });
 

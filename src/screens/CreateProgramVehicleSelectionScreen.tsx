@@ -265,12 +265,12 @@ const CreateProgramVehicleSelectionScreen: React.FC = () => {
           <Card variant="elevated" style={styles.section}>
             <View style={styles.noVehiclesContainer}>
               <Typography variant="body" style={styles.noVehiclesText}>
-                {t('programs.noVehiclesAvailable', 'No vehicles available. Add a vehicle first.')}
+                {t('programs.redirectToAddVehicle', 'Please add a vehicle first before creating maintenance programs.')}
               </Typography>
               <Button
-                title={t('vehicles.addVehicle', 'Add Vehicle')}
-                onPress={() => navigation.navigate('AddVehicle')}
-                variant="primary"
+                title={t('common.goBack', 'Go Back')}
+                onPress={() => navigation.goBack()}
+                variant="outline"
                 size="sm"
                 style={styles.addVehicleButton}
               />

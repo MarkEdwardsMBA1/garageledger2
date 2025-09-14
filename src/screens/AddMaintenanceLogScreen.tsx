@@ -392,11 +392,22 @@ const AddMaintenanceLogScreen: React.FC = () => {
   };
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
-    // Always hide the date picker after selection
-    setShowDatePicker(false);
     if (selectedDate) {
       setFormData(prev => ({ ...prev, date: selectedDate }));
     }
+
+    // Handle picker dismissal properly - don't close on scroll events
+    if (Platform.OS === 'android') {
+      // Android: picker closes automatically after selection/cancel
+      setShowDatePicker(false);
+    } else if (Platform.OS === 'ios' && event.type === 'set') {
+      // iOS: only close when user taps "Done"
+      setShowDatePicker(false);
+    } else if (Platform.OS === 'ios' && event.type === 'dismissed') {
+      // iOS: user tapped "Cancel"
+      setShowDatePicker(false);
+    }
+    // On iOS, if event.type is undefined (scroll/interaction), keep picker open
   };
 
 
@@ -740,7 +751,7 @@ const AddMaintenanceLogScreen: React.FC = () => {
                 formData.serviceType === 'diy' && styles.serviceTypeOptionSelected
               ]}
               onPress={() => {
-                navigation.navigate('DIYServiceStep1', { vehicleId: vehicleId });
+                navigation.navigate('DIYServiceWizard', { vehicleId: vehicleId });
               }}
             >
               <Typography variant="bodyLarge" style={[
@@ -763,7 +774,7 @@ const AddMaintenanceLogScreen: React.FC = () => {
                 formData.serviceType === 'shop' && styles.serviceTypeOptionSelected
               ]}
               onPress={() => {
-                navigation.navigate('ShopServiceStep1', { vehicleId: vehicleId });
+                navigation.navigate('ShopServiceWizard', { vehicleId: vehicleId });
               }}
             >
               <Typography variant="bodyLarge" style={[
@@ -1000,15 +1011,8 @@ const AddMaintenanceLogScreen: React.FC = () => {
           title={t('common.cancel', 'Cancel')}
           variant="outline"
           onPress={() => navigation.goBack()}
-          style={styles.button}
+          style={styles.fullWidthButton}
           disabled={loading}
-        />
-        <Button
-          title={t('common.save', 'Save')}
-          variant="primary"
-          onPress={handleSave}
-          disabled={loading}
-          style={styles.button}
         />
       </View>
 

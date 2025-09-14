@@ -93,8 +93,8 @@ export const SignUpScreen: React.FC = () => {
         displayName: formData.displayName.trim(),
       });
 
-      // Navigate to onboarding flow as step 1 of 5
-      navigation.navigate('OnboardingFlow' as never);
+      // Navigate to legal agreements (data consents) after signup
+      navigation.navigate('LegalAgreements' as never);
     } catch (error) {
       let message = error instanceof AuthError ? error.message : 'An unexpected error occurred';
       

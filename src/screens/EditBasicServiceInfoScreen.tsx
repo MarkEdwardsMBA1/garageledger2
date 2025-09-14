@@ -6,9 +6,8 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
-  Platform,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { DatePickerInput } from '../components/common/DatePickerInput';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/core';
 import { useTranslation } from 'react-i18next';
@@ -53,8 +52,6 @@ const EditBasicServiceInfoScreen: React.FC<EditBasicServiceInfoScreenProps> = ({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [serviceLog, setServiceLog] = useState<MaintenanceLog | null>(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  
   // Form data
   const [formData, setFormData] = useState<BasicServiceFormData>({
     date: new Date(),
@@ -143,7 +140,12 @@ const EditBasicServiceInfoScreen: React.FC<EditBasicServiceInfoScreenProps> = ({
         shopName: formData.shopName.trim() || undefined,
       };
 
-      await maintenanceLogRepository.update(serviceLog.id, updatedService);
+      // Remove undefined fields to prevent Firebase errors
+      const cleanedService = Object.fromEntries(
+        Object.entries(updatedService).filter(([_, value]) => value !== undefined)
+      ) as MaintenanceLog;
+
+      await maintenanceLogRepository.update(serviceLog.id, cleanedService);
       
       Alert.alert(
         'Success',
@@ -167,11 +169,8 @@ const EditBasicServiceInfoScreen: React.FC<EditBasicServiceInfoScreenProps> = ({
     }
   };
 
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setFormData(prev => ({ ...prev, date: selectedDate }));
-    }
+  const handleDateChange = (date: Date) => {
+    setFormData(prev => ({ ...prev, date }));
   };
 
   const renderBasicInfoForm = () => (
@@ -181,17 +180,14 @@ const EditBasicServiceInfoScreen: React.FC<EditBasicServiceInfoScreenProps> = ({
       </Typography>
 
       {/* Date Input */}
-      <View style={styles.inputGroup}>
-        <Typography variant="label" style={styles.inputLabel}>
-          Service Date *
-        </Typography>
-        <Button
-          title={formData.date.toLocaleDateString()}
-          variant="outline"
-          onPress={() => setShowDatePicker(true)}
-          style={styles.dateButton}
-        />
-      </View>
+      <DatePickerInput
+        label="Service Date"
+        value={formData.date}
+        onDateChange={handleDateChange}
+        required
+        maximumDate={new Date()}
+        style={styles.inputGroup}
+      />
 
       {/* Mileage Input */}
       <View style={styles.inputGroup}>
@@ -275,17 +271,6 @@ const EditBasicServiceInfoScreen: React.FC<EditBasicServiceInfoScreenProps> = ({
       </ScrollView>
 
       {renderActions()}
-
-      {/* Date Picker - Navigation-based, no modal issues */}
-      {showDatePicker && (
-        <DateTimePicker
-          value={formData.date}
-          mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={handleDateChange}
-          maximumDate={new Date()}
-        />
-      )}
     </View>
   );
 };
@@ -332,11 +317,6 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 0,
-  },
-
-  // Date button
-  dateButton: {
-    justifyContent: 'flex-start',
   },
 
   // Actions

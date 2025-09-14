@@ -289,6 +289,15 @@ const ProgramsScreen: React.FC = () => {
   // Render empty state (card-based design matching Vehicles screen)
   const renderEmptyState = () => {
     console.log('📅 ProgramsScreen: Rendering custom empty state with card layout');
+    
+    // Smart CTA logic based on vehicle count
+    const hasVehicles = vehicles.length > 0;
+    const ctaTitle = hasVehicles ? "Create Program" : "Add Vehicle";
+    const ctaAction = hasVehicles ? handleCreateProgram : () => navigation.navigate('Vehicles', { screen: 'AddVehicle' });
+    const messageText = hasVehicles 
+      ? "This is where your list of maintenance programs will appear. Click Create Program to get started."
+      : "This is where your list of maintenance programs will appear. Click Add Vehicle to get started.";
+    
     return (
       <View style={styles.emptyStateContainer}>
         <InfoCard
@@ -301,20 +310,20 @@ const ProgramsScreen: React.FC = () => {
               <CalendarIcon size={160} color={theme.colors.text} />
             </View>
             
-            {/* Text below the image */}
+            {/* Text below the image - smart content based on vehicle count */}
             <Typography variant="body" style={styles.emptyStateText}>
-              This is where your list of maintenance programs will appear. Click Create Program to get started.
+              {messageText}
             </Typography>
           </View>
         </InfoCard>
         
-        {/* CTA button below the card */}
+        {/* CTA button below the card - smart action based on vehicle count */}
         <Button
-          title="Create Program"
-          onPress={handleCreateProgram}
+          title={ctaTitle}
+          onPress={ctaAction}
           variant="primary"
           style={styles.emptyStateCTAButton}
-          testID="create-program-empty-button"
+          testID={hasVehicles ? "create-program-empty-button" : "add-vehicle-empty-button"}
         />
       </View>
     );
