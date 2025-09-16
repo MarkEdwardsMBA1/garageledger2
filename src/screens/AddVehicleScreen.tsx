@@ -1,13 +1,15 @@
 // Add Vehicle screen for creating new vehicles
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
   ScrollView,
   Alert,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { theme } from '../utils/theme';
 import { Typography } from '../components/common/Typography';
 import { Card } from '../components/common/Card';
@@ -34,18 +36,56 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
   const { user } = useAuth();
   const navigation = useNavigation<any>();
   const [loading, setLoading] = useState(false);
+
+  // Navigation interceptor for unsaved changes - temporarily disabled for debugging
+  // useEffect(() => {
+  //   const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
+  //     // If form is not dirty, allow navigation
+  //     if (!isVehicleFormDirty(formData)) {
+  //       return;
+  //     }
+
+  //     // Prevent default behavior of leaving the screen
+  //     e.preventDefault();
+
+  //     // Show confirmation dialog
+  //     Alert.alert(
+  //       'Discard Changes?',
+  //       'You have unsaved vehicle information. Are you sure you want to discard your changes?',
+  //       [
+  //         {
+  //           text: 'Continue Editing',
+  //           style: 'cancel',
+  //           onPress: () => {}
+  //         },
+  //         {
+  //           text: 'Discard Changes',
+  //           style: 'destructive',
+  //           onPress: () => {
+  //             // Reset form and allow navigation
+  //             setFormData(EMPTY_VEHICLE_FORM);
+  //             setErrors({});
+  //             navigation.dispatch(e.data.action);
+  //           }
+  //         }
+  //       ]
+  //     );
+  //   });
+
+  //   return unsubscribe;
+  // }, [navigation, formData]);
   const [formData, setFormData] = useState<VehicleFormData>({
     make: '',
     model: '',
     year: '',
     vin: '',
+    nickname: '',
     mileage: '',
     notes: '',
     photoUri: '',
-    nickname: '',
   });
 
-  const [errors, setErrors] = useState<Partial<VehicleFormData>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleInputChange = (field: keyof VehicleFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -55,44 +95,52 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
     }
   };
 
+  // Filtered input handlers using proven patterns
+  const handleYearChange = (input: string) => {
+    // Only allow digits, max 4 characters (enforced by maxLength)
+    const filtered = input.replace(/[^0-9]/g, '');
+    handleInputChange('year', filtered);
+  };
+
+  const handleMileageChange = (input: string) => {
+    // Only allow digits, no decimals
+    const filtered = input.replace(/[^0-9]/g, '');
+    handleInputChange('mileage', filtered);
+  };
+
+  const handleVinChange = (input: string) => {
+    // Auto-uppercase and remove invalid VIN characters (I, O, Q not allowed)
+    const filtered = input.toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, '');
+    handleInputChange('vin', filtered);
+  };
+
   const validateForm = (): boolean => {
-    const newErrors: Partial<VehicleFormData> = {};
+    try {
+      // Simple validation without Zod for now
+      const newErrors: Record<string, string> = {};
 
-    // Required fields
-    if (!formData.make.trim()) {
-      newErrors.make = t('validation.required', 'This field is required');
-    }
-    if (!formData.model.trim()) {
-      newErrors.model = t('validation.required', 'This field is required');
-    }
-    if (!formData.year.trim()) {
-      newErrors.year = t('validation.required', 'This field is required');
-    }
-
-    // Year validation
-    if (formData.year.trim()) {
-      const yearNum = parseInt(formData.year);
-      const currentYear = new Date().getFullYear();
-      if (isNaN(yearNum) || yearNum < 1900 || yearNum > currentYear + 1) {
-        newErrors.year = t('validation.invalidYear', 'Please enter a valid year');
+      if (!formData.make.trim()) {
+        newErrors.make = 'Vehicle make is required';
       }
-    }
-
-    // Mileage validation (if provided)
-    if (formData.mileage.trim()) {
-      const mileageNum = parseInt(formData.mileage.replace(/,/g, ''));
-      if (isNaN(mileageNum) || mileageNum < 0) {
-        newErrors.mileage = t('validation.invalidMileage', 'Please enter a valid mileage');
+      if (!formData.model.trim()) {
+        newErrors.model = 'Vehicle model is required';
       }
-    }
+      if (!formData.year.trim()) {
+        newErrors.year = 'Vehicle year is required';
+      } else {
+        const yearNum = parseInt(formData.year);
+        const currentYear = new Date().getFullYear();
+        if (isNaN(yearNum) || yearNum < 1900 || yearNum > currentYear + 2) {
+          newErrors.year = `Year must be between 1900 and ${currentYear + 2}`;
+        }
+      }
 
-    // VIN validation (basic - should be 17 characters if provided)
-    if (formData.vin.trim() && formData.vin.trim().length !== 17) {
-      newErrors.vin = t('validation.invalidVin', 'VIN should be 17 characters');
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    } catch (error) {
+      console.error('Error in validateForm:', error);
+      return false;
     }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
   const handlePhotoSelected = (uri: string) => {
@@ -124,10 +172,10 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
         make: formData.make.trim(),
         model: formData.model.trim(),
         year: parseInt(formData.year),
-        vin: formData.vin.trim() || '',
-        mileage: formData.mileage.trim() ? parseInt(formData.mileage.replace(/,/g, '')) : 0,
-        notes: formData.notes.trim() || '',
-        nickname: formData.nickname.trim() || '',
+        vin: (formData.vin || '').trim(),
+        mileage: (formData.mileage || '').trim() ? parseInt((formData.mileage || '').replace(/,/g, '')) : 0,
+        notes: (formData.notes || '').trim(),
+        nickname: (formData.nickname || '').trim(),
         ...(formData.photoUri && { photoUri: formData.photoUri }),
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -168,10 +216,10 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
         model: '',
         year: '',
         vin: '',
+        nickname: '',
         mileage: '',
         notes: '',
         photoUri: '',
-        nickname: '',
       });
 
       // Trigger email verification prompt for next session
@@ -221,10 +269,6 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
     }
   };
 
-  const handleCancel = () => {
-    // Navigate back to Vehicles list screen
-    navigation.navigate('VehiclesList');
-  };
 
   if (loading) {
     return (
@@ -270,7 +314,7 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
           <Input
             label={t('vehicles.year', 'Year')}
             value={formData.year}
-            onChangeText={(value) => handleInputChange('year', value)}
+            onChangeText={handleYearChange}
             placeholder={t('vehicles.yearPlaceholder', 'e.g., 2020')}
             keyboardType="numeric"
             maxLength={4}
@@ -281,8 +325,9 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
           <Input
             label={t('vehicles.vin', 'VIN (Optional)')}
             value={formData.vin}
-            onChangeText={(value) => handleInputChange('vin', value.toUpperCase())}
+            onChangeText={handleVinChange}
             placeholder={t('vehicles.vinPlaceholder', 'Vehicle Identification Number')}
+            autoCapitalize="characters"
             maxLength={17}
             error={errors.vin}
           />
@@ -290,7 +335,7 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
           <Input
             label={t('vehicles.mileage', 'Mileage (Optional)')}
             value={formData.mileage}
-            onChangeText={(value) => handleInputChange('mileage', value)}
+            onChangeText={handleMileageChange}
             placeholder={t('vehicles.mileagePlaceholder', 'e.g., 50000')}
             keyboardType="numeric"
             error={errors.mileage}
@@ -313,25 +358,18 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = () => {
           />
       </Card>
 
-      </ScrollView>
+        </ScrollView>
 
-      {/* Action Buttons */}
-      <View style={styles.actionBar}>
-        <Button
-          title={t('common.cancel', 'Cancel')}
-          variant="outline"
-          onPress={handleCancel}
-          style={styles.button}
-          disabled={loading}
-        />
+        {/* Action Button */}
+        <View style={styles.actionBar}>
         <Button
           title={t('vehicles.saveVehicle', 'Save Vehicle')}
           variant="primary"
           onPress={handleSave}
-          style={styles.button}
+          style={styles.fullWidthButton}
           loading={loading}
         />
-      </View>
+        </View>
     </View>
   );
 };
@@ -368,16 +406,13 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   actionBar: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
     padding: theme.spacing.lg,
     backgroundColor: theme.colors.surface,
     borderTopWidth: 1,
     borderTopColor: theme.colors.borderLight,
     ...theme.shadows.sm,
   },
-  button: {
-    flex: 1,
+  fullWidthButton: {
     minHeight: 48,
   },
 });

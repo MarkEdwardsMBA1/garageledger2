@@ -14,6 +14,7 @@ import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { MaintenanceCategoryPicker } from '../components/common/MaintenanceCategoryPicker';
+import { SelectedServicesCard } from '../components/common/SelectedServicesCard';
 import { SelectedService, AdvancedServiceConfiguration } from '../types';
 import { ServiceFormData } from '../components/forms/ServiceFormRouter';
 
@@ -134,20 +135,13 @@ export const DIYServiceStep2Screen: React.FC = () => {
         // Show selected services summary
         <View style={styles.content}>
           <ScrollView style={styles.scrollContent}>
-            <Card variant="elevated" style={styles.selectedServicesCard}>
-              <Typography variant="heading" style={styles.selectedServicesTitle}>
-                Services
-              </Typography>
-              
-              {selectedServices.map((service, index) => (
-                <View key={index} style={styles.serviceItem}>
-                  <Typography variant="body" style={styles.serviceName}>
-                    • {service.serviceName}
-                  </Typography>
-                  {/* TODO: Show cost breakdown when parts/fluids are configured */}
-                </View>
-              ))}
-            </Card>
+            <SelectedServicesCard
+              services={selectedServices}
+              mode="diy"
+              serviceConfigs={serviceConfigs}
+              serviceFormData={serviceFormData}
+              style={styles.selectedServicesCard}
+            />
 
             <View style={styles.notesSection}>
               <Input
@@ -171,16 +165,10 @@ export const DIYServiceStep2Screen: React.FC = () => {
 
           <View style={styles.buttonContainer}>
             <Button
-              title="Back"
-              variant="outline"
-              onPress={handleBack}
-              style={styles.button}
-            />
-            <Button
               title="Next"
               variant="primary"
               onPress={handleNext}
-              style={styles.button}
+              style={styles.fullWidthButton}
             />
           </View>
         </View>
@@ -208,16 +196,6 @@ const styles = StyleSheet.create({
   selectedServicesCard: {
     marginBottom: theme.spacing.md,
   },
-  selectedServicesTitle: {
-    color: theme.colors.text,
-    marginBottom: theme.spacing.md,
-  },
-  serviceItem: {
-    marginBottom: theme.spacing.sm,
-  },
-  serviceName: {
-    color: theme.colors.text,
-  },
   notesSection: {
     marginBottom: theme.spacing.md,
   },
@@ -225,15 +203,13 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
   },
   buttonContainer: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
     padding: theme.spacing.lg,
     paddingTop: theme.spacing.md,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
   },
-  button: {
-    flex: 1,
+  fullWidthButton: {
+    minHeight: 48,
   },
 });
 

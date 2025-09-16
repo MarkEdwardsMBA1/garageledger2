@@ -1004,16 +1004,6 @@ const AddMaintenanceLogScreen: React.FC = () => {
 
       </ScrollView>
 
-      {/* Action Buttons */}
-      <View style={styles.buttonContainer}>
-        <Button
-          title={t('common.cancel', 'Cancel')}
-          variant="outline"
-          onPress={() => navigation.goBack()}
-          fullWidth
-          disabled={loading}
-        />
-      </View>
 
       {/* DIY Service Picker Modal */}
       <MaintenanceCategoryPicker
@@ -1100,19 +1090,6 @@ const styles = StyleSheet.create({
     padding: theme.spacing.sm,
     backgroundColor: theme.colors.backgroundSecondary,
     borderRadius: theme.borderRadius.sm,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.borderLight,
-    ...theme.shadows.sm,
-  },
-  button: {
-    flex: 1,
-    minHeight: 48,
   },
   // Service Type Selection
   serviceTypeContainer: {

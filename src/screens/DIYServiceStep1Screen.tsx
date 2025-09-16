@@ -169,16 +169,10 @@ export const DIYServiceStep1Screen: React.FC = () => {
 
       <View style={styles.buttonContainer}>
         <Button
-          title="Cancel"
-          variant="outline"
-          onPress={() => navigation.navigate('VehicleHome', { vehicleId: params.vehicleId })}
-          style={styles.button}
-        />
-        <Button
           title="Next"
           variant="primary"
           onPress={handleNext}
-          style={styles.button}
+          style={styles.fullWidthButton}
         />
       </View>
     </View>
@@ -214,15 +208,13 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
   },
   buttonContainer: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
     padding: theme.spacing.lg,
     paddingTop: theme.spacing.md,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
   },
-  button: {
-    flex: 1,
+  fullWidthButton: {
+    minHeight: 48,
   },
 });
 

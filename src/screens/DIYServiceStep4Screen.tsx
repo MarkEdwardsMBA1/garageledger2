@@ -275,16 +275,10 @@ export const DIYServiceStep4Screen: React.FC = () => {
 
       <View style={styles.buttonContainer}>
         <Button
-          title="Back"
-          variant="outline"
-          onPress={handleBack}
-          style={styles.button}
-        />
-        <Button
           title="Save"
           variant="primary"
           onPress={handleSave}
-          style={styles.button}
+          style={styles.fullWidthButton}
         />
       </View>
     </View>
@@ -349,15 +343,13 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xs,
   },
   buttonContainer: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
     padding: theme.spacing.lg,
     paddingTop: theme.spacing.md,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
   },
-  button: {
-    flex: 1,
+  fullWidthButton: {
+    minHeight: 48,
   },
 });
 

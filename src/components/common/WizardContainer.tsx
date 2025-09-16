@@ -145,36 +145,13 @@ export const WizardContainer: React.FC<WizardContainerProps> = ({
         {/* Navigation Buttons */}
         <View style={styles.navigationContainer}>
           <View style={styles.navigationButtons}>
-            {/* Cancel Button */}
-            {config.allowCancel !== false && (
-              <Button
-                title="Cancel"
-                variant="outline"
-                onPress={handleCancel}
-                style={styles.cancelButton}
-                disabled={isLoading}
-              />
-            )}
-
-            {/* Back Button */}
-            {wizard.canGoBack && (
-              <Button
-                title="Back"
-                variant="outline"
-                onPress={wizard.goBack}
-                style={styles.backButton}
-                disabled={isLoading}
-              />
-            )}
-
-
-            {/* Next/Complete Button */}
+            {/* Next/Complete Button - Full Width */}
             {showCompleteButton ? (
               <Button
                 title="Save"
                 variant="primary"
                 onPress={handleComplete}
-                style={styles.primaryButton}
+                style={styles.fullWidthButton}
                 disabled={isLoading}
                 loading={isLoading}
               />
@@ -183,7 +160,7 @@ export const WizardContainer: React.FC<WizardContainerProps> = ({
                 title="Next"
                 variant={getNextButtonVariant()}
                 onPress={wizard.goNext}
-                style={styles.primaryButton}
+                style={styles.fullWidthButton}
                 disabled={!wizard.canGoNext || isLoading}
                 loading={isLoading}
               />
@@ -262,17 +239,11 @@ const styles = StyleSheet.create({
   },
   navigationButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: theme.spacing.sm,
   },
-  cancelButton: {
-    flex: 1,
-  },
-  backButton: {
-    flex: 1,
-  },
-  primaryButton: {
+  fullWidthButton: {
+    minHeight: 48,
     flex: 1,
   },
 });

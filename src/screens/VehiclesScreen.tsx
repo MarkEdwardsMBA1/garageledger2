@@ -12,6 +12,7 @@ import { theme } from '../utils/theme';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { Typography } from '../components/common/Typography';
+import { FloatingActionButton } from '../components/common/FloatingActionButton';
 import { AutomotiveErrorState } from '../components/common/AutomotiveErrorState';
 import { Loading } from '../components/common/Loading';
 import { Car91Icon } from '../components/icons';
@@ -136,7 +137,7 @@ const VehiclesScreen: React.FC<VehiclesScreenProps> = ({ navigation }) => {
             
             {/* Text below the image */}
             <Typography variant="body" style={{ textAlign: 'center', lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.base }}>
-              This is where your list of vehicles will appear. Click Add Vehicle to get started.
+              This is where your list of vehicles will appear. Tap the + button below to add your first vehicle.
             </Typography>
           </View>
         </Card>
@@ -156,27 +157,27 @@ const VehiclesScreen: React.FC<VehiclesScreenProps> = ({ navigation }) => {
   // Vehicle display logic now handled by VehicleCard component
 
   const renderVehiclesList = () => (
-    <ScrollView contentContainerStyle={styles.listContainer}>
-      {vehicles.map((vehicle) => (
-        <VehicleCard
-          key={vehicle.id}
-          vehicle={vehicle}
-          showImage={true}
-          onPress={() => navigation.navigate('VehicleHome', { vehicleId: vehicle.id })}
-        />
-      ))}
-      
-      {/* Add Vehicle button at bottom of list */}
-      <View style={styles.addVehicleButtonContainer}>
-        <Button
-          title={t('vehicles.addVehicle', 'Add Vehicle')}
-          onPress={handleAddVehicle}
-          variant="primary"
-          style={styles.addVehicleButton}
-          testID="add-vehicle-button"
-        />
-      </View>
-    </ScrollView>
+    <View style={styles.vehiclesContainer}>
+      <ScrollView contentContainerStyle={styles.listContainer}>
+        {vehicles.map((vehicle) => (
+          <VehicleCard
+            key={vehicle.id}
+            vehicle={vehicle}
+            showImage={true}
+            onPress={() => navigation.navigate('VehicleHome', { vehicleId: vehicle.id })}
+          />
+        ))}
+      </ScrollView>
+
+      {/* Floating Action Button for Add Vehicle */}
+      <FloatingActionButton
+        onPress={handleAddVehicle}
+        iconText="+"
+        variant="primary"
+        accessibilityLabel={t('vehicles.addVehicle', 'Add Vehicle')}
+        testID="add-vehicle-fab"
+      />
+    </View>
   );
 
   const renderError = () => {
@@ -249,15 +250,13 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
+  vehiclesContainer: {
+    flex: 1,
+    position: 'relative', // Enable absolute positioning for FAB
+  },
   listContainer: {
     padding: theme.spacing.lg,
-  },
-  addVehicleButtonContainer: {
-    marginTop: theme.spacing.xl,
-    marginBottom: theme.spacing.lg,
-  },
-  addVehicleButton: {
-    minHeight: 48,
+    paddingBottom: 80, // Extra bottom padding to prevent FAB overlap
   },
   vehicleImage: {
     width: '100%',

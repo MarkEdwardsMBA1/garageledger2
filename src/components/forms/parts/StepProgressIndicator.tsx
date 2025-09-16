@@ -34,10 +34,6 @@ export const StepProgressIndicator: React.FC<StepProgressIndicatorProps> = ({
       )}
       
       <View style={styles.progressContainer}>
-        <Typography variant="overline" style={styles.progressText}>
-          Step {currentStep} of {totalSteps}
-        </Typography>
-        
         <View style={styles.indicatorContainer}>
           {Array.from({ length: totalSteps }, (_, index) => {
             const stepNumber = index + 1;
@@ -92,6 +88,10 @@ export const StepProgressIndicator: React.FC<StepProgressIndicatorProps> = ({
 const styles = StyleSheet.create({
   container: {
     paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    backgroundColor: theme.colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
     alignItems: 'center',
   },
   title: {
@@ -102,12 +102,6 @@ const styles = StyleSheet.create({
   progressContainer: {
     alignItems: 'center',
     width: '100%',
-  },
-  progressText: {
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: theme.spacing.md,
-    textTransform: 'uppercase',
   },
   indicatorContainer: {
     flexDirection: 'row',

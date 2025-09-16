@@ -1,15 +1,18 @@
 // Part Entry Form - Reusable component for single part entry
 // Follows existing Input and Card patterns for consistency
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Input } from '../../common/Input';
 import { Card } from '../../common/Card';
 import { theme } from '../../../utils/theme';
+import { CalculationService } from '../../../domain/CalculationService';
 
 export interface PartEntryData {
   brand?: string;
   partNumber?: string;
-  cost: string;
+  cost: string; // Keep for backwards compatibility
+  unitCost?: string; // New field for unit cost
+  totalCost?: string; // New field for calculated total
   quantity?: string;
   description?: string;
 }
@@ -49,6 +52,18 @@ export const PartEntryForm: React.FC<PartEntryFormProps> = ({
   const updateField = (field: keyof PartEntryData, value: string) => {
     onChange({ ...data, [field]: value });
   };
+
+  // Calculate total cost when quantity or unit cost changes (matching FluidEntryForm pattern)
+  useEffect(() => {
+    if (showQuantity && data.unitCost !== undefined) {
+      const totalCost = CalculationService.calculatePartTotal(data.quantity || '1', data.unitCost || '0');
+      const formattedTotal = totalCost.toFixed(2);
+
+      if (data.totalCost !== formattedTotal && totalCost > 0) {
+        updateField('totalCost', formattedTotal);
+      }
+    }
+  }, [data.quantity, data.unitCost, showQuantity]);
 
   return (
     <Card title={title} variant="default">
@@ -95,16 +110,42 @@ export const PartEntryForm: React.FC<PartEntryFormProps> = ({
           />
         )}
         
-        <Input
-          label={costRequired ? "Cost" : "Cost (Optional)"}
-          value={data.cost}
-          onChangeText={(value) => updateField('cost', value)}
-          placeholder="$0.00"
-          keyboardType="numeric"
-          error={errors.cost}
-          required={costRequired}
-          containerStyle={styles.inputContainer}
-        />
+        {showQuantity ? (
+          // Show Unit Cost + Total Cost pattern when quantity is enabled
+          <>
+            <Input
+              label={costRequired ? "Unit Cost" : "Unit Cost (Optional)"}
+              value={data.unitCost || ''}
+              onChangeText={(value) => updateField('unitCost', value)}
+              placeholder="$0.00"
+              keyboardType="numeric"
+              error={errors.unitCost}
+              required={costRequired}
+              containerStyle={styles.inputContainer}
+            />
+
+            <Input
+              label="Total Cost"
+              value={data.totalCost ? `$${data.totalCost}` : '$0.00'}
+              editable={false}
+              error={errors.totalCost}
+              containerStyle={styles.inputContainer}
+              inputStyle={styles.calculatedField}
+            />
+          </>
+        ) : (
+          // Show regular Cost field when quantity is not enabled (backwards compatibility)
+          <Input
+            label={costRequired ? "Cost" : "Cost (Optional)"}
+            value={data.cost}
+            onChangeText={(value) => updateField('cost', value)}
+            placeholder="$0.00"
+            keyboardType="numeric"
+            error={errors.cost}
+            required={costRequired}
+            containerStyle={styles.inputContainer}
+          />
+        )}
       </View>
     </Card>
   );
@@ -116,5 +157,9 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     // No additional styling needed - Input component handles it
+  },
+  calculatedField: {
+    backgroundColor: theme.colors.backgroundSecondary,
+    color: theme.colors.textSecondary,
   },
 });

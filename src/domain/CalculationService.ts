@@ -11,6 +11,26 @@ import { FluidEntryData } from '../components/forms/parts/FluidEntryForm';
 export class CalculationService {
   
   /**
+   * Calculate total cost for part entry (quantity × unit cost)
+   * Identical logic to fluid calculation for consistency
+   */
+  static calculatePartTotal(quantity: string, unitCost: string): number {
+    try {
+      const qty = this.parseCurrencyString(quantity);
+      const cost = this.parseCurrencyString(unitCost);
+
+      // Defensive validation
+      if (qty < 0 || cost < 0) return 0;
+      if (!isFinite(qty) || !isFinite(cost)) return 0;
+
+      return qty * cost;
+    } catch (error) {
+      console.warn('[CalculationService] Invalid part calculation input:', { quantity, unitCost });
+      return 0;
+    }
+  }
+
+  /**
    * Calculate total cost for fluid entry (quantity × unit cost)
    * Handles edge cases gracefully with defensive programming
    */
@@ -18,11 +38,11 @@ export class CalculationService {
     try {
       const qty = this.parseCurrencyString(quantity);
       const cost = this.parseCurrencyString(unitCost);
-      
+
       // Defensive validation
       if (qty < 0 || cost < 0) return 0;
       if (!isFinite(qty) || !isFinite(cost)) return 0;
-      
+
       return qty * cost;
     } catch (error) {
       console.warn('[CalculationService] Invalid fluid calculation input:', { quantity, unitCost });
@@ -33,21 +53,32 @@ export class CalculationService {
   /**
    * Calculate total cost for multiple parts
    * Aggregates individual part costs with quantities
+   * Supports both new unitCost/totalCost pattern and legacy cost field
    */
   static calculatePartsTotal(parts: PartEntryData[]): number {
     try {
       if (!Array.isArray(parts)) return 0;
-      
+
       return parts.reduce((sum, part) => {
-        const quantity = this.parseCurrencyString(part.quantity || '1');
-        const cost = this.parseCurrencyString(part.cost || '0');
-        
-        // Skip invalid parts instead of failing entire calculation
-        if (!isFinite(quantity) || !isFinite(cost) || quantity < 0 || cost < 0) {
-          return sum;
+        // Use new unitCost pattern if available, fall back to legacy cost field
+        if (part.unitCost !== undefined && part.quantity !== undefined) {
+          // New pattern: use calculatePartTotal for consistency
+          const partTotal = this.calculatePartTotal(part.quantity, part.unitCost);
+          return sum + partTotal;
+        } else if (part.cost !== undefined) {
+          // Legacy pattern: direct cost (for backwards compatibility)
+          const quantity = this.parseCurrencyString(part.quantity || '1');
+          const cost = this.parseCurrencyString(part.cost);
+
+          // Skip invalid parts instead of failing entire calculation
+          if (!isFinite(quantity) || !isFinite(cost) || quantity < 0 || cost < 0) {
+            return sum;
+          }
+
+          return sum + (quantity * cost);
         }
-        
-        return sum + (quantity * cost);
+
+        return sum; // Skip parts with no cost information
       }, 0);
     } catch (error) {
       console.warn('[CalculationService] Invalid parts calculation input:', { parts });

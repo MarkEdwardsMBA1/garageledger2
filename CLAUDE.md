@@ -332,11 +332,13 @@ interface Vehicle {
 }
 ```
 
-## Shop Service Wizard Implementation
+## Maintenance Logging Wizard Systems
+
+### Shop Service Wizard
 
 **Status**: ✅ Core functionality complete, minor UX refinements pending
 
-### Architecture
+#### Architecture
 The Shop Service wizard follows a progressive modal approach using React Navigation patterns:
 
 ```typescript
@@ -353,51 +355,86 @@ interface ShopServiceData {
 }
 ```
 
-### Implementation Pattern
-- **Step Management**: State-driven step progression with validation
-- **Modal Architecture**: Full-screen modal with step indicators
-- **Data Validation**: Each step validates before allowing progression
-- **Integration**: Auto-saves to MaintenanceLog on completion
-
-### User Flow
+#### User Flow
 ```
-Log Maintenance → "Shop" → 
-Step 1: Basic Info (date, mileage, cost) → 
-Step 2: Service Categories → 
-Step 3: Receipt & Photos (with Pro upgrade prompts) → 
-Step 4: Notes & Summary → 
+Log Maintenance → "Shop" →
+Step 1: Basic Info (date, mileage, cost) →
+Step 2: Service Categories →
+Step 3: Receipt & Photos (with Pro upgrade prompts) →
+Step 4: Notes & Summary →
 Auto-save & Return
 ```
 
-### Key Features Implemented
-- **Progressive Disclosure**: One focused task per step
-- **Step Indicators**: Visual progress with text above circles
-- **Upgrade Prompts**: Gentle Pro tier upselling for photos/receipts
-- **Cost Analytics Integration**: Captures totalCost for vehicle analytics
-- **Service Categories**: Reuses MaintenanceCategoryPicker system
-- **Professional Polish**: Clean typography, proper spacing, automotive theme
+### DIY Service Wizard
 
-### Known Issues & Future Improvements
-- **iOS Datepicker UX**: Currently requires two taps (input field → date button → picker)
-- **Professional Icons**: Temporary emoji usage due to runtime compatibility
-- **Cost Analytics**: Data flows to wizard but Vehicle Details analytics needs debugging
+**Status**: ✅ Comprehensive system with specialized form routing
 
-### Development Notes
-- **Modal Pattern**: Can be reused for future multi-step flows
+#### Architecture
+The DIY Service wizard uses a sophisticated form routing system that automatically directs services to specialized screens based on their requirements:
+
+```typescript
+// Located: src/screens/DIYServiceWizardScreen.tsx
+type WizardStep = 'basic-info' | 'services' | 'photos' | 'review';
+
+// Service-specific form routing
+type ServiceFormType =
+  | 'oil_and_oil_filter'    // 2-step: Oil Filter → Motor Oil
+  | 'tailored_parts'        // Single part entry
+  | 'parts'                 // Multi-part with "Add Another"
+  | 'fluids'                // Single fluid with capacity
+  | 'parts_and_fluids'      // 2-step: Parts → Fluids
+  | 'none';                 // No additional form needed
+```
+
+#### Service Form Routing Matrix
+Based on service requirements spreadsheet, services automatically route to appropriate specialized screens:
+
+| **Screen Type** | **Example Services** | **Wireframe** |
+|-----------------|---------------------|---------------|
+| `oil_and_oil_filter` | Oil & Oil Filter Change | `diy_service_oil_oil_filter_change_wireframe.jpg` |
+| `tailored_parts` | Engine Air Filter, Battery | `diy_tailored_part_wireframe.jpg` |
+| `parts` | Brake Pads & Rotors, Belts | `diy_service_general_parts_wireframe.jpg` |
+| `fluids` | Brake Fluid, Coolant | `diy_service_fluid_wireframe.jpg` |
+| `parts_and_fluids` | Transmission Service | `diy_service_parts_fluids_wireframe.jpg` |
+| `none` | Tire Rotation, Balancing | N/A |
+
+#### User Flow
+```
+Log Maintenance → "DIY" →
+Step 1: Basic Info (date, mileage) →
+Step 2: Service Selection → Specialized Form Screens →
+Step 3: Photos (optional) →
+Step 4: Review & Save →
+Auto-save & Return to Vehicle Details
+```
+
+#### Key Features Implemented
+- **Intelligent Form Routing**: 85+ services automatically routed to correct specialized screens
+- **Multi-Step Specialized Forms**: Oil change (2-step), Parts & Fluids (2-step) with proper step indicators
+- **Cost Calculation Domain Layer**: Automatic total cost calculation across all form types
+- **Validation System**: Required/optional field validation with clear error messaging
+- **Professional UX**: Consistent button layouts, automotive typography, proper visual hierarchy
+
+**Complete Documentation**: [DIY_MAINTENANCE_WIZARD_SYSTEM.md](docs/DIY_MAINTENANCE_WIZARD_SYSTEM.md)
+
+### Shared Implementation Patterns
+- **WizardContainer**: Reusable step management and progress indication
 - **Validation Strategy**: Per-step validation prevents incomplete data
-- **Theme Integration**: Uses automotive color palette and typography system
-- **Error Handling**: Graceful fallbacks for incomplete data
+- **Theme Integration**: Automotive color palette and typography system
+- **Data Persistence**: Both wizards auto-save to MaintenanceLog with proper Firebase integration
+- **Navigation**: Consistent return to Vehicle Details screen after completion
 
 ## Current Development Roadmap
 
 ### Completed ✅
-- **Shop Service Wizard Core**: Full 4-step progressive flow implemented
-- **Professional UX Polish**: Clean typography, proper spacing, step indicators
-- **Service Integration**: MaintenanceCategoryPicker integration working
-- **Data Flow**: Form data properly converts to MaintenanceLog format
-- **Upgrade Prompts**: Pro tier upselling UI implemented
-- **Log Maintenance Simplification**: Clean "Who Performed Maintenance" interface
-- **Cost Analytics Foundation**: Basic analytics card with debug info
+- **Shop Service Wizard**: Full 4-step progressive flow with professional UX polish
+- **DIY Service Wizard**: Complete system with intelligent service form routing
+- **Specialized Form Screens**: 5 wireframe-based screens for different service types
+- **Service Form Routing Matrix**: 85+ services automatically routed to correct screens
+- **Cost Calculation System**: Domain-layer automatic cost calculations
+- **Professional UX Polish**: Automotive typography, consistent layouts, step indicators
+- **Validation Architecture**: Required/optional field validation with error messaging
+- **Data Persistence**: Both wizards integrate with Firebase MaintenanceLog storage
 
 ### In Progress 🔄
 - **Cost Data Analytics**: Vehicle Details cost analytics needs debugging
@@ -405,15 +442,15 @@ Auto-save & Return
 
 ### Pending 📋
 - **Professional Icons**: Replace emoji with custom SVG icons (after runtime fix)
-- **DIY Service Flow**: Implement progressive wizard for DIY maintenance
-- **Enhanced Cost Analytics**: Multi-metric dashboard with trends
-- **Receipt Upload**: Pro tier photo/receipt functionality
-- **Testing**: End-to-end wizard flow testing
+- **Enhanced Cost Analytics**: Multi-metric dashboard with trends and Vehicle Details debugging
+- **Receipt Upload & OCR**: Pro tier photo/receipt functionality with text extraction
+- **Testing Coverage**: End-to-end wizard flow testing for both Shop and DIY systems
+- **Service Suggestions**: AI-powered service recommendations based on maintenance history
 
 ### Next Priority
-1. **Fix cost analytics data flow** from Shop Service to Vehicle Details
-2. **Implement DIY service progressive flow** using Shop Service patterns
-3. **Professional icon implementation** after resolving runtime compatibility
+1. **Fix cost analytics data flow** from both wizards to Vehicle Details screen
+2. **Professional icon implementation** after resolving runtime compatibility
+3. **Enhanced testing coverage** for all specialized form screens and validation logic
 
 ## Internationalization
 

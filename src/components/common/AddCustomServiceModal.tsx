@@ -140,9 +140,6 @@ export const AddCustomServiceModal: React.FC<AddCustomServiceModalProps> = ({
               error={error}
             />
             
-            <Typography variant="caption" style={styles.hint}>
-              You can configure intervals after saving.
-            </Typography>
           </View>
         </View>
 
@@ -155,7 +152,7 @@ export const AddCustomServiceModal: React.FC<AddCustomServiceModalProps> = ({
             style={styles.bottomButton}
           />
           <Button
-            title={t('common.save', 'Save')}
+            title="Next"
             variant="primary"
             onPress={handleSave}
             disabled={!serviceName.trim()}

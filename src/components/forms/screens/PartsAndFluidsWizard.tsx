@@ -8,7 +8,6 @@ import { Typography } from '../../common/Typography';
 import { Card } from '../../common/Card';
 import { PartEntryForm, PartEntryData } from '../parts/PartEntryForm';
 import { FluidEntryForm, FluidEntryData } from '../parts/FluidEntryForm';
-import { StepProgressIndicator } from '../parts/StepProgressIndicator';
 import { theme } from '../../../utils/theme';
 import { CalculationService } from '../../../domain/CalculationService';
 
@@ -42,7 +41,9 @@ type WizardStep = 'parts' | 'fluids';
 const createEmptyPart = (): PartEntryData => ({
   brand: '',
   partNumber: '',
-  cost: '',
+  cost: '', // Keep for backwards compatibility
+  unitCost: '', // New field
+  totalCost: '0.00', // New field
   quantity: '1',
   description: '',
 });
@@ -123,8 +124,8 @@ export const PartsAndFluidsWizard: React.FC<PartsAndFluidsWizardProps> = ({
         if (!part.quantity || part.quantity.trim() === '') {
           partErrors.quantity = 'Quantity is required';
         }
-        if (!part.cost || part.cost.trim() === '') {
-          partErrors.cost = 'Cost is required';
+        if (!part.unitCost || part.unitCost.trim() === '') {
+          partErrors.unitCost = 'Unit cost is required';
         }
 
         if (Object.keys(partErrors).length > 0) {
@@ -174,11 +175,11 @@ export const PartsAndFluidsWizard: React.FC<PartsAndFluidsWizardProps> = ({
 
   const canProceed = () => {
     if (currentStep === 'parts') {
-      return parts.every(part => 
-        part.quantity.trim() !== '' && part.cost.trim() !== ''
+      return parts.every(part =>
+        part.quantity.trim() !== '' && part.unitCost && part.unitCost.trim() !== ''
       );
     } else {
-      return fluids.every(fluid => 
+      return fluids.every(fluid =>
         fluid.quantity.trim() !== '' && fluid.unitCost.trim() !== ''
       );
     }
@@ -189,13 +190,15 @@ export const PartsAndFluidsWizard: React.FC<PartsAndFluidsWizardProps> = ({
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Step Progress Indicator */}
-      <StepProgressIndicator
-        currentStep={currentStepIndex}
-        totalSteps={2}
-        stepLabels={stepLabels}
-        title={serviceName}
-      />
+      {/* Engine Blue Header */}
+      <View style={styles.header}>
+        <Typography variant="title" style={styles.headerTitle}>
+          {serviceName}
+        </Typography>
+        <Typography variant="body" style={styles.headerSubtitle}>
+          Step {currentStepIndex} of 2: {stepLabels[currentStepIndex - 1]}
+        </Typography>
+      </View>
 
       {/* Form Content */}
       <ScrollView 
@@ -277,22 +280,6 @@ export const PartsAndFluidsWizard: React.FC<PartsAndFluidsWizardProps> = ({
           </>
         )}
 
-        {/* Total Cost Summary */}
-        {totalCost > 0 && (
-          <Card variant="elevated" style={styles.totalCostCard}>
-            <View style={styles.costBreakdown}>
-              <Typography variant="body" style={styles.costLine}>
-                Parts: ${totalPartsCost.toFixed(2)}
-              </Typography>
-              <Typography variant="body" style={styles.costLine}>
-                Fluids: ${totalFluidsCost.toFixed(2)}
-              </Typography>
-              <Typography variant="heading" style={styles.totalCostText}>
-                Total: ${totalCost.toFixed(2)}
-              </Typography>
-            </View>
-          </Card>
-        )}
       </ScrollView>
 
       {/* Action Buttons */}
@@ -333,6 +320,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
+  header: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.primary,
+  },
+  headerTitle: {
+    color: theme.colors.surface,
+    textAlign: 'center',
+    marginBottom: theme.spacing.xs,
+  },
+  headerSubtitle: {
+    color: theme.colors.surface,
+    textAlign: 'center',
+    opacity: 0.8,
+  },
   scrollView: {
     flex: 1,
   },
@@ -349,21 +353,6 @@ const styles = StyleSheet.create({
   },
   addButtonContainer: {
     marginBottom: theme.spacing.lg,
-  },
-  totalCostCard: {
-    marginBottom: theme.spacing.lg,
-  },
-  costBreakdown: {
-    gap: theme.spacing.xs,
-  },
-  costLine: {
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
-  },
-  totalCostText: {
-    color: theme.colors.primary,
-    textAlign: 'center',
-    marginTop: theme.spacing.sm,
   },
   actionContainer: {
     flexDirection: 'row',

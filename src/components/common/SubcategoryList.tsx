@@ -154,16 +154,16 @@ export const SubcategoryList: React.FC<SubcategoryListProps> = ({
   const handleCustomServiceSave = (customServiceName: string) => {
     // Create unique service key
     const customServiceKey = `custom-service.${customServiceName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
-    
+
     // Add to selected services
     onToggleService(customServiceKey);
-    
+
     // Close modal
     setShowCustomServiceModal(false);
-    
-    // Open interval configuration with the new service name
+
+    // Open parts/fluids form for custom services (PartsAndFluidsWizard)
     if (onConfigureService) {
-      onConfigureService(customServiceKey, customServiceName, 'Custom Service Reminder', true);
+      onConfigureService(customServiceKey, customServiceName, 'Custom Service', true);
     }
   };
 

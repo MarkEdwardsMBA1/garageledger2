@@ -330,6 +330,127 @@ const styles = StyleSheet.create({
 });
 ```
 
+## Status Bar Indicators
+
+### Multi-Step Flow Indicators
+**Use for**: Multi-step forms, wizards, and progressive flows (DIY service, Shop service, parts/fluids entry)
+
+#### Placement Standards
+- **Modal/Wizard Flows**: Place below header, above main content
+- **Screen-based Flows**: Use header right indicator for simple text
+- **Always**: Separate from header with visual boundary
+
+#### Visual Implementation Patterns
+
+##### Step Progress Indicator (Preferred for 2-4 steps)
+```typescript
+// ✅ CORRECT - Below header placement for modals/wizards
+<View style={styles.stepIndicator}>
+  {steps.map((step, index) => (
+    <View key={step.key} style={styles.stepItem}>
+      <Typography variant="caption" style={[
+        styles.stepLabel,
+        index <= currentStepIndex && styles.stepLabelActive
+      ]}>
+        {step.label}
+      </Typography>
+      <View style={[
+        styles.stepCircle,
+        index <= currentStepIndex && styles.stepCircleActive
+      ]}>
+        <Typography variant="caption" style={[
+          styles.stepNumber,
+          index <= currentStepIndex && styles.stepNumberActive
+        ]}>
+          {index + 1}
+        </Typography>
+      </View>
+    </View>
+  ))}
+</View>
+
+// Styles for step progress indicator
+const styles = StyleSheet.create({
+  stepIndicator: {
+    flexDirection: 'row',
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    backgroundColor: theme.colors.surface, // NOT in header
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  stepItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  stepCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: theme.colors.backgroundSecondary,
+    borderWidth: 2,
+    borderColor: theme.colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepCircleActive: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  stepLabel: {
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: theme.spacing.xs,
+  },
+  stepLabelActive: {
+    color: theme.colors.primary,
+  },
+});
+```
+
+##### Header Text Indicator (Simple flows)
+```typescript
+// ✅ ACCEPTABLE - Header right for simple screen-based flows
+useLayoutEffect(() => {
+  navigation.setOptions({
+    headerRight: () => (
+      <Typography variant="label" style={styles.stepIndicator}>
+        {currentStep} of {totalSteps}
+      </Typography>
+    ),
+  });
+}, [navigation, currentStep]);
+
+const styles = StyleSheet.create({
+  stepIndicator: {
+    color: theme.colors.surface, // White text on Engine Blue header
+    marginRight: theme.spacing.md,
+  },
+});
+```
+
+#### Anti-Patterns to Avoid
+```typescript
+// ❌ INCORRECT - Step indicator in header background
+<View style={{backgroundColor: theme.colors.primary}}>
+  <StepProgressIndicator /> {/* Don't put in header background */}
+</View>
+
+// ❌ INCORRECT - Redundant text with visual indicators
+<Typography>STEP 1 OF 2</Typography> {/* Remove when circles/labels provide context */
+
+// ❌ INCORRECT - Missing visual separation
+<View> {/* Missing borderBottomWidth separator */}
+  <StepProgressIndicator />
+</View>
+```
+
+#### Design Principles
+- **Visual Hierarchy**: Step indicators provide wayfinding, not primary content focus
+- **Consistent Placement**: Below header, above main content for modals/wizards
+- **Clear Progression**: Active steps use primary color, completed steps use success color
+- **Accessibility**: Proper contrast and touch targets for interactive elements
+
 ## Component Usage Standards
 
 ### Card Variants

@@ -86,6 +86,11 @@ export const SERVICE_FORM_MAPPING: Record<string, ServiceFormType> = {
 
 // Helper function to get form type for a service
 export const getServiceFormType = (serviceId: string): ServiceFormType => {
+  // Handle dynamic custom service keys (custom-service.*)
+  if (serviceId.startsWith('custom-service.')) {
+    return 'parts_and_fluids';
+  }
+
   return SERVICE_FORM_MAPPING[serviceId] || 'none';
 };
 
