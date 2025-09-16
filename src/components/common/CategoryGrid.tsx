@@ -9,6 +9,7 @@ import { CategoryCard } from './CategoryCard';
 import { EmptyState } from './ErrorState';
 import { CategoryDisplayData } from '../../utils/CategoryIconMapping';
 import { AdvancedServiceConfiguration } from '../../types';
+import { ServiceFormData } from '../forms/ServiceFormRouter';
 
 interface CategoryGridProps {
   categories: CategoryDisplayData[];
@@ -21,6 +22,7 @@ interface CategoryGridProps {
   onSaveServiceConfig?: (config: AdvancedServiceConfiguration) => void;
   onRemoveServiceConfig?: (serviceKey: string) => void;
   onConfigureService?: (serviceKey: string, serviceName: string, categoryName: string, wasJustSelected?: boolean) => void;
+  serviceFormData?: Record<string, ServiceFormData>;
   loading?: boolean;
   searchQuery?: string;
   showEmptyState?: boolean;
@@ -49,6 +51,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
   onSaveServiceConfig,
   onRemoveServiceConfig,
   onConfigureService,
+  serviceFormData,
   loading = false,
   searchQuery,
   showEmptyState = true,
@@ -126,6 +129,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
               onSaveServiceConfig={onSaveServiceConfig}
               onRemoveServiceConfig={onRemoveServiceConfig}
               onConfigureService={onConfigureService}
+              serviceFormData={serviceFormData}
               testID={`${testID}-card-${index}`}
             />
           ))}
@@ -150,7 +154,6 @@ const styles = StyleSheet.create({
 
   searchSummaryText: {
     color: theme.colors.primary,
-    fontWeight: theme.typography.fontWeight.medium,
     letterSpacing: theme.typography.letterSpacing.wide,
   },
 

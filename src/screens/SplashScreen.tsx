@@ -3,12 +3,12 @@ import {
   View,
   StyleSheet,
   Image,
-  Text,
   StatusBar,
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
+import { Typography } from '../components/common/Typography';
 import { theme } from '../utils/theme';
 
 interface SplashScreenProps {
@@ -63,22 +63,24 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
           </View>
           
           <View style={styles.textContainer}>
-            <Text 
+            <Typography
+              variant="display"
               style={styles.wordmark}
               accessible={true}
               accessibilityRole="text"
               maxFontSizeMultiplier={1.2}
             >
               GarageLedger
-            </Text>
-            <Text 
+            </Typography>
+            <Typography
+              variant="subheading"
               style={styles.tagline}
               accessible={true}
               accessibilityRole="text"
               maxFontSizeMultiplier={1.1}
             >
               {t('splash.tagline', "Track your car's life")}
-            </Text>
+            </Typography>
           </View>
         </View>
       </LinearGradient>
@@ -113,28 +115,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   wordmark: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: Math.min(screenWidth * 0.08, theme.typography.fontSize['3xl']), // Responsive font size
-    fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.surface, // White for contrast against gradient
     textAlign: 'center',
-    letterSpacing: theme.typography.letterSpacing.tight,
     marginBottom: theme.spacing.sm,
     textShadowColor: 'rgba(0, 0, 0, 0.4)', // Darker shadow for better contrast on gray
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 3,
+    // Responsive font size: scale down on smaller screens while using Typography variant as base
+    fontSize: Math.min(screenWidth * 0.08, theme.typography.fontSize['3xl']),
   },
   tagline: {
-    fontFamily: theme.typography.fontFamily.medium,
-    fontSize: Math.min(screenWidth * 0.04, theme.typography.fontSize.lg), // Responsive tagline size
-    fontWeight: theme.typography.fontWeight.medium,
     color: 'rgba(255, 255, 255, 0.9)', // Slightly transparent white
     textAlign: 'center',
-    letterSpacing: theme.typography.letterSpacing.wide,
     opacity: 0.95,
     textShadowColor: 'rgba(0, 0, 0, 0.3)', // Darker shadow for tagline too
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+    // Responsive tagline size: scale down on smaller screens while using Typography variant as base
+    fontSize: Math.min(screenWidth * 0.04, theme.typography.fontSize.lg),
   },
 });
 

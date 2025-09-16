@@ -18,6 +18,7 @@ import { FirebaseMaintenanceLogRepository } from '../repositories/FirebaseMainte
 import { vehicleRepository } from '../repositories/VehicleRepository';
 import { MaintenanceLog, Vehicle } from '../types';
 import { SelectedService, AdvancedServiceConfiguration } from '../types';
+import { ServiceFormData } from '../components/forms/ServiceFormRouter';
 
 interface DIYServiceStep1SerializableData {
   date: string; // ISO string from navigation
@@ -29,6 +30,7 @@ interface DIYServiceStep4Params {
   step1Data: DIYServiceStep1SerializableData;
   selectedServices: SelectedService[];
   serviceConfigs?: { [key: string]: AdvancedServiceConfiguration };
+  serviceFormData?: Record<string, ServiceFormData>;
   photos: string[];
   notes?: string;
 }
@@ -163,6 +165,8 @@ export const DIYServiceStep4Screen: React.FC = () => {
       vehicleId: params.vehicleId,
       step1Data: params.step1Data,
       selectedServices: params.selectedServices,
+      serviceConfigs: params.serviceConfigs,
+      serviceFormData: params.serviceFormData, // Pass along parts/fluids data
       photos: params.photos,
       notes: params.notes,
     });
@@ -334,11 +338,9 @@ const styles = StyleSheet.create({
   serviceValue: {
     color: theme.colors.text,
     flex: 1,
-    fontWeight: theme.typography.fontWeight.medium,
   },
   serviceCost: {
     color: theme.colors.textSecondary,
-    fontWeight: theme.typography.fontWeight.normal,
   },
   servicesList: {
     flex: 1,

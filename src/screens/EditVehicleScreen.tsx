@@ -13,6 +13,7 @@ import { theme } from '../utils/theme';
 import { Card } from '../components/common/Card';
 import { Input } from '../components/common/Input';
 import { Button } from '../components/common/Button';
+import { Typography } from '../components/common/Typography';
 import { Loading } from '../components/common/Loading';
 import { PhotoPicker } from '../components/common/PhotoPicker';
 import { VehicleFormData, Vehicle } from '../types';
@@ -366,9 +367,9 @@ const EditVehicleScreen: React.FC<any> = ({ navigation, route }) => {
   if (!vehicle) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.errorText}>
+        <Typography variant="subheading" style={{ color: theme.colors.error, textAlign: 'center' }}>
           {t('vehicles.notFound', 'Vehicle not found')}
-        </Text>
+        </Typography>
       </View>
     );
   }
@@ -378,9 +379,9 @@ const EditVehicleScreen: React.FC<any> = ({ navigation, route }) => {
       <Card style={styles.formCard}>
         {/* Vehicle Information */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
+          <Typography variant="subheading" style={{ marginBottom: theme.spacing.md }}>
             {t('vehicles.vehicleInfo', 'Vehicle Information')}
-          </Text>
+          </Typography>
           
           <Input
             label={t('vehicles.nickname', 'Nickname (Optional)')}
@@ -500,34 +501,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.colors.background,
   },
-  errorText: {
-    fontSize: theme.typography.fontSize.lg,
-    color: theme.colors.error,
-    textAlign: 'center',
-  },
   formCard: {
     marginBottom: theme.spacing.xl,
   },
-  title: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.sm,
-  },
-  subtitle: {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.xl,
-    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.base,
-  },
   section: {
     marginBottom: theme.spacing.xl,
-  },
-  sectionTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.md,
   },
   buttonContainer: {
     flexDirection: 'row',

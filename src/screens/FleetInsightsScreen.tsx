@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
-    fontSize: theme.typography.fontSize.base,
+    // fontSize: theme.typography.fontSize.base, // Removed - handled by Typography variant="body"
   },
   emptyStateCTAButton: {
     width: '100%',

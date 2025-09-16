@@ -319,11 +319,9 @@ const styles = StyleSheet.create({
   },
   overdueServiceName: {
     color: theme.colors.error,
-    fontWeight: theme.typography.fontWeight.semibold,
   },
   overdueServiceDetails: {
     color: theme.colors.error,
-    fontWeight: theme.typography.fontWeight.medium,
   },
   
   // Bottom Actions (consistent with other screens)
@@ -368,7 +366,6 @@ const styles = StyleSheet.create({
   
   // Simple Text Styles
   logTitle: {
-    fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text,
     marginBottom: theme.spacing.xs,
   },
@@ -386,7 +383,6 @@ const styles = StyleSheet.create({
   },
   loadMoreText: {
     color: theme.colors.primary,
-    fontWeight: theme.typography.fontWeight.medium,
   },
 });
 

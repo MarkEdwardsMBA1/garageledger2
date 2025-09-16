@@ -154,9 +154,9 @@ export const ShopServiceStep1Screen: React.FC = () => {
     <View style={styles.container}>
       <ScrollView style={styles.content}>
         <View style={styles.formSection}>
-          <Text style={styles.fieldLabel}>
+          <Typography variant="label" style={{ marginBottom: theme.spacing.xs }}>
             Service Date
-          </Text>
+          </Typography>
           <TouchableOpacity
             style={styles.dateSelector}
             onPress={() => setShowDatePicker(true)}
@@ -269,14 +269,6 @@ const styles = StyleSheet.create({
   },
   formSection: {
     marginBottom: theme.spacing.lg,
-  },
-  fieldLabel: {
-    marginBottom: theme.spacing.xs,
-    fontWeight: theme.typography.fontWeight.medium,
-    fontFamily: theme.typography.fontFamily.medium,
-    color: theme.colors.text,
-    letterSpacing: theme.typography.letterSpacing.wide,
-    fontSize: theme.typography.fontSize.base, // Match Input component label size
   },
   dateSelector: {
     borderWidth: 1,

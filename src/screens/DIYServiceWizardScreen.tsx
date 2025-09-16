@@ -9,7 +9,7 @@ import { DIYServicesStep } from '../components/wizards/diy/DIYServicesStep';
 import { DIYPhotosStep } from '../components/wizards/diy/DIYPhotosStep';
 import { DIYReviewStep } from '../components/wizards/diy/DIYReviewStep';
 import { WizardConfig, WizardStep, DIYServiceWizardData } from '../types/wizard';
-import { MaintenanceLog, Vehicle, SelectedService, AdvancedServiceConfiguration } from '../types';
+import { MaintenanceLog, Vehicle, SelectedService } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { FirebaseMaintenanceLogRepository } from '../repositories/FirebaseMaintenanceLogRepository';
 import { vehicleRepository } from '../repositories/VehicleRepository';
@@ -22,7 +22,6 @@ interface DIYServiceWizardParams {
     date?: string;
     mileage?: string;
     selectedServices?: SelectedService[];
-    serviceConfigs?: { [key: string]: AdvancedServiceConfiguration };
     photos?: string[];
     notes?: string;
   };
@@ -48,12 +47,8 @@ export const DIYServiceWizardScreen: React.FC = () => {
         },
         'services': {
           selectedServices: [],
-          serviceConfigs: {},
           notes: '',
-          servicesWithPartsAndFluids: {},
-          totalPartsCart: 0,
-          totalFluidsCart: 0,
-          grandTotal: 0,
+          serviceFormData: {},
         },
         'photos': {
           photos: [],
@@ -72,12 +67,8 @@ export const DIYServiceWizardScreen: React.FC = () => {
       },
       'services': {
         selectedServices: params.initialData.selectedServices || [],
-        serviceConfigs: params.initialData.serviceConfigs || {},
         notes: params.initialData.notes || '',
-        servicesWithPartsAndFluids: {},
-        totalPartsCart: 0,
-        totalFluidsCart: 0,
-        grandTotal: 0,
+        serviceFormData: {},
       },
       'photos': {
         photos: params.initialData.photos || [],
@@ -92,7 +83,8 @@ export const DIYServiceWizardScreen: React.FC = () => {
   const wizardSteps: WizardStep[] = [
     {
       id: 'basic-info',
-      title: 'Step 1 of 4',
+      title: '',
+      subtitle: '',
       component: DIYBasicInfoStep,
       validation: (data: any) => {
         console.log('[DEBUG] DIY Step 1 validation data:', data);
@@ -103,20 +95,23 @@ export const DIYServiceWizardScreen: React.FC = () => {
     },
     {
       id: 'services',
-      title: 'Step 2 of 4',
+      title: '',
+      subtitle: '',
       component: DIYServicesStep,
       // TEMP: Validation disabled during refactor
       validation: undefined,
     },
     {
       id: 'photos',
-      title: 'Step 3 of 4',
+      title: '',
+      subtitle: '',
       component: DIYPhotosStep,
       canSkip: true,
     },
     {
       id: 'review',
-      title: 'Step 4 of 4',
+      title: '',
+      subtitle: '',
       component: DIYReviewStep,
     },
   ];

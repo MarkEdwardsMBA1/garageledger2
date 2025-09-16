@@ -499,7 +499,6 @@ const styles = StyleSheet.create({
   },
   reminderTitle: {
     color: theme.colors.text,
-    fontWeight: theme.typography.fontWeight.medium,
     marginBottom: theme.spacing.xs,
   },
   reminderCategory: {
@@ -525,14 +524,12 @@ const styles = StyleSheet.create({
   },
   reminderVehicleName: {
     color: theme.colors.primary,
-    fontWeight: theme.typography.fontWeight.medium,
   },
   reminderDueInfo: {
     alignItems: 'flex-end',
   },
   reminderDueText: {
     color: theme.colors.textSecondary,
-    fontWeight: theme.typography.fontWeight.medium,
   },
   
   reminderBottom: {

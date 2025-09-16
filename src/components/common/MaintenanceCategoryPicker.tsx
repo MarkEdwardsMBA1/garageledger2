@@ -15,12 +15,14 @@ import { getOrderedCategoryData } from '../../utils/CategoryIconMapping';
 import { SelectedService, AdvancedServiceConfiguration, ServiceConfiguration } from '../../types';
 import { getSubcategoryName } from '../../types/MaintenanceCategories';
 import { ServiceConfigBottomSheet } from './ServiceConfigBottomSheet';
+import { ServiceFormRouter, ServiceFormData } from '../forms/ServiceFormRouter';
+import { serviceNeedsForm } from '../../domain/ServiceFormMapping';
 
 interface MaintenanceCategoryPickerProps {
   /** Previously selected services */
   selectedServices?: SelectedService[];
   /** Called when services are selected */
-  onSelectionComplete: (services: SelectedService[], configs?: { [key: string]: AdvancedServiceConfiguration }) => void;
+  onSelectionComplete: (services: SelectedService[], configs?: { [key: string]: AdvancedServiceConfiguration }, serviceFormData?: Record<string, ServiceFormData>) => void;
   /** Called when selection is cancelled */
   onCancel?: () => void;
   /** Whether picker is visible */
@@ -33,6 +35,8 @@ interface MaintenanceCategoryPickerProps {
   enableConfiguration?: boolean;
   /** Service type for configuration UI (shop = simple, diy = advanced) */
   serviceType?: 'shop' | 'diy';
+  /** Initial parts/fluids form data */
+  initialServiceFormData?: Record<string, ServiceFormData>;
 }
 
 /**
@@ -48,6 +52,7 @@ export const MaintenanceCategoryPicker: React.FC<MaintenanceCategoryPickerProps>
   allowMultiple = true,
   enableConfiguration = false,
   serviceType = 'diy',
+  initialServiceFormData = {},
 }) => {
   const { t } = useTranslation();
   
@@ -69,6 +74,10 @@ export const MaintenanceCategoryPicker: React.FC<MaintenanceCategoryPickerProps>
     wasJustSelected?: boolean;
   } | null>(null);
 
+  // Parts/fluids form state (for DIY serviceType)
+  const [serviceFormData, setServiceFormData] = useState<Record<string, ServiceFormData>>(initialServiceFormData);
+  const [activeService, setActiveService] = useState<SelectedService | null>(null);
+
   // Handle category expand/collapse
   const handleToggleExpand = (categoryKey: string) => {
     const updated = new Set(expandedCategories);
@@ -82,21 +91,32 @@ export const MaintenanceCategoryPicker: React.FC<MaintenanceCategoryPickerProps>
 
   // Handle service selection/deselection
   const handleToggleService = (serviceKey: string) => {
+    console.log('[DEBUG] MaintenanceCategoryPicker handleToggleService:', { 
+      serviceKey, 
+      currentlySelected: selectedServiceKeys.has(serviceKey),
+      allowMultiple,
+      selectedServiceKeys: Array.from(selectedServiceKeys)
+    });
+    
     const updated = new Set(selectedServiceKeys);
     
     if (allowMultiple) {
       // Multiple selection: toggle the service
       if (updated.has(serviceKey)) {
+        console.log('[DEBUG] Removing service from selection');
         updated.delete(serviceKey);
       } else {
+        console.log('[DEBUG] Adding service to selection');
         updated.add(serviceKey);
       }
     } else {
       // Single selection: replace with new selection
+      console.log('[DEBUG] Single selection mode, replacing selection');
       updated.clear();
       updated.add(serviceKey);
     }
     
+    console.log('[DEBUG] Updated selection:', Array.from(updated));
     setSelectedServiceKeys(updated);
   };
 
@@ -117,6 +137,30 @@ export const MaintenanceCategoryPicker: React.FC<MaintenanceCategoryPickerProps>
 
   // Handle service configuration
   const handleConfigureService = (serviceKey: string, serviceName: string, categoryName: string, wasJustSelected: boolean = false) => {
+    console.log('[DEBUG] handleConfigureService:', { serviceKey, serviceName, serviceType, wasJustSelected });
+    console.log('[DEBUG] serviceNeedsForm check:', serviceNeedsForm(serviceKey));
+    
+    // For DIY services, check if service needs parts/fluids form
+    if (serviceType === 'diy' && serviceNeedsForm(serviceKey)) {
+      console.log('[DEBUG] Opening parts/fluids form for DIY service');
+      
+      // Convert serviceKey back to SelectedService format
+      const [categoryKey, subcategoryKey] = serviceKey.split('.');
+      const selectedService: SelectedService = {
+        categoryKey,
+        subcategoryKey, 
+        serviceName,
+        serviceId: serviceKey,
+      };
+      
+      console.log('[DEBUG] Setting activeService:', selectedService);
+      setActiveService(selectedService);
+      return;
+    }
+    
+    console.log('[DEBUG] Not opening parts/fluids form - serviceType:', serviceType, 'needsForm:', serviceNeedsForm(serviceKey));
+    
+    // Fall back to original configuration for non-DIY or services without forms
     if (!enableConfiguration) return;
     
     setConfigService({ serviceKey, serviceName, categoryName, wasJustSelected });
@@ -149,6 +193,38 @@ export const MaintenanceCategoryPicker: React.FC<MaintenanceCategoryPickerProps>
     setConfigService(null);
   };
 
+  // Handle service form save (parts/fluids data)
+  const handleServiceFormSave = (serviceId: string, formData: ServiceFormData) => {
+    console.log('[DEBUG] Service form saved:', { serviceId, formData });
+    
+    // Store the form data
+    setServiceFormData(prev => ({
+      ...prev,
+      [serviceId]: formData,
+    }));
+    
+    // Close the form modal (return to service picker)
+    setActiveService(null);
+  };
+
+  // Handle service form cancel
+  const handleServiceFormCancel = () => {
+    console.log('[DEBUG] Service form cancelled');
+    
+    // If this was a newly selected service, deselect it
+    if (activeService) {
+      const serviceKey = activeService.serviceId;
+      setSelectedServiceKeys(prev => {
+        const updated = new Set(prev);
+        updated.delete(serviceKey);
+        return updated;
+      });
+    }
+    
+    // Close the form modal
+    setActiveService(null);
+  };
+
   // Create adapter for ServiceConfigBottomSheet
   const createServiceAdapter = (serviceKey: string, serviceName: string, categoryName: string) => {
     return {
@@ -165,10 +241,18 @@ export const MaintenanceCategoryPicker: React.FC<MaintenanceCategoryPickerProps>
 
   // Handle save - convert selections and close
   const handleSave = () => {
+    console.log('[DEBUG] MaintenanceCategoryPicker handleSave:', { 
+      selectedServiceKeys: Array.from(selectedServiceKeys),
+      serviceFormData,
+      serviceType
+    });
+    
     const services = convertToSelectedServices();
     // Convert Map to plain object for navigation serialization
     const configs = enableConfiguration ? Object.fromEntries(serviceConfigs) : undefined;
-    onSelectionComplete(services, configs);
+    
+    // Include serviceFormData for DIY services
+    onSelectionComplete(services, configs, serviceFormData);
   };
 
   // Handle cancel
@@ -221,6 +305,7 @@ export const MaintenanceCategoryPicker: React.FC<MaintenanceCategoryPickerProps>
               onToggleService={handleToggleService}
               serviceConfigs={enableConfiguration ? serviceConfigs : undefined}
               onConfigureService={enableConfiguration ? handleConfigureService : undefined}
+              serviceFormData={serviceFormData}
             />
           </ScrollView>
         </View>
@@ -258,6 +343,17 @@ export const MaintenanceCategoryPicker: React.FC<MaintenanceCategoryPickerProps>
           serviceType={serviceType}
         />
       )}
+
+      {/* Service Parts/Fluids Form Router (DIY Services) */}
+      {serviceType === 'diy' && activeService && (
+        <ServiceFormRouter
+          service={activeService}
+          visible={!!activeService}
+          initialData={serviceFormData[activeService.serviceId]?.data}
+          onSave={handleServiceFormSave}
+          onCancel={handleServiceFormCancel}
+        />
+      )}
     </Modal>
   );
 };
@@ -284,7 +380,6 @@ const styles = StyleSheet.create({
     color: theme.colors.surface,
     flex: 1,
     textAlign: 'center',
-    fontWeight: theme.typography.fontWeight.semibold,
   },
   content: {
     flex: 1,

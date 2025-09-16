@@ -208,15 +208,17 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.primary,
   },
   title: {
-    color: theme.colors.text,
+    color: theme.colors.surface,
     textAlign: 'center',
     marginBottom: theme.spacing.xs,
   },
   subtitle: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.surface,
     textAlign: 'center',
+    opacity: 0.8,
   },
   content: {
     flex: 1,
@@ -250,8 +252,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: theme.colors.error,
-    fontSize: 14,
-    lineHeight: 20,
   },
   navigationContainer: {
     borderTopWidth: 1,

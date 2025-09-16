@@ -10,6 +10,7 @@ import {
   TouchableOpacityProps,
 } from 'react-native';
 import { theme } from '../../utils/theme';
+import { Typography } from './Typography';
 
 export interface ButtonProps extends Omit<TouchableOpacityProps, 'style'> {
   /** Button text content */
@@ -73,17 +74,37 @@ export const Button: React.FC<ButtonProps> = ({
     style,
   ];
 
-  const textStyles = [
-    styles.textStyle,
-    styles[`${variant}Text`],
-    styles[`${size}Text`],
-    isDisabled && styles.disabledText,
-    textStyle,
-  ];
 
   const handlePress = () => {
     if (!isDisabled && onPress) {
       onPress({} as any);
+    }
+  };
+
+  const getButtonTextStyle = () => {
+    return {
+      color: getTextColor(),
+      textAlign: 'center' as const,
+      // Typography variant="button" handles fontSize, fontWeight, fontFamily, letterSpacing
+    };
+  };
+
+  const getTextColor = () => {
+    if (isDisabled) {
+      return theme.colors.textSecondary;
+    }
+
+    switch (variant) {
+      case 'primary':
+      case 'secondary':
+      case 'danger':
+        return theme.colors.surface;
+      case 'outline':
+      case 'ghost':
+      case 'text':
+        return theme.colors.primary;
+      default:
+        return theme.colors.surface;
     }
   };
 
@@ -101,13 +122,13 @@ export const Button: React.FC<ButtonProps> = ({
       return (
         <>
           {iconPosition === 'left' && icon}
-          <Text style={textStyles}>{title}</Text>
+          <Typography variant="button" style={getButtonTextStyle()}>{title}</Typography>
           {iconPosition === 'right' && icon}
         </>
       );
     }
 
-    return <Text style={textStyles}>{title}</Text>;
+    return <Typography variant="button" style={getButtonTextStyle()}>{title}</Typography>;
   };
 
   return (
@@ -201,49 +222,8 @@ const styles = StyleSheet.create({
   },
   textDisabled: {},
 
-  // Text styles - Enhanced typography
-  textStyle: {
-    fontFamily: theme.typography.fontFamily.semibold,
-    fontWeight: theme.typography.fontWeight.semibold,
-    textAlign: 'center',
-    letterSpacing: theme.typography.letterSpacing.wide,
-  },
-
-  // Text size variants
-  smText: {
-    fontSize: theme.components.button.fontSize.sm,
-  },
-  mdText: {
-    fontSize: theme.components.button.fontSize.md,
-  },
-  lgText: {
-    fontSize: theme.components.button.fontSize.lg,
-  },
-
-  // Text color variants
-  primaryText: {
-    color: theme.colors.surface,
-  },
-  secondaryText: {
-    color: theme.colors.surface,
-  },
-  outlineText: {
-    color: theme.colors.primary,
-  },
-  ghostText: {
-    color: theme.colors.primary,
-  },
-  dangerText: {
-    color: theme.colors.surface,
-  },
-  textText: {
-    color: theme.colors.primary,
-  },
-
-  // Disabled text
-  disabledText: {
-    color: theme.colors.textSecondary,
-  },
+  // Typography handled by Typography variant="button"
+  // Colors handled by getButtonTextStyle() function
 });
 
 export default Button;

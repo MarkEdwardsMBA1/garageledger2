@@ -225,13 +225,9 @@ export interface DIYBasicInfoData {
 
 export interface DIYServicesData {
   selectedServices: SelectedService[];
-  serviceConfigs: { [key: string]: AdvancedServiceConfiguration };
   notes: string;
-  // Enhanced with parts and fluids data
-  servicesWithPartsAndFluids: { [serviceId: string]: import('../domain/PartsAndFluids').ServiceEntryData };
-  totalPartsCart: number;
-  totalFluidsCart: number;
-  grandTotal: number;
+  // Store parts/fluids data per service
+  serviceFormData: Record<string, any>; // ServiceFormData from ServiceFormRouter
 }
 
 export interface DIYPhotosData {

@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { theme } from '../utils/theme';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
+import { Typography } from '../components/common/Typography';
 import { AutomotiveErrorState } from '../components/common/AutomotiveErrorState';
 import { Loading } from '../components/common/Loading';
 import { Car91Icon } from '../components/icons';
@@ -134,9 +135,9 @@ const VehiclesScreen: React.FC<VehiclesScreenProps> = ({ navigation }) => {
             </View>
             
             {/* Text below the image */}
-            <Text style={styles.emptyStateText}>
+            <Typography variant="body" style={{ textAlign: 'center', lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.base }}>
               This is where your list of vehicles will appear. Click Add Vehicle to get started.
-            </Text>
+            </Typography>
           </View>
         </Card>
         
@@ -295,15 +296,6 @@ const styles = StyleSheet.create({
   subtitleContainer: {
     gap: theme.spacing.xs,
   },
-  vehicleInfoText: {
-    color: theme.colors.textSecondary,
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.normal,
-  },
-  mileageText: {
-    color: theme.colors.textSecondary,
-    fontSize: theme.typography.fontSize.sm,
-  },
   // Empty state styles
   emptyStateContainer: {
     flex: 1,
@@ -325,12 +317,6 @@ const styles = StyleSheet.create({
   },
   emptyStateImageContainer: {
     marginBottom: theme.spacing.xl,
-  },
-  emptyStateText: {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.text,
-    textAlign: 'center',
-    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.base,
   },
   emptyStateCTAButton: {
     width: '100%',

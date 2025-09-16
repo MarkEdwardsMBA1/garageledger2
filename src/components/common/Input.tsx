@@ -2,7 +2,6 @@
 import React, { useState, forwardRef, useRef } from 'react';
 import {
   View,
-  Text,
   TextInput,
   StyleSheet,
   TextInputProps,
@@ -12,6 +11,7 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native';
 import { theme } from '../../utils/theme';
+import { Typography } from './Typography';
 
 export interface InputProps extends Omit<TextInputProps, 'style'> {
   /** Input label */
@@ -166,7 +166,6 @@ export const Input = forwardRef<TextInput, InputProps>(({
   const labelStyles = [
     styles.label,
     styles[`${size}Label`],
-    required && styles.requiredLabel,
     hasError && styles.errorLabel,
     disabled && styles.disabledLabel,
     labelStyle,
@@ -177,10 +176,9 @@ export const Input = forwardRef<TextInput, InputProps>(({
   return (
     <View style={containerStyles}>
       {label && (
-        <Text style={labelStyles}>
+        <Typography variant="label" style={labelStyles}>
           {label}
-          {required && <Text style={styles.required}> *</Text>}
-        </Text>
+        </Typography>
       )}
       
       <TouchableWithoutFeedback onPress={focusInput}>
@@ -208,9 +206,9 @@ export const Input = forwardRef<TextInput, InputProps>(({
             <View style={styles.rightIconContainer}>
               {showPasswordToggle && secureTextEntry ? (
                 <TouchableOpacity onPress={togglePasswordVisibility}>
-                  <Text style={styles.passwordToggle}>
+                  <Typography variant="body" style={styles.passwordToggle}>
                     {isPasswordVisible ? '🙈' : '👁️'}
-                  </Text>
+                  </Typography>
                 </TouchableOpacity>
               ) : (
                 rightIcon
@@ -222,12 +220,12 @@ export const Input = forwardRef<TextInput, InputProps>(({
       
       {(currentError || helperText) && (
         <View style={styles.messageContainer}>
-          <Text style={[
+          <Typography variant="bodySmall" style={[
             styles.message,
             currentError ? styles.errorMessage : styles.helperMessage
           ]}>
             {currentError || helperText}
-          </Text>
+          </Typography>
         </View>
       )}
     </View>
@@ -241,13 +239,10 @@ const styles = StyleSheet.create({
     marginVertical: theme.spacing.sm,
   },
 
-  // Label styles - Enhanced typography
+  // Label styles - Uses Typography variant="label" with size customization
   label: {
     marginBottom: theme.spacing.xs,
-    fontWeight: theme.typography.fontWeight.medium,
-    fontFamily: theme.typography.fontFamily.medium,
     color: theme.colors.text,
-    letterSpacing: theme.typography.letterSpacing.wide,
   },
   smLabel: {
     fontSize: theme.typography.fontSize.sm,
@@ -258,17 +253,11 @@ const styles = StyleSheet.create({
   lgLabel: {
     fontSize: theme.typography.fontSize.lg,
   },
-  requiredLabel: {
-    // Additional styling for required fields if needed
-  },
   errorLabel: {
     color: theme.colors.error,
   },
   disabledLabel: {
     color: theme.colors.textLight,
-  },
-  required: {
-    color: theme.colors.error,
   },
 
   // Input container styles
@@ -324,7 +313,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.borderLight,
   },
 
-  // Input styles - Enhanced typography
+  // Input styles - Typography handled by TextInput native styling
   input: {
     flex: 1,
     fontFamily: theme.typography.fontFamily.regular,
@@ -359,7 +348,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   passwordToggle: {
-    fontSize: 18,
     padding: theme.spacing.xs,
   },
 
@@ -368,7 +356,7 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.xs,
   },
   message: {
-    fontSize: theme.typography.fontSize.sm,
+    // Font handled by Typography component
   },
   errorMessage: {
     color: theme.colors.error,

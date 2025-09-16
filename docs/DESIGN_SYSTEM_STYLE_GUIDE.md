@@ -3,6 +3,8 @@
 ## Overview
 This style guide ensures consistent, professional design across all screens in GarageLedger. It combines best practices from premium apps like MyFitnessPal with our automotive-inspired design system.
 
+> **📖 TYPOGRAPHY REFERENCE**: For comprehensive Typography usage guidelines, patterns, and conversion standards, see [`TYPOGRAPHY_GUIDELINES.md`](./TYPOGRAPHY_GUIDELINES.md) - the gold standard for all Typography implementation.
+
 ## Design Principles
 
 ### 1. Strategic Typography Hierarchy
@@ -23,12 +25,14 @@ This style guide ensures consistent, professional design across all screens in G
 ```
 
 #### Standard Screen Typography Hierarchy
-1. **Screen Title**: `Typography variant="title"` (24px, bold)
-2. **Section Headers**: `Typography variant="heading"` (20px, semibold) 
-3. **Subsection Headers**: `Typography variant="subheading"` (18px, medium)
-4. **Body Text**: `Typography variant="body"` (16px, normal)
-5. **Helper Text**: `Typography variant="caption"` (14px, normal, wide letter spacing)
-6. **Labels**: `Typography variant="label"` (14px, medium, wide letter spacing)
+**⭐ REFERENCE: See [`TYPOGRAPHY_GUIDELINES.md`](./TYPOGRAPHY_GUIDELINES.md) for complete Typography variant reference.**
+
+1. **Screen Title**: `Typography variant="title"` - Professional page titles
+2. **Section Headers**: `Typography variant="heading"` - Major content sections
+3. **Subsection Headers**: `Typography variant="subheading"` - Sub-sections and form groups
+4. **Body Text**: `Typography variant="body"` - Main content, descriptions
+5. **Helper Text**: `Typography variant="bodySmall"` - Secondary information
+6. **Labels**: `Typography variant="label"` - Form labels, UI labels
 
 #### Selection Components
 

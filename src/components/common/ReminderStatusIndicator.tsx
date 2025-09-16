@@ -90,7 +90,10 @@ export const ReminderStatusBadge: React.FC<ReminderStatusBadgeProps> = ({
 
   return (
     <View style={badgeStyle}>
-      <Typography variant="caption" style={textStyle}>
+      <Typography
+        variant={size === 'sm' ? 'overline' : 'caption'}
+        style={[textStyle, { textTransform: 'uppercase' }]}
+      >
         {count ? `${count} ${getStatusText()}` : getStatusText()}
       </Typography>
     </View>
@@ -276,18 +279,16 @@ const styles = StyleSheet.create({
   
   badgeText: {
     color: theme.colors.surface,
-    fontWeight: theme.typography.fontWeight.semibold,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   badgeTextSm: {
-    fontSize: 10,
+    // Typography handled by variant
   },
   badgeTextMd: {
-    fontSize: theme.typography.fontSize.xs,
+    // Typography handled by variant
   },
   badgeTextLg: {
-    fontSize: theme.typography.fontSize.sm,
+    // Typography handled by variant
   },
   
   // Indicator styles
@@ -318,7 +319,7 @@ const styles = StyleSheet.create({
   },
   
   indicatorText: {
-    fontWeight: theme.typography.fontWeight.medium,
+    // Font weight handled by Typography component
   },
   
   // Summary bar styles
@@ -347,7 +348,7 @@ const styles = StyleSheet.create({
   
   summaryText: {
     flex: 1,
-    fontWeight: theme.typography.fontWeight.medium,
+    // Font weight handled by Typography component
   },
   
   summaryBadges: {

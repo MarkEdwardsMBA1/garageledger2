@@ -72,10 +72,6 @@ const styles = StyleSheet.create({
   label: {
     color: theme.colors.text,
     marginBottom: theme.spacing.xs,
-    fontWeight: theme.typography.fontWeight.medium,
-    fontSize: theme.typography.fontSize.base,
-    fontFamily: theme.typography.fontFamily.medium,
-    letterSpacing: theme.typography.letterSpacing.wide,
   },
 });
 

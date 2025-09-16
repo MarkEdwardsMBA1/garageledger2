@@ -15,6 +15,7 @@ import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { MaintenanceCategoryPicker } from '../components/common/MaintenanceCategoryPicker';
 import { SelectedService, AdvancedServiceConfiguration } from '../types';
+import { ServiceFormData } from '../components/forms/ServiceFormRouter';
 
 interface DIYServiceStep1SerializableData {
   date: string; // ISO string from navigation
@@ -26,6 +27,7 @@ interface DIYServiceStep2Params {
   step1Data: DIYServiceStep1SerializableData;
   selectedServices?: SelectedService[];
   serviceConfigs?: { [key: string]: AdvancedServiceConfiguration }; // Plain object for navigation
+  serviceFormData?: Record<string, ServiceFormData>; // Parts/fluids form data
   notes?: string;
 }
 
@@ -40,6 +42,9 @@ export const DIYServiceStep2Screen: React.FC = () => {
   );
   const [serviceConfigs, setServiceConfigs] = useState<Map<string, AdvancedServiceConfiguration>>(
     params?.serviceConfigs ? new Map(Object.entries(params.serviceConfigs)) : new Map()
+  );
+  const [serviceFormData, setServiceFormData] = useState<Record<string, ServiceFormData>>(
+    params?.serviceFormData || {}
   );
   const [notes, setNotes] = useState(params?.notes || '');
   const [showCategoryPicker, setShowCategoryPicker] = useState(
@@ -58,10 +63,17 @@ export const DIYServiceStep2Screen: React.FC = () => {
     });
   }, [navigation]);
 
-  const handleServiceSelection = (services: SelectedService[], configs?: { [key: string]: AdvancedServiceConfiguration }) => {
+  const handleServiceSelection = (
+    services: SelectedService[], 
+    configs?: { [key: string]: AdvancedServiceConfiguration },
+    formData?: Record<string, ServiceFormData>
+  ) => {
     setSelectedServices(services);
     if (configs) {
       setServiceConfigs(new Map(Object.entries(configs)));
+    }
+    if (formData) {
+      setServiceFormData(formData);
     }
     setShowCategoryPicker(false);
   };
@@ -89,6 +101,7 @@ export const DIYServiceStep2Screen: React.FC = () => {
       step1Data: params.step1Data,
       selectedServices: selectedServices,
       serviceConfigs: Object.fromEntries(serviceConfigs),
+      serviceFormData: serviceFormData, // Pass along parts/fluids data
       notes: notes,
     });
   };
@@ -99,6 +112,7 @@ export const DIYServiceStep2Screen: React.FC = () => {
       data: params.step1Data, // Already serializable
       selectedServices: selectedServices, // Pass along selected services
       serviceConfigs: Object.fromEntries(serviceConfigs), // Pass along service configs
+      serviceFormData: serviceFormData, // Pass along parts/fluids data
       notes: notes, // Pass along notes
     });
   };
@@ -114,6 +128,7 @@ export const DIYServiceStep2Screen: React.FC = () => {
           onCancel={() => navigation.goBack()}
           serviceType="diy"
           enableConfiguration={true} // Enable detailed parts/fluids configuration for DIY
+          initialServiceFormData={serviceFormData} // Persist parts/fluids data
         />
       ) : (
         // Show selected services summary

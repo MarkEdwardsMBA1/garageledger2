@@ -12,18 +12,19 @@ import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 import { theme } from '../utils/theme';
 import { Card } from '../components/common/Card';
+import { Typography } from '../components/common/Typography';
 import { LanguageUtils, AVAILABLE_LANGUAGES, SupportedLanguage } from '../i18n';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/AuthService';
-import { 
-  GlobeIcon, 
-  NotificationsIcon, 
-  RulerIcon, 
-  CloudIcon, 
-  ExportIcon, 
-  HelpIcon, 
-  FeedbackIcon, 
-  InfoIcon 
+import {
+  GlobeIcon,
+  NotificationsIcon,
+  RulerIcon,
+  CloudIcon,
+  ExportIcon,
+  HelpIcon,
+  FeedbackIcon,
+  InfoIcon
 } from '../components/icons';
 
 interface SettingItem {
@@ -231,13 +232,13 @@ const SettingsScreen: React.FC = () => {
         <item.IconComponent size={20} color={theme.colors.textSecondary} />
       </View>
       <View style={styles.settingContent}>
-        <Text style={styles.settingTitle}>{item.title}</Text>
+        <Typography variant="body">{item.title}</Typography>
         {item.subtitle && (
-          <Text style={styles.settingSubtitle}>{item.subtitle}</Text>
+          <Typography variant="bodySmall" style={{ color: theme.colors.textSecondary }}>{item.subtitle}</Typography>
         )}
       </View>
       <View style={styles.settingArrow}>
-        <Text style={styles.settingArrowText}>›</Text>
+        <Typography variant="heading" style={{ color: theme.colors.textLight }}>›</Typography>
       </View>
     </TouchableOpacity>
   );
@@ -251,21 +252,21 @@ const SettingsScreen: React.FC = () => {
             <Text style={styles.profileAvatarText}>👤</Text>
           </View>
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>
+            <Typography variant="subheading">
               {user?.displayName || t('settings.user', 'User')}
-            </Text>
-            <Text style={styles.profileEmail}>
+            </Typography>
+            <Typography variant="bodySmall" style={{ color: theme.colors.textSecondary }}>
               {user?.email || t('settings.notSignedIn', 'Not signed in')}
-            </Text>
+            </Typography>
           </View>
           {!user && (
             <TouchableOpacity
               style={styles.signInButton}
               onPress={() => console.log('Navigate to sign in')}
             >
-              <Text style={styles.signInButtonText}>
+              <Typography variant="button" style={{ color: theme.colors.surface }}>
                 {t('settings.signIn', 'Sign In')}
-              </Text>
+              </Typography>
             </TouchableOpacity>
           )}
         </View>
@@ -275,38 +276,38 @@ const SettingsScreen: React.FC = () => {
       {user && !user.emailVerified && (
         <Card variant="elevated" style={styles.emailVerificationCard}>
           <View style={styles.emailVerificationHeader}>
-            <Text style={styles.emailVerificationIcon}>⚠️</Text>
+            <Typography variant="heading">⚠️</Typography>
             <View style={styles.emailVerificationHeaderText}>
-              <Text style={styles.emailVerificationTitle}>
+              <Typography variant="body" style={{ color: theme.colors.warning, marginBottom: theme.spacing.xs }}>
                 Please Verify Your Email
-              </Text>
-              <Text style={styles.emailVerificationSubtitle}>
+              </Typography>
+              <Typography variant="bodySmall" style={{ color: theme.colors.textSecondary }}>
                 Complete your account setup
-              </Text>
+              </Typography>
             </View>
           </View>
           
-          <Text style={styles.emailVerificationDescription}>
+          <Typography variant="bodySmall" style={{ color: theme.colors.text, lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.sm, marginBottom: theme.spacing.lg }}>
             Verify your email to secure your account and enable password recovery. Check your inbox for our verification email.
-          </Text>
+          </Typography>
           
           <View style={styles.emailVerificationActions}>
             <TouchableOpacity 
               style={styles.verifyEmailPrimaryButton}
               onPress={handleSendVerification}
             >
-              <Text style={styles.verifyEmailPrimaryText}>
+              <Typography variant="button" style={{ color: theme.colors.surface }}>
                 Send Verification Email
-              </Text>
+              </Typography>
             </TouchableOpacity>
             
             <TouchableOpacity 
               style={styles.verifyEmailSecondaryButton}
               onPress={handleRefreshEmailVerification}
             >
-              <Text style={styles.verifyEmailSecondaryText}>
+              <Typography variant="bodySmall" style={{ color: theme.colors.warning }}>
                 Already verified? Check status
-              </Text>
+              </Typography>
             </TouchableOpacity>
           </View>
         </Card>
@@ -315,7 +316,7 @@ const SettingsScreen: React.FC = () => {
       {/* Settings Sections */}
       {settingSections.map((section) => (
         <View key={section.title} style={styles.section}>
-          <Text style={styles.sectionTitle}>{section.title}</Text>
+          <Typography variant="label" style={{ color: theme.colors.textSecondary, marginBottom: theme.spacing.md }}>{section.title}</Typography>
           <Card variant="elevated" style={styles.sectionCard}>
             {section.items.map((item, index) => (
               <View key={item.id}>
@@ -339,10 +340,10 @@ const SettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingContent}>
-                <Text style={styles.settingTitle}>Terms of Service</Text>
+                <Typography variant="body">Terms of Service</Typography>
               </View>
               <View style={styles.settingArrow}>
-                <Text style={styles.settingArrowText}>›</Text>
+                <Typography variant="heading" style={{ color: theme.colors.textLight }}>›</Typography>
               </View>
             </TouchableOpacity>
             
@@ -354,10 +355,10 @@ const SettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingContent}>
-                <Text style={styles.settingTitle}>Privacy Policy</Text>
+                <Typography variant="body">Privacy Policy</Typography>
               </View>
               <View style={styles.settingArrow}>
-                <Text style={styles.settingArrowText}>›</Text>
+                <Typography variant="heading" style={{ color: theme.colors.textLight }}>›</Typography>
               </View>
             </TouchableOpacity>
             
@@ -369,10 +370,10 @@ const SettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingContent}>
-                <Text style={styles.settingTitle}>Maintenance Disclaimer</Text>
+                <Typography variant="body">Maintenance Disclaimer</Typography>
               </View>
               <View style={styles.settingArrow}>
-                <Text style={styles.settingArrowText}>›</Text>
+                <Typography variant="heading" style={{ color: theme.colors.textLight }}>›</Typography>
               </View>
             </TouchableOpacity>
           </Card>
@@ -386,9 +387,9 @@ const SettingsScreen: React.FC = () => {
             onPress={handleSignOut}
             style={styles.signOutButton}
           >
-            <Text style={styles.signOutText}>
+            <Typography variant="body" style={{ color: theme.colors.textSecondary, textAlign: 'center' }}>
               {t('settings.signOut', 'Sign Out')}
-            </Text>
+            </Typography>
           </TouchableOpacity>
         </View>
       )}
@@ -424,20 +425,10 @@ const styles = StyleSheet.create({
     marginRight: theme.spacing.md,
   },
   profileAvatarText: {
-    fontSize: 24,
+    // Text emoji, no font styling needed
   },
   profileInfo: {
     flex: 1,
-  },
-  profileName: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-  },
-  profileEmail: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.textSecondary,
   },
   // Email Verification Card Styles
   emailVerificationCard: {
@@ -451,27 +442,10 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   emailVerificationIcon: {
-    fontSize: 24,
     marginRight: theme.spacing.md,
   },
   emailVerificationHeaderText: {
     flex: 1,
-  },
-  emailVerificationTitle: {
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.warning, // Signal Orange
-    marginBottom: theme.spacing.xs,
-  },
-  emailVerificationSubtitle: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.textSecondary,
-  },
-  emailVerificationDescription: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text,
-    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.sm,
-    marginBottom: theme.spacing.lg,
   },
   emailVerificationActions: {
     gap: theme.spacing.sm,
@@ -484,11 +458,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: theme.spacing.sm,
   },
-  verifyEmailPrimaryText: {
-    color: theme.colors.surface,
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.semibold,
-  },
   verifyEmailSecondaryButton: {
     backgroundColor: 'transparent',
     borderWidth: 1,
@@ -497,11 +466,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.sm,
     alignItems: 'center',
-  },
-  verifyEmailSecondaryText: {
-    color: theme.colors.warning, // Signal Orange
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
   },
   signInButton: {
     paddingHorizontal: theme.spacing.md,
@@ -521,28 +485,10 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.lg,
   },
-  signOutText: {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
-  },
-  signInButtonText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.surface,
-  },
 
   // Settings sections
   section: {
     marginBottom: theme.spacing.xl,
-  },
-  sectionTitle: {
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.md,
-    textTransform: 'none',
-    letterSpacing: 0.5,
   },
   sectionCard: {
     padding: 0,
@@ -564,22 +510,8 @@ const styles = StyleSheet.create({
   settingContent: {
     flex: 1,
   },
-  settingTitle: {
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-  },
-  settingSubtitle: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.textSecondary,
-  },
   settingArrow: {
     marginLeft: theme.spacing.md,
-  },
-  settingArrowText: {
-    fontSize: 20,
-    color: theme.colors.textLight,
   },
   settingDivider: {
     height: 1,

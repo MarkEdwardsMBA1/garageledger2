@@ -187,14 +187,14 @@ const ProgramsScreen: React.FC = () => {
         >
           {/* Program Type */}
           <View style={styles.statRow}>
-            <Typography variant="caption" style={styles.statLabel}>
+            <Typography variant="bodySmall" style={styles.statLabel}>
               Program Type:{' '}
             </Typography>
             <View style={[
               styles.programTypeBadge,
               programTypeInfo.isAdvanced && styles.programTypeBadgeAdvanced
             ]}>
-              <Typography variant="caption" style={[
+              <Typography variant="overline" style={[
                 styles.programTypeText,
                 programTypeInfo.isAdvanced && styles.programTypeTextAdvanced
               ]}>
@@ -207,12 +207,12 @@ const ProgramsScreen: React.FC = () => {
           {assignedVehicles.length > 0 && (
             <View style={[styles.statRow, { flexDirection: 'column', alignItems: 'flex-start' }]}>
               <View style={styles.vehiclesRow}>
-                <Typography variant="caption" style={styles.statLabel}>
+                <Typography variant="bodySmall" style={styles.statLabel}>
                   Vehicles:{' '}
                 </Typography>
                 <View style={styles.vehiclesList}>
                   {assignedVehicles.map((vehicleName, index) => (
-                    <Typography key={index} variant="caption" style={styles.vehicleListItem}>
+                    <Typography key={index} variant="bodySmall" style={styles.vehicleListItem}>
                       {vehicleName}
                     </Typography>
                   ))}
@@ -223,14 +223,14 @@ const ProgramsScreen: React.FC = () => {
 
           {/* Service Reminders Count */}
           <View style={[styles.statRow, { flexDirection: 'row', alignItems: 'center' }]}>
-            <Typography variant="caption" style={styles.statLabel}>
+            <Typography variant="bodySmall" style={styles.statLabel}>
               Service reminders: {serviceRemindersCount}
             </Typography>
           </View>
           
           {/* Last Updated Date */}
           <View style={[styles.statRow, { flexDirection: 'row', alignItems: 'center' }]}>
-            <Typography variant="caption" style={styles.statLabel}>
+            <Typography variant="bodySmall" style={styles.statLabel}>
               Date last updated: {formatDate(program.updatedAt)}
             </Typography>
           </View>
@@ -250,34 +250,34 @@ const ProgramsScreen: React.FC = () => {
       >
         <View style={styles.overviewStats}>
           <View style={styles.overviewStatItem}>
-            <Typography variant="title" style={styles.overviewStatNumber}>
+            <Typography variant="display" style={styles.overviewStatNumber}>
               {stats.totalPrograms}
             </Typography>
-            <Typography variant="caption" style={styles.overviewStatLabel}>
+            <Typography variant="bodySmall" style={styles.overviewStatLabel}>
               {stats.totalPrograms === 1 ? 'Program' : 'Programs'}
             </Typography>
           </View>
           
           <View style={styles.overviewStatItem}>
-            <Typography variant="title" style={[styles.overviewStatNumber, { color: theme.colors.success }]}>
+            <Typography variant="display" style={[styles.overviewStatNumber, { color: theme.colors.success }]}>
               {stats.vehiclesWithPrograms}
             </Typography>
-            <Typography variant="caption" style={styles.overviewStatLabel}>
+            <Typography variant="bodySmall" style={styles.overviewStatLabel}>
               {stats.vehiclesWithPrograms === 1 ? 'Vehicle' : 'Vehicles'} with Programs
             </Typography>
           </View>
           
           <View style={styles.overviewStatItem}>
-            <Typography 
-              variant="title" 
+            <Typography
+              variant="display"
               style={[
-                styles.overviewStatNumber, 
+                styles.overviewStatNumber,
                 { color: stats.vehiclesWithoutPrograms === 0 ? theme.colors.success : '#f59e0b' } // Racing Green if 0, yellow if > 0
               ]}
             >
               {stats.vehiclesWithoutPrograms}
             </Typography>
-            <Typography variant="caption" style={styles.overviewStatLabel}>
+            <Typography variant="bodySmall" style={styles.overviewStatLabel}>
               {stats.vehiclesWithoutPrograms === 1 ? 'Vehicle' : 'Vehicles'} without Programs
             </Typography>
           </View>
@@ -414,13 +414,10 @@ const styles = StyleSheet.create({
   overviewStatNumber: {
     color: theme.colors.text,
     marginBottom: theme.spacing.xs,
-    fontSize: 28,
-    fontWeight: theme.typography.fontWeight.bold,
   },
   overviewStatLabel: {
     color: theme.colors.textSecondary,
     textAlign: 'center',
-    fontSize: theme.typography.fontSize.sm,
   },
 
   // Search Section
@@ -475,7 +472,6 @@ const styles = StyleSheet.create({
   vehicleListItem: {
     color: theme.colors.textSecondary,
     marginBottom: theme.spacing.xs / 2,
-    fontSize: theme.typography.fontSize.sm, // Match caption variant size
   },
   
   statRow: {
@@ -485,7 +481,6 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     color: theme.colors.textSecondary,
-    fontSize: theme.typography.fontSize.sm,
   },
   
   // Program Type Badge Styles
@@ -504,10 +499,6 @@ const styles = StyleSheet.create({
   },
   programTypeText: {
     color: theme.colors.success,
-    fontWeight: theme.typography.fontWeight.semibold,
-    fontSize: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   programTypeTextAdvanced: {
     color: theme.colors.primary,
@@ -562,10 +553,8 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xl,
   },
   emptyStateText: {
-    fontSize: theme.typography.fontSize.base,
     color: theme.colors.text,
     textAlign: 'center',
-    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.base,
   },
   emptyStateCTAButton: {
     width: '100%',

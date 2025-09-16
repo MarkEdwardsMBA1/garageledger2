@@ -96,7 +96,7 @@ const LogSummaryCard: React.FC<LogSummaryCardProps> = ({
               activeOpacity={0.7}
             >
               {/* Service Type - Main title */}
-              <Typography variant="body" style={styles.serviceTypeText}>
+              <Typography variant="subheading" style={styles.serviceTypeText}>
                 {serviceType}
               </Typography>
               
@@ -116,7 +116,7 @@ const LogSummaryCard: React.FC<LogSummaryCardProps> = ({
                     <Typography variant="bodySmall" style={styles.logDetailSeparator}>
                       •
                     </Typography>
-                    <Typography variant="bodySmall" style={styles.costText}>
+                    <Typography variant="label" style={styles.costText}>
                       ${log.totalCost.toFixed(2)}
                     </Typography>
                   </>
@@ -136,7 +136,7 @@ const LogSummaryCard: React.FC<LogSummaryCardProps> = ({
           <View style={styles.actionsContainer}>
             {showViewAll && onViewAll && (
               <TouchableOpacity onPress={onViewAll} style={styles.actionButton}>
-                <Typography variant="bodySmall" style={styles.actionText}>
+                <Typography variant="button" style={styles.actionText}>
                   View All{totalCount ? ` (${totalCount})` : ''}
                 </Typography>
               </TouchableOpacity>
@@ -144,7 +144,7 @@ const LogSummaryCard: React.FC<LogSummaryCardProps> = ({
             
             {showLoadMore && onLoadMore && (
               <TouchableOpacity onPress={onLoadMore} style={styles.actionButton}>
-                <Typography variant="bodySmall" style={styles.actionText}>
+                <Typography variant="button" style={styles.actionText}>
                   Load More
                 </Typography>
               </TouchableOpacity>
@@ -186,7 +186,6 @@ const styles = StyleSheet.create({
   
   // Text Styles
   serviceTypeText: {
-    fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text,
   },
   
@@ -205,13 +204,11 @@ const styles = StyleSheet.create({
   },
   costText: {
     color: theme.colors.textSecondary,
-    fontWeight: theme.typography.fontWeight.medium,
   },
   
   // Services Text
   servicesText: {
     color: theme.colors.textSecondary,
-    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.sm,
   },
   
   // Actions Container
@@ -228,7 +225,6 @@ const styles = StyleSheet.create({
   },
   actionText: {
     color: theme.colors.primary,
-    fontWeight: theme.typography.fontWeight.medium,
   },
 });
 

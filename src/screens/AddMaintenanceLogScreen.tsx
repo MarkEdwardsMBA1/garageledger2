@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   Alert,
@@ -127,7 +126,7 @@ const AddMaintenanceLogScreen: React.FC = () => {
           style={{ flexDirection: 'row', alignItems: 'center', paddingLeft: 10 }}
         >
           <Ionicons name="chevron-back" size={24} color={theme.colors.surface} />
-          <Text style={{ color: theme.colors.surface, fontSize: 17, marginLeft: 5 }}>Back</Text>
+          <Typography variant="body" style={{ color: theme.colors.surface, marginLeft: 5 }}>Back</Typography>
         </TouchableOpacity>
       ),
       headerBackTitle: 'Back',
@@ -1011,7 +1010,7 @@ const AddMaintenanceLogScreen: React.FC = () => {
           title={t('common.cancel', 'Cancel')}
           variant="outline"
           onPress={() => navigation.goBack()}
-          style={styles.fullWidthButton}
+          fullWidth
           disabled={loading}
         />
       </View>
@@ -1072,8 +1071,7 @@ const styles = StyleSheet.create({
   },
   vehicleContextVin: {
     color: theme.colors.textSecondary,
-    fontSize: theme.typography.fontSize.sm,
-    fontFamily: 'monospace',
+    fontFamily: 'monospace', // Keep monospace for VIN display
   },
   dateSelector: {
     marginVertical: theme.spacing.sm,
@@ -1085,7 +1083,6 @@ const styles = StyleSheet.create({
   },
   dateLabel: {
     color: theme.colors.text,
-    fontWeight: theme.typography.fontWeight.medium,
     marginBottom: theme.spacing.xs,
   },
   dateValue: {
@@ -1138,11 +1135,9 @@ const styles = StyleSheet.create({
   },
   serviceTypeTextSelected: {
     color: theme.colors.primary,
-    fontWeight: theme.typography.fontWeight.semibold,
   },
   serviceTypeDescription: {
     color: theme.colors.textSecondary,
-    fontSize: theme.typography.fontSize.sm,
   },
   serviceTypeDescriptionSelected: {
     color: theme.colors.primary,
@@ -1180,12 +1175,9 @@ const styles = StyleSheet.create({
   },
   partFluidTitle: {
     color: theme.colors.text,
-    fontWeight: theme.typography.fontWeight.semibold,
   },
   removeButton: {
     color: theme.colors.error,
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
     padding: theme.spacing.sm,
   },
   partFluidRow: {

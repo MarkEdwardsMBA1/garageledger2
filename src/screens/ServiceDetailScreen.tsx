@@ -88,7 +88,7 @@ const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
             <Typography variant="body" style={styles.infoLabel}>
               Date:
             </Typography>
-            <Typography variant="body" style={styles.infoValue}>
+            <Typography variant="body" style={[styles.infoValue, { fontWeight: 'normal' }]}>
               {serviceLog.date.toLocaleDateString()}
             </Typography>
           </View>
@@ -97,9 +97,9 @@ const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
             <Typography variant="body" style={styles.infoLabel}>
               Mileage:
             </Typography>
-            <Typography variant="body" style={styles.infoValue}>
-              {serviceLog.mileage > 0 
-                ? `${serviceLog.mileage.toLocaleString()} miles` 
+            <Typography variant="body" style={[styles.infoValue, { fontWeight: 'normal' }]}>
+              {serviceLog.mileage > 0
+                ? `${serviceLog.mileage.toLocaleString()} miles`
                 : 'Not recorded'}
             </Typography>
           </View>
@@ -108,7 +108,7 @@ const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
             <Typography variant="body" style={styles.infoLabel}>
               Service Type:
             </Typography>
-            <Typography variant="body" style={styles.infoValue}>
+            <Typography variant="body" style={[styles.infoValue, { fontWeight: 'normal' }]}>
               {serviceLog.serviceType === 'shop' ? 'Shop Service' : 'DIY Service'}
             </Typography>
           </View>
@@ -118,7 +118,7 @@ const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
               <Typography variant="body" style={styles.infoLabel}>
                 Total Cost:
               </Typography>
-              <Typography variant="body" style={[styles.infoValue, styles.costValue]}>
+              <Typography variant="subheading" style={[styles.infoValue, styles.costValue]}>
                 ${serviceLog.totalCost.toFixed(2)}
               </Typography>
             </View>
@@ -144,11 +144,11 @@ const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
           {serviceLog.services.map((service: SelectedService, index: number) => (
             <View key={`${service.serviceId}-${index}`} style={styles.serviceItem}>
               <View style={styles.serviceHeader}>
-                <Typography variant="body" style={styles.serviceName}>
+                <Typography variant="body" style={[styles.serviceName, { fontWeight: 'normal' }]}>
                   {service.serviceName || 'Unknown Service'}
                 </Typography>
                 {service.cost && service.cost > 0 && (
-                  <Typography variant="body" style={styles.serviceCost}>
+                  <Typography variant="subheading" style={styles.serviceCost}>
                     ${Number(service.cost).toFixed(2)}
                   </Typography>
                 )}
@@ -180,7 +180,7 @@ const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
               <Typography variant="body" style={styles.infoLabel}>
                 Shop Name:
               </Typography>
-              <Typography variant="body" style={styles.infoValue}>
+              <Typography variant="body" style={[styles.infoValue, { fontWeight: 'normal' }]}>
                 {serviceLog.shopName}
               </Typography>
             </View>
@@ -258,7 +258,7 @@ const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
         <View style={styles.tagsContainer}>
           {serviceLog.tags.map((tag: string, index: number) => (
             <View key={`tag-${index}`} style={styles.tag}>
-              <Typography variant="caption" style={styles.tagText}>
+              <Typography variant="caption" style={[styles.tagText, { fontWeight: 'normal' }]}>
                 {tag}
               </Typography>
             </View>
@@ -367,13 +367,11 @@ const styles = StyleSheet.create({
   },
   infoValue: {
     color: theme.colors.text,
-    fontWeight: theme.typography.fontWeight.medium,
     flex: 2,
     textAlign: 'right',
   },
   costValue: {
     color: theme.colors.primary,
-    fontWeight: theme.typography.fontWeight.semibold,
   },
 
   // Services
@@ -396,11 +394,9 @@ const styles = StyleSheet.create({
   serviceName: {
     flex: 1,
     color: theme.colors.text,
-    fontWeight: theme.typography.fontWeight.medium,
   },
   serviceCost: {
     color: theme.colors.text,
-    fontWeight: theme.typography.fontWeight.semibold,
   },
   serviceCategory: {
     color: theme.colors.textSecondary,
@@ -467,7 +463,6 @@ const styles = StyleSheet.create({
   },
   tagText: {
     color: theme.colors.surface,
-    fontWeight: theme.typography.fontWeight.medium,
   },
 
   // Error

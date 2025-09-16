@@ -172,12 +172,9 @@ const styles = StyleSheet.create({
   },
   checkmark: {
     color: theme.colors.background,
-    fontSize: 16,
-    fontWeight: theme.typography.fontWeight.bold,
   },
   stepNumber: {
-    fontSize: 14,
-    fontWeight: theme.typography.fontWeight.medium,
+    color: theme.colors.text,
   },
   stepNumberUpcoming: {
     color: theme.colors.textSecondary,
@@ -194,9 +191,6 @@ const styles = StyleSheet.create({
   },
   stepLabel: {
     textAlign: 'center',
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: theme.typography.fontWeight.medium,
   },
   stepLabelUpcoming: {
     color: theme.colors.textSecondary,
@@ -209,8 +203,6 @@ const styles = StyleSheet.create({
   },
   stepSubtitle: {
     textAlign: 'center',
-    fontSize: 10,
-    lineHeight: 12,
     marginTop: 2,
   },
   stepSubtitleUpcoming: {

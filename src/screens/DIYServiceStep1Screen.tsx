@@ -17,6 +17,7 @@ import { Typography } from '../components/common/Typography';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { SelectedService, AdvancedServiceConfiguration } from '../types';
+import { ServiceFormData } from '../components/forms/ServiceFormRouter';
 
 interface DIYServiceStep1Data {
   date: Date;
@@ -33,6 +34,7 @@ interface DIYServiceStep1Params {
   data?: DIYServiceStep1SerializableData;
   selectedServices?: SelectedService[];
   serviceConfigs?: { [key: string]: AdvancedServiceConfiguration };
+  serviceFormData?: Record<string, ServiceFormData>;
   notes?: string;
 }
 
@@ -122,6 +124,7 @@ export const DIYServiceStep1Screen: React.FC = () => {
       step1Data: serializableData,
       selectedServices: params.selectedServices, // Pass along any existing selected services
       serviceConfigs: params.serviceConfigs, // Pass along service configs
+      serviceFormData: params.serviceFormData, // Pass along parts/fluids data
       notes: params.notes, // Pass along notes
     });
   };
@@ -130,9 +133,9 @@ export const DIYServiceStep1Screen: React.FC = () => {
     <View style={styles.container}>
       <ScrollView style={styles.content}>
         <View style={styles.formSection}>
-          <Text style={styles.fieldLabel}>
+          <Typography variant="label" style={{ marginBottom: theme.spacing.xs }}>
             Service Date
-          </Text>
+          </Typography>
           <TouchableOpacity
             style={styles.dateSelector}
             onPress={() => setShowDatePicker(true)}
@@ -197,14 +200,6 @@ const styles = StyleSheet.create({
   },
   formSection: {
     marginBottom: theme.spacing.lg,
-  },
-  fieldLabel: {
-    marginBottom: theme.spacing.xs,
-    fontWeight: theme.typography.fontWeight.medium,
-    fontFamily: theme.typography.fontFamily.medium,
-    color: theme.colors.text,
-    letterSpacing: theme.typography.letterSpacing.wide,
-    fontSize: theme.typography.fontSize.base, // Match Input component label size
   },
   dateSelector: {
     borderWidth: 1,

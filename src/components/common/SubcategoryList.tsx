@@ -8,6 +8,7 @@ import { Typography } from './Typography';
 import { CheckIcon } from '../icons';
 import { AddCustomServiceModal } from './AddCustomServiceModal';
 import { getSubcategoryKeys, getSubcategoryName, getComponents, getServiceConfigType } from '../../types/MaintenanceCategories';
+import { serviceNeedsForm } from '../../domain/ServiceFormMapping';
 import { AdvancedServiceConfiguration } from '../../types';
 
 interface SubcategoryListProps {
@@ -18,6 +19,7 @@ interface SubcategoryListProps {
   onSaveServiceConfig?: (config: AdvancedServiceConfiguration) => void;
   onRemoveServiceConfig?: (serviceKey: string) => void;
   onConfigureService?: (serviceKey: string, serviceName: string, categoryName: string, wasJustSelected?: boolean) => void;
+  serviceFormData?: Record<string, any>; // Parts/fluids form data
   testID?: string;
 }
 
@@ -49,6 +51,7 @@ export const SubcategoryList: React.FC<SubcategoryListProps> = ({
   onSaveServiceConfig,
   onRemoveServiceConfig,
   onConfigureService,
+  serviceFormData = {},
   testID = 'subcategory-list',
 }) => {
   // State for custom service modal
@@ -107,17 +110,20 @@ export const SubcategoryList: React.FC<SubcategoryListProps> = ({
   const services: ServiceItem[] = [...customServices, ...regularServices];
 
   const handleServiceToggle = (serviceKey: string, serviceName: string) => {
+    console.log('[DEBUG] Service toggle clicked:', { serviceKey, serviceName, wasSelected: selectedServices.has(serviceKey) });
+    
     // Special handling for the base custom service selector
     if (serviceKey === 'custom-service.custom') {
       const wasSelected = selectedServices.has(serviceKey);
+      console.log('[DEBUG] Custom service selector:', { wasSelected });
       
       if (wasSelected) {
-        // If already selected, open config to reconfigure
-        if (onConfigureService) {
-          onConfigureService(serviceKey, serviceName, categoryKey, false);
-        }
+        // If already selected, deselect it (simple toggle behavior)
+        console.log('[DEBUG] Deselecting custom service');
+        onToggleService(serviceKey);
       } else {
         // If not selected, show custom service modal
+        console.log('[DEBUG] Opening custom service modal');
         setShowCustomServiceModal(true);
       }
       return;
@@ -125,30 +131,20 @@ export const SubcategoryList: React.FC<SubcategoryListProps> = ({
 
     // Created custom services and standard services both use regular handling
     const wasSelected = selectedServices.has(serviceKey);
+    console.log('[DEBUG] Standard service toggle:', { serviceKey, wasSelected });
     
     if (wasSelected) {
-      // Check if this service needs configuration
-      const [categoryKeyPart, subcategoryKey] = serviceKey.split('.');
-      const serviceConfigType = getServiceConfigType(categoryKeyPart, subcategoryKey);
-      
-      if (serviceConfigType === 'labor-only') {
-        // For labor-only services, toggle (deselect) when clicked again
-        onToggleService(serviceKey);
-      } else if (onConfigureService) {
-        // For other services, open config to reconfigure
-        onConfigureService(serviceKey, serviceName, categoryKey, false);
-      }
+      // Always allow deselection by clicking selected service
+      console.log('[DEBUG] Service was selected, deselecting it');
+      onToggleService(serviceKey);
     } else {
       // If not selected, select it
+      console.log('[DEBUG] Service was not selected, selecting it');
       onToggleService(serviceKey);
       
-      // Check if this service needs configuration
-      const [categoryKeyPart, subcategoryKey] = serviceKey.split('.');
-      const serviceConfigType = getServiceConfigType(categoryKeyPart, subcategoryKey);
-      
-      // Only open configuration for services that need parts, fluids, or detailed setup
-      // Skip configuration for labor-only services like tire rotation
-      if (onConfigureService && serviceConfigType !== 'labor-only') {
+      // Check if this service needs parts/fluids form (consistent with MaintenanceCategoryPicker)
+      if (onConfigureService && serviceNeedsForm(serviceKey)) {
+        console.log('[DEBUG] Opening configuration for newly selected service:', serviceKey);
         onConfigureService(serviceKey, serviceName, categoryKey, true);
       }
     }
@@ -192,6 +188,7 @@ export const SubcategoryList: React.FC<SubcategoryListProps> = ({
       {services.map((service, index) => {
         const isSelected = selectedServices.has(service.key);
         const isConfigured = serviceConfigs.has(service.key);
+        const hasFormData = serviceFormData && serviceFormData[service.key];
         const isCustomServiceSelector = service.key === 'custom-service.custom';
         const isCreatedCustomService = service.key.startsWith('custom-service.') && service.key !== 'custom-service.custom';
         
@@ -221,8 +218,8 @@ export const SubcategoryList: React.FC<SubcategoryListProps> = ({
 
               {/* Service Details */}
               <View style={styles.serviceDetails}>
-                <Typography 
-                  variant="subheading" 
+                <Typography
+                  variant="body"
                   style={[styles.serviceName, isSelected && styles.serviceNameSelected]}
                 >
                   {service.name}
@@ -230,15 +227,22 @@ export const SubcategoryList: React.FC<SubcategoryListProps> = ({
                 
                 {/* Show "Custom" label for created custom services */}
                 {isCreatedCustomService && (
-                  <Typography variant="caption" style={styles.customServiceLabel}>
+                  <Typography variant="label" style={styles.customServiceLabel}>
                     Custom
                   </Typography>
                 )}
 
                 {/* Configuration Status */}
                 {isConfigured && (
-                  <Typography variant="caption" style={styles.configuredText}>
+                  <Typography variant="label" style={styles.configuredText}>
                     ✓ Configured
+                  </Typography>
+                )}
+                
+                {/* Form Data Status */}
+                {hasFormData && (
+                  <Typography variant="label" style={styles.formCompleteText}>
+                    ✓ Details Added
                   </Typography>
                 )}
               </View>
@@ -324,18 +328,20 @@ const styles = StyleSheet.create({
   serviceName: {
     color: theme.colors.text,
     marginBottom: theme.spacing.xs,
-    fontWeight: theme.typography.fontWeight.medium,
   },
 
   serviceNameSelected: {
     color: theme.colors.primary,
-    fontWeight: theme.typography.fontWeight.semibold,
   },
 
 
   configuredText: {
     color: theme.colors.success,
-    fontWeight: theme.typography.fontWeight.medium,
+    letterSpacing: theme.typography.letterSpacing.wide,
+  },
+
+  formCompleteText: {
+    color: theme.colors.primary,
     letterSpacing: theme.typography.letterSpacing.wide,
   },
 
@@ -345,8 +351,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.xs,
     paddingVertical: 2,
     borderRadius: theme.borderRadius.sm,
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.medium,
     alignSelf: 'flex-start',
     marginBottom: theme.spacing.xs,
   },

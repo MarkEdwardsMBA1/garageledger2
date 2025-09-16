@@ -2,7 +2,6 @@
 import React from 'react';
 import {
   View,
-  Text,
   ActivityIndicator,
   StyleSheet,
   ViewStyle,
@@ -10,6 +9,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { theme } from '../../utils/theme';
+import { Typography } from './Typography';
 
 export interface LoadingProps {
   /** Loading message */
@@ -74,9 +74,9 @@ export const Loading: React.FC<LoadingProps> = ({
         style={styles.indicator}
       />
       {showMessage && (
-        <Text style={messageTextStyle}>
+        <Typography variant="body" style={messageTextStyle}>
           {defaultMessage}
-        </Text>
+        </Typography>
       )}
     </>
   );
@@ -173,7 +173,6 @@ const styles = StyleSheet.create({
 
   // Text styles
   message: {
-    fontSize: theme.typography.fontSize.base,
     color: theme.colors.textSecondary,
     textAlign: 'center',
     marginTop: theme.spacing.sm,

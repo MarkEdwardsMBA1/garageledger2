@@ -1,6 +1,6 @@
-// DIY Service Step 2: Service Selection Component with Parts and Fluids
-// Enhanced with dynamic parts and fluids data entry
-import React, { useState, useMemo } from 'react';
+// DIY Service Step 2: Service Selection Component
+// Clean implementation for service selection and notes
+import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Typography } from '../../common/Typography';
@@ -8,14 +8,6 @@ import { Card } from '../../common/Card';
 import { Input } from '../../common/Input';
 import { Button } from '../../common/Button';
 import { MaintenanceCategoryPicker } from '../../common/MaintenanceCategoryPicker';
-import { ServicePartsAndFluids, CostSummary } from '../../parts';
-import { 
-  ServiceEntryData,
-  DIYStep2Data,
-  EntryFactory,
-  CostCalculator 
-} from '../../../domain/PartsAndFluids';
-import { ServiceRequirementsEngine } from '../../../domain/ServiceRequirements';
 import { theme } from '../../../utils/theme';
 import { WizardStepProps, DIYServicesData } from '../../../types/wizard';
 import { SelectedService } from '../../../types';
@@ -23,12 +15,8 @@ import { SelectedService } from '../../../types';
 export const DIYServicesStep: React.FC<WizardStepProps<DIYServicesData>> = ({
   data = {
     selectedServices: [],
-    serviceConfigs: {},
     notes: '',
-    servicesWithPartsAndFluids: {},
-    totalPartsCart: 0,
-    totalFluidsCart: 0,
-    grandTotal: 0,
+    serviceFormData: {},
   },
   onDataChange,
 }) => {
@@ -41,8 +29,13 @@ export const DIYServicesStep: React.FC<WizardStepProps<DIYServicesData>> = ({
     onDataChange({ [field]: value });
   };
 
-  const handleServiceSelection = (services: SelectedService[]) => {
+  const handleServiceSelection = (services: SelectedService[], configs?: any, serviceFormData?: any) => {
+    console.log('[DEBUG] DIYServicesStep handleServiceSelection:', { services, serviceFormData });
+    
     updateField('selectedServices', services);
+    if (serviceFormData) {
+      updateField('serviceFormData', serviceFormData);
+    }
     setShowCategoryPicker(false);
   };
 
@@ -55,80 +48,6 @@ export const DIYServicesStep: React.FC<WizardStepProps<DIYServicesData>> = ({
     setShowCategoryPicker(true);
   };
 
-  // Calculate DIY Step 2 data for cost summary
-  const diyStep2Data: DIYStep2Data = useMemo(() => {
-    const services = Object.values(data.servicesWithPartsAndFluids || {});
-    const totals = CostCalculator.calculateGrandTotal(services);
-    
-    return {
-      services,
-      totalPartsCart: totals.totalPartsCart,
-      totalFluidsCart: totals.totalFluidsCart,
-      grandTotal: totals.grandTotal,
-    };
-  }, [data.servicesWithPartsAndFluids]);
-
-  // Initialize service data when services are selected
-  const initializeServiceData = (services: SelectedService[]) => {
-    const updatedServicesData = { ...(data.servicesWithPartsAndFluids || {}) };
-    
-    // Add new services
-    services.forEach(service => {
-      if (!updatedServicesData[service.serviceId]) {
-        // Create initial service entry
-        updatedServicesData[service.serviceId] = {
-          serviceId: service.serviceId,
-          category: service.category || 'Unknown',
-          serviceName: service.serviceName,
-          partsData: undefined,
-          fluidsData: undefined,
-          partsSubtotal: 0,
-          fluidsSubtotal: 0,
-          serviceTotalCost: 0,
-        };
-      }
-    });
-
-    // Remove services that are no longer selected
-    const selectedServiceIds = new Set(services.map(s => s.serviceId));
-    Object.keys(updatedServicesData).forEach(serviceId => {
-      if (!selectedServiceIds.has(serviceId)) {
-        delete updatedServicesData[serviceId];
-      }
-    });
-
-    return updatedServicesData;
-  };
-
-  // Handle service selection with parts/fluids initialization
-  const handleServiceSelectionEnhanced = (services: SelectedService[]) => {
-    const updatedServicesData = initializeServiceData(services);
-    const servicesList = Object.values(updatedServicesData);
-    const totals = CostCalculator.calculateGrandTotal(servicesList);
-    
-    updateField('selectedServices', services);
-    updateField('servicesWithPartsAndFluids', updatedServicesData);
-    updateField('totalPartsCart', totals.totalPartsCart);
-    updateField('totalFluidsCart', totals.totalFluidsCart);
-    updateField('grandTotal', totals.grandTotal);
-    setShowCategoryPicker(false);
-  };
-
-  // Handle service parts and fluids data changes
-  const handleServiceDataChange = (serviceId: string, updatedServiceData: ServiceEntryData) => {
-    const updatedServicesData = {
-      ...(data.servicesWithPartsAndFluids || {}),
-      [serviceId]: updatedServiceData,
-    };
-    
-    const servicesList = Object.values(updatedServicesData);
-    const totals = CostCalculator.calculateGrandTotal(servicesList);
-    
-    updateField('servicesWithPartsAndFluids', updatedServicesData);
-    updateField('totalPartsCart', totals.totalPartsCart);
-    updateField('totalFluidsCart', totals.totalFluidsCart);
-    updateField('grandTotal', totals.grandTotal);
-  };
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -137,9 +56,11 @@ export const DIYServicesStep: React.FC<WizardStepProps<DIYServicesData>> = ({
           <MaintenanceCategoryPicker
             visible={true}
             selectedServices={data.selectedServices}
-            onSelectionComplete={handleServiceSelectionEnhanced}
+            onSelectionComplete={handleServiceSelection}
             onCancel={handleCancelSelection}
             serviceType="diy"
+            enableConfiguration={true}
+            initialServiceFormData={data.serviceFormData}
           />
         </View>
       ) : (
@@ -151,16 +72,25 @@ export const DIYServicesStep: React.FC<WizardStepProps<DIYServicesData>> = ({
               variant="elevated"
             >
               <View style={styles.servicesList}>
-                {data.selectedServices.map((service, index) => (
-                  <View key={service.serviceId} style={styles.serviceItem}>
-                    <Typography variant="body" style={styles.serviceName}>
-                      {service.serviceName}
-                    </Typography>
-                    <Typography variant="caption" style={styles.serviceCategory}>
-                      {service.category}
-                    </Typography>
-                  </View>
-                ))}
+                {data.selectedServices.map((service, index) => {
+                  const hasFormData = data.serviceFormData && data.serviceFormData[service.serviceId];
+                  
+                  return (
+                    <View key={service.serviceId} style={styles.serviceItem}>
+                      <Typography variant="body" style={styles.serviceName}>
+                        {service.serviceName}
+                      </Typography>
+                      <Typography variant="caption" style={styles.serviceCategory}>
+                        {service.categoryKey}
+                      </Typography>
+                      {hasFormData && (
+                        <Typography variant="caption" style={styles.serviceStatus}>
+                          ✓ Details Added
+                        </Typography>
+                      )}
+                    </View>
+                  );
+                })}
               </View>
 
               {data.selectedServices.length === 0 ? (
@@ -181,40 +111,6 @@ export const DIYServicesStep: React.FC<WizardStepProps<DIYServicesData>> = ({
               )}
             </Card>
           </View>
-
-          {/* Parts and Fluids Forms for Each Service */}
-          {data.selectedServices.length > 0 && (
-            <View style={styles.partsAndFluidsContainer}>
-              {data.selectedServices.map((service) => {
-                const serviceData = data.servicesWithPartsAndFluids?.[service.serviceId];
-                if (!serviceData) return null;
-
-                return (
-                  <View key={service.serviceId} style={styles.serviceFormContainer}>
-                    <ServicePartsAndFluids
-                      category={service.category || 'Unknown'}
-                      serviceName={service.serviceName}
-                      data={serviceData}
-                      onChange={(updatedData) => 
-                        handleServiceDataChange(service.serviceId, updatedData)
-                      }
-                    />
-                  </View>
-                );
-              })}
-            </View>
-          )}
-
-          {/* Cost Summary */}
-          {data.selectedServices.length > 0 && diyStep2Data.services.length > 0 && (
-            <View style={styles.costSummaryContainer}>
-              <CostSummary
-                data={diyStep2Data}
-                showServiceBreakdown={true}
-                compact={false}
-              />
-            </View>
-          )}
 
           {/* Service Notes */}
           <View style={styles.notesSection}>
@@ -266,17 +162,23 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
     paddingBottom: theme.spacing.xs,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border.light,
+    borderBottomColor: theme.colors.borderLight,
   },
   serviceName: {
-    color: theme.colors.text.primary,
-    fontSize: theme.typography.fontSize.md,
+    color: theme.colors.text,
+    fontSize: theme.typography.fontSize.lg,
     fontWeight: theme.typography.fontWeight.medium,
     marginBottom: 2,
   },
   serviceCategory: {
-    color: theme.colors.text.secondary,
+    color: theme.colors.textSecondary,
     fontSize: theme.typography.fontSize.sm,
+  },
+  serviceStatus: {
+    color: theme.colors.primary,
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.medium,
+    marginTop: theme.spacing.xs,
   },
   // Empty State Styles
   emptyStateContainer: {
@@ -284,7 +186,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyStateText: {
-    color: theme.colors.text.secondary,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
   },
   editButtonContainer: {
@@ -292,16 +194,7 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.sm,
     paddingTop: theme.spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
-  },
-  partsAndFluidsContainer: {
-    marginBottom: theme.spacing.lg,
-  },
-  serviceFormContainer: {
-    marginBottom: theme.spacing.xl,
-  },
-  costSummaryContainer: {
-    marginBottom: theme.spacing.lg,
+    borderTopColor: theme.colors.borderLight,
   },
   notesSection: {
     marginBottom: theme.spacing.lg,

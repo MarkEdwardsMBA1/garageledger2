@@ -9,6 +9,7 @@ import { CategoryDisplayData } from '../../utils/CategoryIconMapping';
 import { ChevronDownIcon, ChevronRightIcon } from '../icons';
 import { SubcategoryList } from './SubcategoryList';
 import { AdvancedServiceConfiguration } from '../../types';
+import { ServiceFormData } from '../forms/ServiceFormRouter';
 
 interface CategoryCardProps {
   category: CategoryDisplayData;
@@ -21,6 +22,7 @@ interface CategoryCardProps {
   onSaveServiceConfig?: (config: AdvancedServiceConfiguration) => void;
   onRemoveServiceConfig?: (serviceKey: string) => void;
   onConfigureService?: (serviceKey: string, serviceName: string, categoryName: string, wasJustSelected?: boolean) => void;
+  serviceFormData?: Record<string, ServiceFormData>;
   showServices?: boolean;
   testID?: string;
 }
@@ -46,6 +48,7 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
   onSaveServiceConfig,
   onRemoveServiceConfig,
   onConfigureService,
+  serviceFormData,
   showServices = true,
   testID,
 }) => {
@@ -128,6 +131,7 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
           onSaveServiceConfig={onSaveServiceConfig}
           onRemoveServiceConfig={onRemoveServiceConfig}
           onConfigureService={onConfigureService}
+          serviceFormData={serviceFormData}
           testID={`${testID}-subcategories`}
         />
       )}
@@ -171,7 +175,6 @@ const styles = StyleSheet.create({
   },
 
   categoryName: {
-    fontWeight: theme.typography.fontWeight.semibold,
     marginBottom: theme.spacing.xs,
     letterSpacing: theme.typography.letterSpacing.wide,
   },

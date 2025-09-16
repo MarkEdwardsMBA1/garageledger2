@@ -320,11 +320,9 @@ const styles = StyleSheet.create({
   serviceValue: {
     color: theme.colors.text,
     flex: 1,
-    fontWeight: theme.typography.fontWeight.medium,
   },
   costValue: {
     color: theme.colors.primary,
-    fontSize: theme.typography.fontSize.lg,
   },
   servicesList: {
     flex: 1,
@@ -337,7 +335,6 @@ const styles = StyleSheet.create({
   },
   serviceCost: {
     color: theme.colors.primary,
-    fontWeight: theme.typography.fontWeight.medium,
   },
   buttonContainer: {
     flexDirection: 'row',

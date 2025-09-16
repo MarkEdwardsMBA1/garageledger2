@@ -10,6 +10,7 @@ import {
   TouchableOpacityProps,
 } from 'react-native';
 import { theme } from '../../utils/theme';
+import { Typography } from './Typography';
 
 export interface CardProps {
   /** Card content */
@@ -86,6 +87,39 @@ export const Card: React.FC<CardProps> = ({
   const isPressable = pressable || !!onPress;
   const isDisabled = disabled && isPressable;
 
+  const getTitleVariant = () => {
+    switch (size) {
+      case 'sm': return 'body' as const;
+      case 'md': return 'subheading' as const;
+      case 'lg': return 'heading' as const;
+      default: return 'subheading' as const;
+    }
+  };
+
+  const getSubtitleVariant = () => {
+    switch (size) {
+      case 'sm': return 'bodySmall' as const;
+      case 'md': return 'body' as const;
+      case 'lg': return 'subheading' as const;
+      default: return 'body' as const;
+    }
+  };
+
+  const getTitleStyle = () => {
+    return {
+      marginBottom: theme.spacing.xs,
+      color: isDisabled ? theme.colors.textLight : undefined,
+      ...titleStyle,
+    };
+  };
+
+  const getSubtitleStyle = () => {
+    return {
+      color: isDisabled ? theme.colors.textLight : theme.colors.textSecondary,
+      ...subtitleStyle,
+    };
+  };
+
   const cardStyle = [
     styles.base,
     styles[variant],
@@ -100,19 +134,6 @@ export const Card: React.FC<CardProps> = ({
     contentStyle,
   ];
 
-  const titleStyles = [
-    styles.title,
-    styles[`${size}Title`],
-    isDisabled && styles.disabledText,
-    titleStyle,
-  ];
-
-  const subtitleStyles = [
-    styles.subtitle,
-    styles[`${size}Subtitle`],
-    isDisabled && styles.disabledText,
-    subtitleStyle,
-  ];
 
   const renderHeader = () => {
     if (header) {
@@ -123,10 +144,10 @@ export const Card: React.FC<CardProps> = ({
       return (
         <View style={styles.headerContainer}>
           <View style={styles.titleContainer}>
-            {title && <Text style={titleStyles}>{title}</Text>}
+            {title && <Typography variant={getTitleVariant()} style={getTitleStyle()}>{title}</Typography>}
             {subtitle && (
               typeof subtitle === 'string' ? (
-                <Text style={subtitleStyles}>{subtitle}</Text>
+                <Typography variant={getSubtitleVariant()} style={getSubtitleStyle()}>{subtitle}</Typography>
               ) : (
                 <View style={styles.subtitleContainer}>{subtitle}</View>
               )
@@ -254,34 +275,9 @@ const styles = StyleSheet.create({
     borderTopColor: theme.colors.borderLight,
   },
 
-  // Text styles
-  title: {
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-  },
-  smTitle: {
-    fontSize: theme.typography.fontSize.base,
-  },
-  mdTitle: {
-    fontSize: theme.typography.fontSize.lg,
-  },
-  lgTitle: {
-    fontSize: theme.typography.fontSize.xl,
-  },
-
-  subtitle: {
-    color: theme.colors.textSecondary,
-  },
-  smSubtitle: {
-    fontSize: theme.typography.fontSize.sm,
-  },
-  mdSubtitle: {
-    fontSize: theme.typography.fontSize.base,
-  },
-  lgSubtitle: {
-    fontSize: theme.typography.fontSize.lg,
-  },
+  // Typography handled by Typography component variants
+  // Titles use body/subheading/heading variants based on card size
+  // Subtitles use bodySmall/body/subheading variants based on card size
 
   disabledText: {
     color: theme.colors.textLight,

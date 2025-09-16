@@ -2,7 +2,6 @@
 import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ViewStyle,
   TextStyle,
@@ -10,6 +9,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { theme } from '../../utils/theme';
 import { Button } from './Button';
+import { Typography } from './Typography';
 
 export interface ErrorStateProps {
   /** Error title */
@@ -130,21 +130,21 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
       {/* Icon */}
       <View style={styles.iconContainer}>
         {icon || (
-          <Text style={styles.emoji}>
+          <Typography variant="display" style={styles.emoji}>
             {defaultContent.emoji}
-          </Text>
+          </Typography>
         )}
       </View>
 
       {/* Title */}
-      <Text style={titleStyles}>
+      <Typography variant="heading" style={titleStyles}>
         {displayTitle}
-      </Text>
+      </Typography>
 
       {/* Message */}
-      <Text style={messageStyles}>
+      <Typography variant="body" style={messageStyles}>
         {displayMessage}
-      </Text>
+      </Typography>
 
       {/* Actions */}
       <View style={styles.actionsContainer}>
@@ -217,23 +217,18 @@ const styles = StyleSheet.create({
   },
 
   emoji: {
-    fontSize: 48,
     marginBottom: theme.spacing.md,
   },
 
   title: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text,
     textAlign: 'center',
     marginBottom: theme.spacing.md,
   },
 
   message: {
-    fontSize: theme.typography.fontSize.base,
     color: theme.colors.textSecondary,
     textAlign: 'center',
-    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.base,
     marginBottom: theme.spacing.xl,
     maxWidth: 300,
   },

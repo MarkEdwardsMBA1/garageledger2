@@ -14,6 +14,7 @@ import { Button } from '../components/common/Button';
 import { PhotoPicker } from '../components/common/PhotoPicker';
 import { LockIcon } from '../components/icons';
 import { SelectedService, AdvancedServiceConfiguration } from '../types';
+import { ServiceFormData } from '../components/forms/ServiceFormRouter';
 
 interface DIYServiceStep1SerializableData {
   date: string; // ISO string from navigation
@@ -25,6 +26,7 @@ interface DIYServiceStep3Params {
   step1Data: DIYServiceStep1SerializableData;
   selectedServices: SelectedService[];
   serviceConfigs?: { [key: string]: AdvancedServiceConfiguration };
+  serviceFormData?: Record<string, ServiceFormData>;
   photos?: string[];
   notes?: string;
 }
@@ -64,6 +66,7 @@ export const DIYServiceStep3Screen: React.FC = () => {
       step1Data: params.step1Data,
       selectedServices: params.selectedServices,
       serviceConfigs: params.serviceConfigs,
+      serviceFormData: params.serviceFormData, // Pass along parts/fluids data
       photos: photos,
       notes: params.notes,
     });
@@ -75,6 +78,7 @@ export const DIYServiceStep3Screen: React.FC = () => {
       step1Data: params.step1Data,
       selectedServices: params.selectedServices,
       serviceConfigs: params.serviceConfigs,
+      serviceFormData: params.serviceFormData, // Pass along parts/fluids data
       notes: params.notes,
     });
   };
@@ -245,7 +249,6 @@ const styles = StyleSheet.create({
   photoListTitle: {
     color: theme.colors.text,
     marginBottom: theme.spacing.md,
-    fontWeight: theme.typography.fontWeight.semibold,
   },
   photoList: {
     gap: theme.spacing.sm,

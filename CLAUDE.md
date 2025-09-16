@@ -241,15 +241,15 @@ GarageLedger features a sophisticated automotive-inspired design system that cre
 - **Electric Blue** `#0284c7` → Modern info states, technology features
 
 #### Typography Hierarchy
-Enhanced typography system with automotive precision:
-- **Display** (36px) - Hero/display text with tight letter spacing
-- **Title** (24px) - Page titles with premium weight
-- **Heading** (20px) - Section headings with proper hierarchy
-- **Subheading** (18px) - Sub-section organization
-- **Body/BodyLarge/BodySmall** (14-18px) - Optimized reading experience
-- **Caption/Label** (12-14px) - UI labels with wide letter spacing
-- **Button** (16px) - Optimized for interaction with wide spacing
-- **Overline** (12px) - Small caps with extensive letter spacing
+Enhanced typography system with automotive precision - **[Complete Reference: TYPOGRAPHY_GUIDELINES.md](docs/TYPOGRAPHY_GUIDELINES.md)**:
+- **Display** - Hero/display text for major branding elements
+- **Title** - Page titles and screen headers
+- **Heading** - Section headings with proper hierarchy
+- **Subheading** - Sub-section organization and form groups
+- **Body/BodyLarge/BodySmall** - Optimized reading experience for content
+- **Caption/Label** - UI labels and form field labels
+- **Button** - Interactive element text with proper emphasis
+- **Overline** - Small caps text for category labels and metadata
 
 #### Premium Shadows & Depth
 Oil Black shadow system for sophisticated visual hierarchy:

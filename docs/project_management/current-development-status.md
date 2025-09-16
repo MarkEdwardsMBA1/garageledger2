@@ -52,6 +52,8 @@ GarageLedger2 has evolved from MVP foundations to a **production-ready applicati
 - **🎯 NEW: Real-time Cost Calculations**: Professional receipt-style cost tracking
 - **🎯 NEW: Service-Driven Forms**: Context-aware form selection based on service requirements
 - ✨ **NEW: Enhanced Validation UX**: Fixed validation bypass bugs, consistent button states, proper error messaging across DIY/Shop wizards
+- 🎯 **NEW: Modal-from-Modal UX Flow**: Enhanced DIY service configuration with immediate parts/fluids entry after service selection
+- 🎨 **NEW: Engine Blue Header Consistency**: Unified modal styling across service picker and parts/fluids forms
 
 #### **Epic 4: Maintenance Programs** 📋
 - **Status**: ✅ **PRODUCTION READY** *(Enhanced January 18)*
@@ -79,7 +81,7 @@ GarageLedger2 has evolved from MVP foundations to a **production-ready applicati
 - **Step 4 Polish**: Reduced vertical spacing in DIY Service Summary for professional display
 - **Cross-Platform Consistency**: All improvements applied to both DIY and Shop service wizards
 
-### **🔥 CURRENT DEVELOPMENT - September 12, 2025**
+### **🔥 CURRENT DEVELOPMENT - September 15, 2025**
 
 #### **Advanced DIY Service Wizard - Parts & Fluids System** 🧰
 - **Status**: 🚀 **MAJOR BREAKTHROUGH** *(Complex domain logic successfully implemented)*
@@ -98,6 +100,12 @@ GarageLedger2 has evolved from MVP foundations to a **production-ready applicati
 - **Validation Integration**: Enhanced DIY Step 1 validation with real-time button states
 - **Error Resolution**: Fixed call stack errors and undefined property access
 - **Data Structure Enhancement**: Extended DIYServicesData with parts/fluids support
+
+**📋 Current Development (September 15, 2025):**
+- 🎯 **CalculationService Domain Layer**: Implement centralized calculation service following ValidationService architecture pattern
+- 🧮 **Cost Calculation Consolidation**: Move scattered UI calculations to domain layer for consistency and testability
+- ✅ **Modal-from-Modal UX Flow**: Enhanced DIY service configuration with immediate parts/fluids entry (COMPLETED)
+- 🎨 **Engine Blue Header Consistency**: Unified modal styling across service picker and parts/fluids forms (COMPLETED)
 
 **📋 Remaining Work:**
 - **DIY Steps 3 & 4**: Photos and Review step integration with parts/fluids data

@@ -432,52 +432,61 @@ const MaintenanceScreen: React.FC = () => {
                 }}
                 rightContent={
                   <View style={styles.logDetails}>
-                    <Text style={styles.logDate}>
+                    <Typography variant="bodySmall" style={{ color: theme.colors.textSecondary }}>
                       {log.date.toLocaleDateString()}
-                    </Text>
-                    <Text style={styles.completedStatus}>
+                    </Typography>
+                    <Typography variant="bodySmall" style={styles.completedStatus}>
                       {t('maintenance.completed', 'Completed')}
-                    </Text>
+                    </Typography>
                   </View>
                 }
               >
                 <View style={styles.logContent}>
                   <View style={styles.logRow}>
-                    <Text style={styles.logLabel}>
+                    <Typography variant="bodySmall" style={styles.logLabel}>
                       {t('maintenance.category', 'Category')}:
-                    </Text>
-                    <Text style={styles.logValue}>
+                    </Typography>
+                    <Typography variant="bodySmall" style={{ color: theme.colors.text }}>
                       {subcategoryName || categoryName}
-                    </Text>
+                    </Typography>
                   </View>
                   
                   {log.mileage > 0 && (
                     <View style={styles.logRow}>
-                      <Text style={styles.logLabel}>
+                      <Typography variant="bodySmall" style={styles.logLabel}>
                         {t('maintenance.mileage', 'Mileage')}:
-                      </Text>
-                      <Text style={styles.logValue}>
+                      </Typography>
+                      <Typography variant="bodySmall" style={{ color: theme.colors.text }}>
                         {log.mileage.toLocaleString()} {t('vehicles.miles', 'miles')}
-                      </Text>
+                      </Typography>
                     </View>
                   )}
                   
                   {log.cost && (
                     <View style={styles.logRow}>
-                      <Text style={styles.logLabel}>
+                      <Typography variant="bodySmall" style={styles.logLabel}>
                         {t('maintenance.cost', 'Cost')}:
-                      </Text>
-                      <Text style={styles.logValue}>
+                      </Typography>
+                      <Typography variant="bodySmall" style={{ color: theme.colors.text }}>
                         ${log.cost.toFixed(2)}
-                      </Text>
+                      </Typography>
                     </View>
                   )}
                   
                   {log.notes && (
                     <View style={[styles.logRow, styles.notesRow]}>
-                      <Text style={styles.logNotes} numberOfLines={2}>
+                      <Typography
+                        variant="bodySmall"
+                        style={{
+                          color: theme.colors.textSecondary,
+                          fontStyle: 'italic',
+                          flex: 1,
+                          lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.sm
+                        }}
+                        numberOfLines={2}
+                      >
                         {log.notes}
-                      </Text>
+                      </Typography>
                     </View>
                   )}
                 </View>
@@ -562,7 +571,6 @@ const styles = StyleSheet.create({
   statNumber: {
     color: theme.colors.primary,
     marginBottom: theme.spacing.xs,
-    fontWeight: theme.typography.fontWeight.bold,
     textAlign: 'center',
   },
   statLabel: {
@@ -573,10 +581,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     gap: theme.spacing.xs,
   },
-  logDate: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.textSecondary,
-  },
+  // logDate style removed - using Typography variant="bodySmall"
   logContent: {
     marginTop: theme.spacing.sm,
     gap: theme.spacing.xs,
@@ -586,26 +591,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  logLabel: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.textSecondary,
-    fontWeight: theme.typography.fontWeight.medium,
-  },
-  logValue: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text,
-  },
+  // logLabel style removed - using Typography variant="bodySmall"
+  // logValue style removed - using Typography variant="bodySmall"
   notesRow: {
     alignItems: 'flex-start',
     marginTop: theme.spacing.xs,
   },
-  logNotes: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.textSecondary,
-    fontStyle: 'italic',
-    flex: 1,
-    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.sm,
-  },
+  // logNotes style removed - using Typography variant="bodySmall"
   dueBadge: {
     backgroundColor: theme.colors.warning,
     paddingHorizontal: theme.spacing.sm,
@@ -613,15 +605,9 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
   },
   dueBadgeText: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.surface,
   },
-  completedStatus: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.success,
-    fontWeight: theme.typography.fontWeight.medium,
-  },
+  // completedStatus style removed - using Typography variant="bodySmall"
   
   // Fleet Status Styles
   summaryCard: {
@@ -690,7 +676,6 @@ const styles = StyleSheet.create({
   },
   vehicleName: {
     color: theme.colors.text,
-    fontWeight: theme.typography.fontWeight.medium,
   },
   vehicleDetails: {
     gap: theme.spacing.xs,
@@ -700,7 +685,6 @@ const styles = StyleSheet.create({
   },
   lastMaintenance: {
     color: theme.colors.primary,
-    fontWeight: theme.typography.fontWeight.medium,
   },
   noMaintenance: {
     color: theme.colors.textSecondary,
@@ -714,7 +698,6 @@ const styles = StyleSheet.create({
   
   sectionTitle: {
     color: theme.colors.text,
-    fontWeight: theme.typography.fontWeight.semibold,
     marginBottom: theme.spacing.sm,
   },
   
@@ -727,12 +710,10 @@ const styles = StyleSheet.create({
   },
   categoryName: {
     color: theme.colors.text,
-    fontWeight: theme.typography.fontWeight.semibold,
     marginBottom: theme.spacing.xs,
   },
   categoryStats: {
     color: theme.colors.textSecondary,
-    fontSize: theme.typography.fontSize.sm,
   },
   categoryBar: {
     height: 8,
@@ -775,7 +756,6 @@ const styles = StyleSheet.create({
   },
   activityVehicle: {
     color: theme.colors.primary,
-    fontWeight: theme.typography.fontWeight.medium,
   },
   activityCategory: {
     color: theme.colors.textSecondary,
@@ -791,6 +771,14 @@ const styles = StyleSheet.create({
   },
   viewAllText: {
     color: theme.colors.primary,
+  },
+  // Typography styles
+  logLabel: {
+    color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  completedStatus: {
+    color: theme.colors.success,
     fontWeight: theme.typography.fontWeight.medium,
   },
 });

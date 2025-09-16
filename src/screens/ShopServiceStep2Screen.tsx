@@ -236,7 +236,6 @@ const styles = StyleSheet.create({
   },
   summaryText: {
     color: theme.colors.text,
-    fontWeight: theme.typography.fontWeight.medium,
   },
   buttonContainer: {
     flexDirection: 'row',

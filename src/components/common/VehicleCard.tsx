@@ -3,7 +3,6 @@
 import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   Image,
   TouchableOpacity,
@@ -12,6 +11,7 @@ import { Card } from './Card';
 import { CarSilhouetteIcon, CameraIcon } from '../icons';
 import { theme } from '../../utils/theme';
 import { Vehicle } from '../../types';
+import { Typography } from './Typography';
 
 interface VehicleDisplayInfo {
   title: string;
@@ -66,13 +66,13 @@ const VehicleCard: React.FC<VehicleCardProps> = ({
   const renderSubtitle = () => (
     <View style={styles.subtitleContainer}>
       {displayInfo.vehicleInfo && (
-        <Text style={styles.vehicleInfoText}>
+        <Typography variant="bodySmall" style={styles.vehicleInfoText}>
           {displayInfo.vehicleInfo}
-        </Text>
+        </Typography>
       )}
-      <Text style={styles.mileageText}>
+      <Typography variant="bodySmall" style={styles.mileageText}>
         {vehicle.mileage ? `${vehicle.mileage.toLocaleString()} miles` : 'Mileage not set'}
-      </Text>
+      </Typography>
       {additionalInfo}
     </View>
   );
@@ -124,12 +124,9 @@ const styles = StyleSheet.create({
   },
   vehicleInfoText: {
     color: theme.colors.textSecondary,
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.normal,
   },
   mileageText: {
     color: theme.colors.textSecondary,
-    fontSize: theme.typography.fontSize.sm,
   },
 
   // Image styles (from VehiclesScreen)

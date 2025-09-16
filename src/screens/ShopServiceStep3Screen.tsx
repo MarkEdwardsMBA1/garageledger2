@@ -247,7 +247,6 @@ const styles = StyleSheet.create({
   photoListTitle: {
     color: theme.colors.text,
     marginBottom: theme.spacing.md,
-    fontWeight: theme.typography.fontWeight.semibold,
   },
   photoList: {
     gap: theme.spacing.sm,

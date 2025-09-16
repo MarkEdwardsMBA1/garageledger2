@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   Image,
   TouchableOpacity,
@@ -17,6 +16,7 @@ import { Button } from './Button';
 import { Loading } from './Loading';
 import { CameraIcon } from '../icons';
 import { imageUploadService } from '../../services/ImageUploadService';
+import { Typography } from './Typography';
 
 export interface PhotoPickerProps {
   /** Current photo URI */
@@ -309,9 +309,9 @@ export const PhotoPicker: React.FC<PhotoPickerProps> = ({
         ) : (
           <View style={styles.placeholderContainer}>
             <CameraIcon size={48} color={theme.colors.textSecondary} />
-            <Text style={styles.placeholderText}>
+            <Typography variant="body" style={styles.placeholderText}>
               {placeholder || t('photo.addPhoto', 'Add Photo')}
-            </Text>
+            </Typography>
           </View>
         )}
       </TouchableOpacity>
@@ -365,7 +365,6 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md,
   },
   placeholderText: {
-    fontSize: theme.typography.fontSize.base,
     color: theme.colors.textSecondary,
     textAlign: 'center',
   },
